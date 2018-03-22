@@ -1,0 +1,116 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{219FB311-434C-436A-BD59-C3888DEB0F8E}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>ReplayParser</RootNamespace>
+    <AssemblyName>ReplayParser</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
+    <FileAlignment>512</FileAlignment>
+    <SccProjectName>SAK</SccProjectName>
+    <SccLocalPath>SAK</SccLocalPath>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccProvider>SAK</SccProvider>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="DotNetZip, Version=1.10.1.0, Culture=neutral, PublicKeyToken=6583c7c814667745">
+      <HintPath>..\packages\DotNetZip.1.10.1\lib\net20\DotNetZip.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Actions\AbstractAction.cs" />
+    <Compile Include="Actions\AllyAction.cs" />
+    <Compile Include="Actions\BuildAction.cs" />
+    <Compile Include="Actions\GameChatAction.cs" />
+    <Compile Include="Actions\GenericAction.cs" />
+    <Compile Include="Actions\GenericMultipleObjectIdentifierAction.cs" />
+    <Compile Include="Actions\GenericObjectIdentifierAction.cs" />
+    <Compile Include="Actions\GenericObjectTypeAction.cs" />
+    <Compile Include="Actions\GenericQueueTypeAction.cs" />
+    <Compile Include="Actions\HotKeyAction.cs" />
+    <Compile Include="Actions\LeaveGameAction.cs" />
+    <Compile Include="Actions\LiftAction.cs" />
+    <Compile Include="Actions\MinimapPingAction.cs" />
+    <Compile Include="Actions\ResearchAction.cs" />
+    <Compile Include="Actions\RightClickAction.cs" />
+    <Compile Include="Actions\TargetAction.cs" />
+    <Compile Include="Actions\UpgradeAction.cs" />
+    <Compile Include="Actions\VisionAction.cs" />
+    <Compile Include="Analyzers\ObserverAnalyzer.cs" />
+    <Compile Include="Analyzers\WinAnalyzer.cs" />
+    <Compile Include="Entities\Enums.cs" />
+    <Compile Include="Entities\Header.cs" />
+    <Compile Include="Entities\MapPosition.cs" />
+    <Compile Include="Entities\Replay.cs" />
+    <Compile Include="Entities\ReplayMap.cs" />
+    <Compile Include="Interfaces\Action\IObjectTypeAction.cs" />
+    <Compile Include="Interfaces\Action\IOrderTypeAction.cs" />
+    <Compile Include="Interfaces\Action\IQueueTypeAction.cs" />
+    <Compile Include="Interfaces\IAction.cs" />
+    <Compile Include="Interfaces\Action\IMapPositionAction.cs" />
+    <Compile Include="Interfaces\Action\IObjectIdentifierAction.cs" />
+    <Compile Include="Interfaces\IMapPosition.cs" />
+    <Compile Include="Interfaces\IPlayer.cs" />
+    <Compile Include="Entities\Player.cs" />
+    <Compile Include="Interfaces\IReplay.cs" />
+    <Compile Include="Interfaces\IReplayMap.cs" />
+    <Compile Include="Loader\ByteConstants.cs" />
+    <Compile Include="Loader\Common.cs" />
+    <Compile Include="Loader\DecodeBuffer.cs" />
+    <Compile Include="Loader\Decoder.cs" />
+    <Compile Include="Loader\ReplayLoader.cs" />
+    <Compile Include="Loader\Unpacker.cs" />
+    <Compile Include="Loader\UnpackResult.cs" />
+    <Compile Include="Parser\AbstractParser.cs" />
+    <Compile Include="Parser\ActionParser.cs" />
+    <Compile Include="Parser\HeaderParser.cs" />
+    <Compile Include="Parser\ReplayDataInputStreamcs.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

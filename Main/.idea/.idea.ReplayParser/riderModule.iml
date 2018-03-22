@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="RIDER_MODULE" version="4">
+  <component name="NewModuleRootManager">
+    <content url="file://$MODULE_DIR$/../..">
+      <sourceFolder url="file://$MODULE_DIR$/../../ReplayParser" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../../ReplayParser.Clusterer" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../../ReplayParser.Console" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../../ReplayParser.FeatureExtraction" isTestSource="false" />
+      <excludeFolder url="file://$MODULE_DIR$/../../ReplayParser.Clusterer/bin" />
+      <excludeFolder url="file://$MODULE_DIR$/../../ReplayParser.Clusterer/obj" />
+      <excludeFolder url="file://$MODULE_DIR$/../../ReplayParser.Console/bin" />
+      <excludeFolder url="file://$MODULE_DIR$/../../ReplayParser.Console/obj" />
+      <excludeFolder url="file://$MODULE_DIR$/../../ReplayParser.FeatureExtraction/bin" />
+      <excludeFolder url="file://$MODULE_DIR$/../../ReplayParser.FeatureExtraction/obj" />
+      <excludeFolder url="file://$MODULE_DIR$/../../ReplayParser/bin" />
+      <excludeFolder url="file://$MODULE_DIR$/../../ReplayParser/obj" />
+      <excludeFolder url="file://$MODULE_DIR$/../../packages" />
+    </content>
+    <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+</module>

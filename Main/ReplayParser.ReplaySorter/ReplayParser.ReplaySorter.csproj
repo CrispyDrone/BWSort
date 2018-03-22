@@ -1,0 +1,177 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{833D41A5-2BE7-431D-97A8-6AF51DC9C35C}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>ReplayParser.ReplaySorter</RootNamespace>
+    <AssemblyName>ReplayParser.ReplaySorter</AssemblyName>
+    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <TargetFrameworkProfile>
+    </TargetFrameworkProfile>
+    <SccProjectName>SAK</SccProjectName>
+    <SccLocalPath>SAK</SccLocalPath>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccProvider>SAK</SccProvider>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Replays.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Replays.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Sorting\Enums\Criteria.cs" />
+    <Compile Include="ReplayRenamer\CustomReplayFormat.cs" />
+    <Compile Include="ReplayRenamer\CustomReplayNameSyntax.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ReplayHandler\ReplayHandler.cs" />
+    <Compile Include="ReplayRenamer\Date.cs" />
+    <Compile Include="ReplayRenamer\Duration.cs" />
+    <Compile Include="ReplayRenamer\IReplayNameSection.cs" />
+    <Compile Include="ReplayRenamer\LosingRace.cs" />
+    <Compile Include="ReplayRenamer\LosingTeam.cs" />
+    <Compile Include="ReplayRenamer\Map.cs" />
+    <Compile Include="ReplayRenamer\MatchUp.cs" />
+    <Compile Include="ReplayRenamer\Team.cs" />
+    <Compile Include="ReplayRenamer\WinningRace.cs" />
+    <Compile Include="ReplayRenamer\WinningTeam.cs" />
+    <Compile Include="Sorting\Enums\PlayerType.cs" />
+    <Compile Include="Sorting\SortCommands\ISortCommand.cs" />
+    <Compile Include="Sorting\SortCommands\SortCommandFactory.cs" />
+    <Compile Include="Sorting\SortCommands\SortOnDuration.cs" />
+    <Compile Include="Sorting\SortCommands\SortOnGameType.cs" />
+    <Compile Include="Sorting\SortCommands\SortOnMap.cs" />
+    <Compile Include="Sorting\SortCommands\SortOnMatchUp.cs" />
+    <Compile Include="Sorting\SortCommands\SortOnPlayerName.cs" />
+    <Compile Include="Sorting\Sorter\SortCriteriaParameters.cs" />
+    <Compile Include="Sorting\EqualityComparers\MatchUpEqualityComparer.cs" />
+    <Compile Include="Sorting\EqualityComparers\RaceCombinationEqualityComparer.cs" />
+    <Compile Include="Sorting\Enums\RaceType.cs" />
+    <Compile Include="Sorting\EqualityComparers\ReplayMapEqualityComparer.cs" />
+    <Compile Include="Sorting\Sorter\Sorter.cs" />
+    <Compile Include="UserInput\Answer.cs" />
+    <Compile Include="UserInput\SearchDirectory.cs" />
+    <Compile Include="UserInput\UserInput.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+    <EmbeddedResource Include="Resources\000204-Fighting Spirit 1.3_.rep">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\003327-Fighting Spirit 1.3_.rep">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\010312-Fighting Spirit 1.3_.rep">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\010812-Fighting Spirit 1.3_.rep">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\173811-Fighting Spirit 1.3_.rep">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\202641-%284%29투혼1.3.rep">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\224520-Fighting Spirit 1.3_.rep">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\225906-Fighting Spirit 1.3_.rep">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\235958-Fighting Spirit 1.3_.rep">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <None Include="Resources\192042-%284%29투혼1.3.rep" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ReplayParser\ReplayParser.csproj">
+      <Project>{219fb311-434c-436a-bd59-c3888deb0f8e}</Project>
+      <Name>ReplayParser</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Replays.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <SubType>Designer</SubType>
+      <LastGenOutput>Replays.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include=".NETFramework,Version=v4.0,Profile=Client">
+      <Visible>False</Visible>
+      <ProductName>Microsoft .NET Framework 4 Client Profile %28x86 and x64%29</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Windows.Installer.4.5">
+      <Visible>False</Visible>
+      <ProductName>Windows Installer 4.5</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
