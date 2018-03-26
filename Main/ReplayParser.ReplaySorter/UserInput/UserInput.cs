@@ -9,12 +9,24 @@ namespace ReplayParser.ReplaySorter.UserInput
 {
     public static class User
     {
-        public static SearchDirectory AskDirectory()
+        public static BaseDirectory AskDirectory(Type directoryType, string message = "")
+        {
+            if (directoryType == typeof(SearchDirectory))
+            {
+                return AskSearchDirectory();
+            }
+            if (directoryType == typeof(OutputDirectory))
+            {
+                return AskOutputDirectory(message);
+            }
+            return null;
+        }
+        public static SearchDirectory AskSearchDirectory()
         {
             Console.WriteLine("Replay directory?");
             string directory = Console.ReadLine();
 
-            while (!Directory.Exists(directory) /*&& directory != string.Empty*/)
+            while (!Directory.Exists(directory))
             {
                 Console.WriteLine("Could not find directory {0}.", directory);
                 Console.WriteLine("Please specify an existing directory containing your replays.");
@@ -48,6 +60,14 @@ namespace ReplayParser.ReplaySorter.UserInput
             }
 
             return new SearchDirectory(directory, searchoption);
+        }
+
+        public static OutputDirectory AskOutputDirectory(string message)
+        {
+            Console.WriteLine("{0}", message);
+            string directory = Console.ReadLine();
+
+            return new OutputDirectory(directory, message);
         }
 
         public static Answer AskYesNo()

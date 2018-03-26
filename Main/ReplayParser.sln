@@ -21,28 +21,28 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{219FB311-434C-436A-BD59-C3888DEB0F8E}.Debug|Any CPU.ActiveCfg = Debug|x86
-		{219FB311-434C-436A-BD59-C3888DEB0F8E}.Debug|Any CPU.Build.0 = Debug|x86
-		{219FB311-434C-436A-BD59-C3888DEB0F8E}.Debug|x86.ActiveCfg = Debug|x86
-		{219FB311-434C-436A-BD59-C3888DEB0F8E}.Debug|x86.Build.0 = Debug|x86
+		{219FB311-434C-436A-BD59-C3888DEB0F8E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{219FB311-434C-436A-BD59-C3888DEB0F8E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{219FB311-434C-436A-BD59-C3888DEB0F8E}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{219FB311-434C-436A-BD59-C3888DEB0F8E}.Debug|x86.Build.0 = Debug|Any CPU
 		{219FB311-434C-436A-BD59-C3888DEB0F8E}.Release|Any CPU.ActiveCfg = Release|x86
+		{219FB311-434C-436A-BD59-C3888DEB0F8E}.Release|Any CPU.Build.0 = Release|x86
+		{219FB311-434C-436A-BD59-C3888DEB0F8E}.Release|Any CPU.Deploy.0 = Release|x86
 		{219FB311-434C-436A-BD59-C3888DEB0F8E}.Release|x86.ActiveCfg = Release|x86
 		{219FB311-434C-436A-BD59-C3888DEB0F8E}.Release|x86.Build.0 = Release|x86
 		{11F79DED-FF92-4CE2-95DC-7A6CAB5DA03C}.Debug|Any CPU.ActiveCfg = Debug|x86
 		{11F79DED-FF92-4CE2-95DC-7A6CAB5DA03C}.Debug|x86.ActiveCfg = Debug|x86
-		{11F79DED-FF92-4CE2-95DC-7A6CAB5DA03C}.Debug|x86.Build.0 = Debug|x86
 		{11F79DED-FF92-4CE2-95DC-7A6CAB5DA03C}.Release|Any CPU.ActiveCfg = Release|x86
 		{11F79DED-FF92-4CE2-95DC-7A6CAB5DA03C}.Release|x86.ActiveCfg = Release|x86
 		{11F79DED-FF92-4CE2-95DC-7A6CAB5DA03C}.Release|x86.Build.0 = Release|x86
 		{40113F15-7ECB-4A96-913A-187F7F38C989}.Debug|Any CPU.ActiveCfg = Debug|x86
 		{40113F15-7ECB-4A96-913A-187F7F38C989}.Debug|x86.ActiveCfg = Debug|x86
-		{40113F15-7ECB-4A96-913A-187F7F38C989}.Debug|x86.Build.0 = Debug|x86
 		{40113F15-7ECB-4A96-913A-187F7F38C989}.Release|Any CPU.ActiveCfg = Release|x86
+		{40113F15-7ECB-4A96-913A-187F7F38C989}.Release|Any CPU.Deploy.0 = Release|x86
 		{40113F15-7ECB-4A96-913A-187F7F38C989}.Release|x86.ActiveCfg = Release|x86
 		{40113F15-7ECB-4A96-913A-187F7F38C989}.Release|x86.Build.0 = Release|x86
 		{F8579F86-42E2-40B4-86E2-E887C3A581FE}.Debug|Any CPU.ActiveCfg = Debug|x86
 		{F8579F86-42E2-40B4-86E2-E887C3A581FE}.Debug|x86.ActiveCfg = Debug|x86
-		{F8579F86-42E2-40B4-86E2-E887C3A581FE}.Debug|x86.Build.0 = Debug|x86
 		{F8579F86-42E2-40B4-86E2-E887C3A581FE}.Release|Any CPU.ActiveCfg = Release|x86
 		{F8579F86-42E2-40B4-86E2-E887C3A581FE}.Release|x86.ActiveCfg = Release|x86
 		{F8579F86-42E2-40B4-86E2-E887C3A581FE}.Release|x86.Build.0 = Release|x86
@@ -52,6 +52,7 @@ Global
 		{833D41A5-2BE7-431D-97A8-6AF51DC9C35C}.Debug|x86.Build.0 = Debug|Any CPU
 		{833D41A5-2BE7-431D-97A8-6AF51DC9C35C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{833D41A5-2BE7-431D-97A8-6AF51DC9C35C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{833D41A5-2BE7-431D-97A8-6AF51DC9C35C}.Release|Any CPU.Deploy.0 = Release|Any CPU
 		{833D41A5-2BE7-431D-97A8-6AF51DC9C35C}.Release|x86.ActiveCfg = Release|Any CPU
 		{833D41A5-2BE7-431D-97A8-6AF51DC9C35C}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
@@ -69,14 +70,14 @@ Global
 		SccProjectUniqueName2 = ReplayParser.Console\\ReplayParser.Console.csproj
 		SccProjectName2 = ReplayParser.Console
 		SccLocalPath2 = ReplayParser.Console
-		SccProjectUniqueName3 = ReplayParser.Clusterer\\ReplayParser.Clusterer.csproj
-		SccProjectName3 = ReplayParser.Clusterer
-		SccLocalPath3 = ReplayParser.Clusterer
-		SccProjectUniqueName4 = ReplayParser.ReplaySorter\\ReplayParser.ReplaySorter.csproj
-		SccProjectName4 = ReplayParser.ReplaySorter
-		SccLocalPath4 = ReplayParser.ReplaySorter
-		SccProjectUniqueName5 = ReplayParser.FeatureExtraction\\ReplayParser.FeatureExtraction.csproj
-		SccProjectName5 = ReplayParser.FeatureExtraction
-		SccLocalPath5 = ReplayParser.FeatureExtraction
+		SccProjectUniqueName3 = ReplayParser.FeatureExtraction\\ReplayParser.FeatureExtraction.csproj
+		SccProjectName3 = ReplayParser.FeatureExtraction
+		SccLocalPath3 = ReplayParser.FeatureExtraction
+		SccProjectUniqueName4 = ReplayParser.Clusterer\\ReplayParser.Clusterer.csproj
+		SccProjectName4 = ReplayParser.Clusterer
+		SccLocalPath4 = ReplayParser.Clusterer
+		SccProjectUniqueName5 = ReplayParser.ReplaySorter\\ReplayParser.ReplaySorter.csproj
+		SccProjectName5 = ReplayParser.ReplaySorter
+		SccLocalPath5 = ReplayParser.ReplaySorter
 	EndGlobalSection
 EndGlobal

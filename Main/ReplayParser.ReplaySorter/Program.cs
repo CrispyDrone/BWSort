@@ -56,14 +56,14 @@ namespace ReplayParser.ReplaySorter
 
             // parse all replays in directory
 
-            var searchDirectory = User.AskDirectory();
+            var searchDirectory = (SearchDirectory)User.AskDirectory(typeof(SearchDirectory));
             List<IReplay> ListReplays = new List<IReplay>();
             IEnumerable<string> files = Directory.EnumerateFiles(searchDirectory.Directory, "*.rep", searchDirectory.SearchOption);
 
             while (files.Count() == 0)
             {
                 Console.WriteLine("No replays found in {0}", searchDirectory.Directory);
-                searchDirectory = User.AskDirectory();
+                searchDirectory = (SearchDirectory)User.AskDirectory(typeof(SearchDirectory));
                 files = Directory.EnumerateFiles(searchDirectory.Directory, "*.rep", searchDirectory.SearchOption);
             }
             // getting a lot of errors for replays, figure out why. Add possibility to rename the replays themselves.
@@ -72,7 +72,7 @@ namespace ReplayParser.ReplaySorter
             // could I put a try/catch inside a nother catch? Or should I just use a stringbuilder and write the entirety of it to a file in the end
             StringBuilder ErrorMessages = new StringBuilder();
             List<string> ReplaysThrowingExceptions = new List<string>();
-            var BadReplays = searchDirectory.Directory + @"\BadReplays";
+            //var BadReplays = searchDirectory.Directory + @"\BadReplays";
             Stopwatch sw = new Stopwatch();
             sw.Start();
             //try
@@ -115,20 +115,36 @@ namespace ReplayParser.ReplaySorter
                 Console.WriteLine("Error writing error messages." + ex.Message);
             }
 
-            ReplayHandler.LogBadReplays(ReplaysThrowingExceptions, BadReplays);
-
             if (ReplaysThrowingExceptions.Count() > 0)
             {
-                Console.WriteLine("Move bad replays to designated folder {0}? Y(es)/N(o).", BadReplays);
+                Console.WriteLine("Move bad replays to a designated folder? Y(es)/N(o).");
                 var MoveBadReplays = User.AskYesNo();
                 if (MoveBadReplays.Yes != null)
                 {
                     if ((bool)MoveBadReplays.Yes)
                     {
+                        var BadReplaysOutputDirectory = (OutputDirectory)User.AskDirectory(typeof(OutputDirectory), "Specify a directory to put the bad replays.");
+                        bool CreateDirectorySuccess = false;
+                        while (!CreateDirectorySuccess)
+                        {
+                            try
+                            {
+                                Directory.CreateDirectory(BadReplaysOutputDirectory.Directory);
+                                CreateDirectorySuccess = true;
+                            }
+                            catch (Exception)
+                            {
+                                Console.WriteLine("Could not create directory. Invalid directory name or not enough privileges.");
+                                CreateDirectorySuccess = false;
+                            }
+                        }
+
                         foreach (var replay in ReplaysThrowingExceptions)
                         {
-                            ReplayHandler.RemoveBadReplay(BadReplays, replay);
+                            ReplayHandler.RemoveBadReplay(BadReplaysOutputDirectory.Directory + @"\BadReplays", replay);
                         }
+                        ReplayHandler.LogBadReplays(ReplaysThrowingExceptions, BadReplaysOutputDirectory.Directory + @"\BadReplays");
+                        
                     }
                 }
                 else
@@ -136,9 +152,9 @@ namespace ReplayParser.ReplaySorter
                     Console.WriteLine("Answer can not be null");
                     return;
                 }
-                   
+                // remove bad replay from files
+                files = files.Where(x => !ReplaysThrowingExceptions.Contains(x));
             }
-
 
             // you might want to extract information and put everything into some sort of data structure, so you don't have to go through the list of replays for each
             // sort but instead can lookup in the datastructure/table? 
@@ -149,6 +165,36 @@ namespace ReplayParser.ReplaySorter
 
             // use a library to parse command line arguments => then return some sort of Enum
             // then pass this enum to a Sorter object
+            OutputDirectory SortResultOutputDirectory = (OutputDirectory)User.AskDirectory(typeof(OutputDirectory), "Specify a directory for the sort result. If it does not exist, it will be created.");
+            while (!Directory.Exists(SortResultOutputDirectory.Directory))
+            {
+                try
+                {
+                    Directory.CreateDirectory(SortResultOutputDirectory.Directory);
+                }
+                catch (Exception)
+                {
+                    Console.WriteLine("Could not create directory. Invalid directory name or not enough privileges.");
+                    Console.WriteLine("Retry?");
+                    var TryAgain = User.AskYesNo();
+                    if (TryAgain.Yes != null)
+                    {
+                        if ((bool)TryAgain.Yes)
+                        {
+                            continue;
+                        }
+                        else
+                        {
+                            SortResultOutputDirectory = (OutputDirectory)User.AskDirectory(typeof(OutputDirectory), "Specify a different directory for the sort result.If it does not exist, it will be created.");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("Answer can not be null.");
+                        return;
+                    }
+                }
+            }
 
             Console.WriteLine("Please enter criteria to sort replays on.");
             Console.WriteLine("Provide a space separated list of criteria.");
@@ -189,7 +235,7 @@ namespace ReplayParser.ReplaySorter
                         return;
                     }
 
-                    sorter.CurrentDirectory = searchDirectory.Directory;
+                    sorter.CurrentDirectory = SortResultOutputDirectory.Directory;
                     sorter.Files = files;
                     sorter.ListReplays = ListReplays;
                     sorter.SortCriteria = SortCriteria.ChosenCriteria;

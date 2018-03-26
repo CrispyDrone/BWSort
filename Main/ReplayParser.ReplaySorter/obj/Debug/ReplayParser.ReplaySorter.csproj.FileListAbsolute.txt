@@ -1,1 +1,21 @@
 C:\Users\Eigenaar\Desktop\Projects\SCReplayFileParser\Main\ReplayParser.ReplaySorter\bin\Debug\ReplayParser.ReplaySorter.exe.config
+C:\Users\Eigenaar\Desktop\Projects\SCReplayFileParser\Main\ReplayParser.ReplaySorter\bin\Debug\Resources\000204-Fighting Spirit 1.3_.rep
+C:\Users\Eigenaar\Desktop\Projects\SCReplayFileParser\Main\ReplayParser.ReplaySorter\bin\Debug\Resources\003327-Fighting Spirit 1.3_.rep
+C:\Users\Eigenaar\Desktop\Projects\SCReplayFileParser\Main\ReplayParser.ReplaySorter\bin\Debug\Resources\010312-Fighting Spirit 1.3_.rep
+C:\Users\Eigenaar\Desktop\Projects\SCReplayFileParser\Main\ReplayParser.ReplaySorter\bin\Debug\Resources\010812-Fighting Spirit 1.3_.rep
+C:\Users\Eigenaar\Desktop\Projects\SCReplayFileParser\Main\ReplayParser.ReplaySorter\bin\Debug\Resources\173811-Fighting Spirit 1.3_.rep
+C:\Users\Eigenaar\Desktop\Projects\SCReplayFileParser\Main\ReplayParser.ReplaySorter\bin\Debug\Resources\202641-(4)투혼1.3.rep
+C:\Users\Eigenaar\Desktop\Projects\SCReplayFileParser\Main\ReplayParser.ReplaySorter\bin\Debug\Resources\224520-Fighting Spirit 1.3_.rep
+C:\Users\Eigenaar\Desktop\Projects\SCReplayFileParser\Main\ReplayParser.ReplaySorter\bin\Debug\Resources\225906-Fighting Spirit 1.3_.rep
+C:\Users\Eigenaar\Desktop\Projects\SCReplayFileParser\Main\ReplayParser.ReplaySorter\bin\Debug\Resources\235958-Fighting Spirit 1.3_.rep
+C:\Users\Eigenaar\Desktop\Projects\SCReplayFileParser\Main\ReplayParser.ReplaySorter\bin\Debug\ReplayParser.ReplaySorter.exe
+C:\Users\Eigenaar\Desktop\Projects\SCReplayFileParser\Main\ReplayParser.ReplaySorter\bin\Debug\ReplayParser.ReplaySorter.pdb
+C:\Users\Eigenaar\Desktop\Projects\SCReplayFileParser\Main\ReplayParser.ReplaySorter\bin\Debug\ReplayParser.dll
+C:\Users\Eigenaar\Desktop\Projects\SCReplayFileParser\Main\ReplayParser.ReplaySorter\bin\Debug\DotNetZip.dll
+C:\Users\Eigenaar\Desktop\Projects\SCReplayFileParser\Main\ReplayParser.ReplaySorter\bin\Debug\ReplayParser.pdb
+C:\Users\Eigenaar\Desktop\Projects\SCReplayFileParser\Main\ReplayParser.ReplaySorter\bin\Debug\DotNetZip.xml
+C:\Users\Eigenaar\Desktop\Projects\SCReplayFileParser\Main\ReplayParser.ReplaySorter\obj\Debug\ReplayParser.ReplaySorter.csprojResolveAssemblyReference.cache
+C:\Users\Eigenaar\Desktop\Projects\SCReplayFileParser\Main\ReplayParser.ReplaySorter\obj\Debug\ReplayParser.ReplaySorter.Replays.resources
+C:\Users\Eigenaar\Desktop\Projects\SCReplayFileParser\Main\ReplayParser.ReplaySorter\obj\Debug\ReplayParser.ReplaySorter.csproj.GenerateResource.Cache
+C:\Users\Eigenaar\Desktop\Projects\SCReplayFileParser\Main\ReplayParser.ReplaySorter\obj\Debug\ReplayParser.ReplaySorter.exe
+C:\Users\Eigenaar\Desktop\Projects\SCReplayFileParser\Main\ReplayParser.ReplaySorter\obj\Debug\ReplayParser.ReplaySorter.pdb

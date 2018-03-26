@@ -6,14 +6,12 @@ using System.IO;
 
 namespace ReplayParser.ReplaySorter.UserInput
 {
-    public class SearchDirectory
+    public class SearchDirectory : BaseDirectory
     {
-        public SearchDirectory(string directory, SearchOption searchoption)
+        public SearchDirectory(string directory, SearchOption searchoption) : base(directory)
         {
-            this.Directory = directory;
             this.SearchOption = searchoption;
         }
-        public string Directory { get; set; }
         public SearchOption SearchOption { get; set; }
     }
 }

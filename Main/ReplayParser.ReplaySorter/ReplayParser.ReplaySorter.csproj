@@ -35,7 +35,7 @@
     <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>x86</PlatformTarget>
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -102,6 +102,8 @@
     <Compile Include="Sorting\EqualityComparers\ReplayMapEqualityComparer.cs" />
     <Compile Include="Sorting\Sorter\Sorter.cs" />
     <Compile Include="UserInput\Answer.cs" />
+    <Compile Include="UserInput\BaseDirectory.cs" />
+    <Compile Include="UserInput\OutputDirectory.cs" />
     <Compile Include="UserInput\SearchDirectory.cs" />
     <Compile Include="UserInput\UserInput.cs" />
   </ItemGroup>
