@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using ReplayParser.Interfaces;
+using ReplayParser.ReplaySorter.Diagnostics;
 
 namespace ReplayParser.ReplaySorter.ReplayRenamer
 {
@@ -17,6 +18,15 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
         public IReplay Replay { get; set; }
 
         public string[] Names { get; set; }
+
+        // Option 2
+        //public IEnumerable<IPlayer> Players
+        //{
+        //    get
+        //    {
+        //        return Replay.Winner;
+        //    }
+        //}
 
         public CustomReplayNameSyntax Type { get { return CustomReplayNameSyntax.WT; } }
 
@@ -48,7 +58,7 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
                 //}
 
                 var winnerTeam = Replay.Winner;
-                if (winnerTeam.Count() == 0)
+                if (winnerTeam == null || winnerTeam.Count() == 0)
                 {
                     throw new NullReferenceException();
                 }
@@ -61,10 +71,10 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
                     index++;
                 }
             }
-            catch (NullReferenceException nullex)
+            catch (NullReferenceException /*nullex*/)
             {
-                Console.WriteLine("No winner.");
-                Console.WriteLine(nullex.Message);
+                //Console.WriteLine("No winner.");
+                //Console.WriteLine(nullex.Message);
                 Names = new string[] { "NoWinner" };
             }
 

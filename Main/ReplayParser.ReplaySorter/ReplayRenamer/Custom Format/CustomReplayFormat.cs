@@ -119,7 +119,7 @@ namespace ReplayParser.ReplaySorter
             IReplayNameSections[4] = new Date(replay);
             IReplayNameSections[5] = new WinningRace(replay);
             IReplayNameSections[6] = new LosingRace(replay);
-            IReplayNameSections[7] = new MatchUp(replay);
+            IReplayNameSections[7] = new MatchUp(replay, (Team)IReplayNameSections[0]);
             IReplayNameSections[8] = new Duration(replay);
 
             Dictionary<CustomReplayNameSyntax, string> ReplayNameSections = new Dictionary<CustomReplayNameSyntax, string>();

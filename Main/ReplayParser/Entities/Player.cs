@@ -33,6 +33,8 @@ namespace ReplayParser.Entities
 		    this.Name       = name;
 		    this.ColourType = colourType;
 		    this.Spot       = spot;
+            this.OpponentDropped = null;
+            this.IsObserver = null;
 	    }
     }
 }

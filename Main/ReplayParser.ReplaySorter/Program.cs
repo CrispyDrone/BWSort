@@ -11,6 +11,7 @@ using System.Reflection;
 using System.Diagnostics;
 using ReplayParser.ReplaySorter.UserInput;
 using ReplayParser.Interfaces;
+using ReplayParser.ReplaySorter.Diagnostics;
 
 namespace ReplayParser.ReplaySorter
 {
@@ -56,6 +57,8 @@ namespace ReplayParser.ReplaySorter
 
             // parse all replays in directory
 
+
+            // for your UI, you should be able to put these things in a separate class and methods so you can make use of them instead of having to rewrite this...
             var searchDirectory = (SearchDirectory)User.AskDirectory(typeof(SearchDirectory));
             List<IReplay> ListReplays = new List<IReplay>();
             IEnumerable<string> files = Directory.EnumerateFiles(searchDirectory.Directory, "*.rep", searchDirectory.SearchOption);
@@ -75,10 +78,15 @@ namespace ReplayParser.ReplaySorter
             //var BadReplays = searchDirectory.Directory + @"\BadReplays";
             Stopwatch sw = new Stopwatch();
             sw.Start();
+            var ProgressBar = new ProgressBar(Console.CursorLeft, Console.CursorTop);
+            var numberOfFiles = files.Count();
+            int currentPosition = 0;
             //try
             //{
             foreach (var replay in files)
             {
+                currentPosition++;
+                ProgressBar.ShowAndUpdate(currentPosition, numberOfFiles);
                 try
                 {
                     var ParsedReplay = ReplayLoader.LoadReplay(replay);
@@ -88,11 +96,12 @@ namespace ReplayParser.ReplaySorter
                 catch (Exception ex)
                 {
                     //Console.WriteLine(ex.Message);
-                    Console.WriteLine("Error with replay {0}", replay.ToString());
+                    Console.WriteLine("\nError with replay {0}", replay.ToString());
                     ErrorMessages.AppendLine(ex.Message + ":" + replay.ToString());
                     ReplaysThrowingExceptions.Add(replay);
                 }
             }
+            Console.WriteLine();
             //}
             //catch(Exception ex)
             //{
@@ -236,6 +245,8 @@ namespace ReplayParser.ReplaySorter
                     }
 
                     sorter.CurrentDirectory = SortResultOutputDirectory.Directory;
+                    // I lose currentdirectory because I only use one sorter
+                    sorter.OriginalDirectory = SortResultOutputDirectory.Directory;
                     sorter.Files = files;
                     sorter.ListReplays = ListReplays;
                     sorter.SortCriteria = SortCriteria.ChosenCriteria;

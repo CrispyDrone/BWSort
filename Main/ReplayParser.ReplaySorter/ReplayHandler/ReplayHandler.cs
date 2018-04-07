@@ -143,7 +143,7 @@ namespace ReplayParser.ReplaySorter
 
         // Enumerate subdirectories, find replay files, copy to 1 big folder??
 
-        public static string GenerateReplayName(Interfaces.IReplay replay, CustomReplayFormat format)
+        public static string GenerateReplayName(IReplay replay, CustomReplayFormat format)
         {
             // generate mapping structure
             // make interface that has method "GenerateReplayNameSection"
@@ -162,7 +162,12 @@ namespace ReplayParser.ReplaySorter
                 CustomReplayName.Append(CustomReplayNameSections[(CustomReplayNameSyntax)Enum.Parse(typeof(CustomReplayNameSyntax), arguments[i])]);
             }
 
-            return CustomReplayName.ToString();
+
+            // remove invalid characters from the name
+
+            string CustomReplayNameString = RemoveInvalidChars(CustomReplayName.ToString());
+
+            return CustomReplayNameString;
 
             //Dictionary<int, Dictionary<CustomReplayNameSyntax, string[]>> CustomReplayNameSectionsForAllTeams = new Dictionary<int, Dictionary<CustomReplayNameSyntax, string[]>>();
 
@@ -178,6 +183,27 @@ namespace ReplayParser.ReplaySorter
             //{
             //    arguments.Count(x => x == argument)
             //}
+        }
+
+        public static char[] InvalidFileChars = Path.GetInvalidFileNameChars();
+        public static char[] InvalidPathChars = Path.GetInvalidPathChars();
+        //public static char[] InvalidFileCharsAdditional = new char[] { '*', ':' };
+
+        public static string RemoveInvalidChars(string name)
+        {
+            foreach (var InvalidChar in InvalidPathChars)
+            {
+                name = name.Replace(InvalidChar.ToString(), string.Empty);
+            }
+            foreach (var InvalidChar in InvalidFileChars)
+            {
+                name = name.Replace(InvalidChar.ToString(), string.Empty);
+            }
+            //foreach (var InvalidChar in InvalidFileCharsAdditional)
+            //{
+            //    name = name.Replace(InvalidChar.ToString(), string.Empty);
+            //}
+            return name;
         }
 
     }

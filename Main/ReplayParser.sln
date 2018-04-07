@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReplayParser.Clusterer", "R
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReplayParser.ReplaySorter", "ReplayParser.ReplaySorter\ReplayParser.ReplaySorter.csproj", "{833D41A5-2BE7-431D-97A8-6AF51DC9C35C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReplayParser.ReplaySorter.UI", "ReplayParser.ReplaySorter.UI\ReplayParser.ReplaySorter.UI.csproj", "{2B1B0E52-36EF-459D-A042-EE6492BC388A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -55,29 +57,16 @@ Global
 		{833D41A5-2BE7-431D-97A8-6AF51DC9C35C}.Release|Any CPU.Deploy.0 = Release|Any CPU
 		{833D41A5-2BE7-431D-97A8-6AF51DC9C35C}.Release|x86.ActiveCfg = Release|Any CPU
 		{833D41A5-2BE7-431D-97A8-6AF51DC9C35C}.Release|x86.Build.0 = Release|Any CPU
+		{2B1B0E52-36EF-459D-A042-EE6492BC388A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2B1B0E52-36EF-459D-A042-EE6492BC388A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2B1B0E52-36EF-459D-A042-EE6492BC388A}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{2B1B0E52-36EF-459D-A042-EE6492BC388A}.Debug|x86.Build.0 = Debug|Any CPU
+		{2B1B0E52-36EF-459D-A042-EE6492BC388A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2B1B0E52-36EF-459D-A042-EE6492BC388A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2B1B0E52-36EF-459D-A042-EE6492BC388A}.Release|x86.ActiveCfg = Release|Any CPU
+		{2B1B0E52-36EF-459D-A042-EE6492BC388A}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(TeamFoundationVersionControl) = preSolution
-		SccNumberOfProjects = 6
-		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
-		SccTeamFoundationServer = https://bartbullens.visualstudio.com/
-		SccLocalPath0 = .
-		SccProjectUniqueName1 = ReplayParser\\ReplayParser.csproj
-		SccProjectName1 = ReplayParser
-		SccLocalPath1 = ReplayParser
-		SccProjectUniqueName2 = ReplayParser.Console\\ReplayParser.Console.csproj
-		SccProjectName2 = ReplayParser.Console
-		SccLocalPath2 = ReplayParser.Console
-		SccProjectUniqueName3 = ReplayParser.FeatureExtraction\\ReplayParser.FeatureExtraction.csproj
-		SccProjectName3 = ReplayParser.FeatureExtraction
-		SccLocalPath3 = ReplayParser.FeatureExtraction
-		SccProjectUniqueName4 = ReplayParser.Clusterer\\ReplayParser.Clusterer.csproj
-		SccProjectName4 = ReplayParser.Clusterer
-		SccLocalPath4 = ReplayParser.Clusterer
-		SccProjectUniqueName5 = ReplayParser.ReplaySorter\\ReplayParser.ReplaySorter.csproj
-		SccProjectName5 = ReplayParser.ReplaySorter
-		SccLocalPath5 = ReplayParser.ReplaySorter
 	EndGlobalSection
 EndGlobal

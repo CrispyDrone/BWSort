@@ -48,7 +48,23 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
                 //    index++;
                 //}
                 var winner = Replay.Winner;
-                var loserTeam = Replay.Players.Where(x => !winner.Contains(x));
+                List<IPlayer> loserTeam;
+                if (winner != null && winner.Count() != 0)
+                {
+                    loserTeam = Replay.Players.Where(x => !winner.Contains(x)).ToList();
+                }
+                else
+                {
+                    loserTeam = Replay.Players.ToList();
+                }
+
+                // remove observers
+                var observers = Replay.Observers;
+                foreach (var observer in observers)
+                {
+                    loserTeam.Remove(observer);
+                }
+
                 int NumberOfLosers = loserTeam.Count();
                 Races = new string[NumberOfLosers];
                 int index = 0;

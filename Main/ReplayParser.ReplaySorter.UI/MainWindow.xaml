@@ -1,0 +1,156 @@
+﻿<Window x:Class="ReplayParser.ReplaySorter.UI.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ReplayParser.ReplaySorter.UI"
+        mc:Ignorable="d"
+        Title="BWSort" Height="500" Width="750"
+        Closing="Window_Closing">
+    <DockPanel>
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="Menu">
+                <MenuItem Header="History">
+                    <StackPanel>
+                        <Label Content="Saved Searches/Pools"></Label>
+                        <ListBox></ListBox>
+                    </StackPanel>
+                </MenuItem>
+                <MenuItem x:Name="MenuItemClose" Header="Close" Click="MenuItemClose_Click"></MenuItem>
+            </MenuItem>
+            <MenuItem Header="Edit">
+                <MenuItem Header="Cut" Command="Cut"></MenuItem>
+                <MenuItem Header="Copy" Command="Copy"></MenuItem>
+                <MenuItem Header="Paste" Command="Paste"></MenuItem>
+                <MenuItem Header="Save pool result"></MenuItem>
+                <MenuItem Header="Send pool to new folder..."></MenuItem>
+            </MenuItem>
+            <MenuItem Header="Options">
+                <MenuItem x:Name="replayDirectoryMenuItem" Header="Current directory...">
+                    <MenuItem x:Name="setReplayDirectoryMenuItem" Header="Select directory" Click="setReplayDirectoryMenuItem_Click"></MenuItem>
+                    <MenuItem x:Name="replayIncludeSubDirectoriesMenuItem" Header="Include subdirectories" IsCheckable="True" IsChecked="{Binding ElementName=includeSubdirectoriesCheckbox, Path=IsChecked, Mode=TwoWay}"></MenuItem>
+                </MenuItem>
+                <MenuItem Header="Output directory...">
+                    <MenuItem x:Name="setSortOutputDirectoryMenuItem" Header="Select directory" Click="setSortOutputDirectoryMenuItem_Click"></MenuItem>
+                    <MenuItem Header="Always write to new folder" IsCheckable="True"></MenuItem>
+                </MenuItem>
+                <MenuItem x:Name="moveBadReplaysDirectoryMenuItem" Header="Set bad replay directory..." Click="moveBadReplaysDirectoryMenuItem_Click"></MenuItem>
+                <MenuItem Header="Advanced Settings"></MenuItem>
+            </MenuItem>
+            <MenuItem Header="Help"></MenuItem>
+        </Menu>
+        <StatusBar DockPanel.Dock="Bottom">
+            <StatusBarItem x:Name="statusBarOutputDir" DockPanel.Dock="Right" Content="{Binding ElementName=sortOutputDirectoryTextBox, Path=Text, Mode=OneWay}" ContentStringFormat="Sort output: {0}"></StatusBarItem>
+            <StatusBarItem x:Name="statusBarAction" DockPanel.Dock="Left"></StatusBarItem>
+            <StatusBarItem x:Name="statusBarErrors" DockPanel.Dock="Left"></StatusBarItem>
+            <StatusBarItem x:Name="statusBarCurrentDir" Content="{Binding ElementName=replayDirectoryTextBox, Path=Text, Mode=OneWay}" ContentStringFormat="Parsing directory: {0}"></StatusBarItem>
+        </StatusBar>
+        <TabControl DockPanel.Dock="Top">
+            <TabItem Header="Parse">
+                <DockPanel>
+                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="10 10 10 0">
+                        <TextBox x:Name="replayDirectoryTextBox" Text="" HorizontalAlignment="Stretch" MinWidth="300"></TextBox>
+                        <Button x:Name="replayDirectoryButton" Content="Set directory" Click="replayDirectoryButton_Click" Margin="10 0 10 0"></Button>
+                    </StackPanel>
+                    <StackPanel DockPanel.Dock="Bottom">
+                        <Grid>
+                            <ProgressBar x:Name="progressBarParsingReplays" Minimum="0" Maximum="100"></ProgressBar>
+                            <Label x:Name="progressBarLabel" Content="{Binding ElementName=progressBarParsingReplays, Path=Value, StringFormat={}{0:0}%}" HorizontalAlignment="Center"></Label>
+                        </Grid>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <Button x:Name="parseReplaysButton" Content="Go" Click="parseReplaysButton_Click" Margin="10" Width="60"></Button>
+                            <Button x:Name="cancelParsingButton" Content="Break" Click="cancelParsingButton_Click" Margin="10" Width="60"></Button>
+                        </StackPanel>
+                    </StackPanel>
+                    <StackPanel Margin="0 10">
+                        <CheckBox x:Name="includeSubdirectoriesCheckbox" Content="Include subdirectories" Margin="10 10 10 0"></CheckBox>
+                        <StackPanel Orientation="Horizontal"  Margin="0 0 ">
+                            <CheckBox Content="Ignore specific files and directories" Margin="10"></CheckBox>
+                            <TextBox Text="" MinWidth="100" VerticalContentAlignment="Center" VerticalAlignment="Center" Margin="0 0 10 0"></TextBox>
+                            <Button Content="Use ignore file" VerticalAlignment="Center"></Button>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal"  Margin="0">
+                            <CheckBox x:Name="moveBadReplaysCheckBox" Content="Move bad replays to: " Margin="10"></CheckBox>
+                            <TextBox x:Name="moveBadReplaysDirectory" Text="" MinWidth="100" VerticalContentAlignment="Center" VerticalAlignment="Center" Margin="0 0 10 0"></TextBox>
+                            <Button x:Name="badReplayDirectory" Content="Set directory" VerticalAlignment="Center" Click="badReplayDirectory_Click"></Button>
+                        </StackPanel>
+                    </StackPanel>
+                </DockPanel>
+            </TabItem>
+            <TabItem Header="Sort">
+                <DockPanel>
+                    <Grid x:Name="gridContainingSortCriteriaComboBoxes" DockPanel.Dock="Top">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition></ColumnDefinition>
+                            <ColumnDefinition></ColumnDefinition>
+                            <ColumnDefinition></ColumnDefinition>
+                            <ColumnDefinition></ColumnDefinition>
+                            <ColumnDefinition></ColumnDefinition>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Orientation="Horizontal" Grid.Column="0" Margin="10">
+                            <Label>1.</Label>
+                            <ComboBox x:Name="sortCriteriaOneComboBox"></ComboBox>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Grid.Column="1" Margin="10">
+                            <Label>2.</Label>
+                            <ComboBox x:Name="sortCriteriaTwoComboBox"></ComboBox>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Grid.Column="2" Margin="10">
+                            <Label>3.</Label>
+                            <ComboBox x:Name="sortCriteriaThreeComboBox"></ComboBox>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Grid.Column="3" Margin="10">
+                            <Label>4.</Label>
+                            <ComboBox x:Name="sortCriteriaFourComboBox"></ComboBox>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Grid.Column="4" Margin="10">
+                            <Label>5.</Label>
+                            <ComboBox x:Name="sortCriteriaFiveComboBox"></ComboBox>
+                        </StackPanel>
+                    </Grid>
+                    <StackPanel DockPanel.Dock="Top">
+                        <StackPanel x:Name="sortCriteriaParameters" Orientation="Horizontal"></StackPanel>
+                        <StackPanel x:Name="keepOriginalReplayNamesPanel" Orientation="Vertical">
+                            <CheckBox x:Name="keepOriginalReplayNamesCheckBox" Content="Keep original replay names" Margin="10 10 0 0" IsChecked="True" Click="keepOriginalReplayNamesCheckBox_Click"></CheckBox>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="10 10 10 0">
+                            <TextBox x:Name="sortOutputDirectoryTextBox" Text="" HorizontalAlignment="Stretch" MinWidth="200"></TextBox>
+                            <Button x:Name="sortOutputDirectoryButton" Content="Set directory" Click="sortOutputDirectoryButton_Click" Margin="10 0 10 0"></Button>
+                        </StackPanel>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Bottom" HorizontalAlignment="Center">
+                        <Button x:Name="executeSortButton"  Content="Execute sort" Margin="10" HorizontalAlignment="Center" Padding="10 0 10 0" Click="executeSortButton_Click"></Button>
+                        <Button x:Name="cancelSortButton" Content="Cancel" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="10 0 10 0" Click="cancelSortButton_Click"></Button>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Bottom" HorizontalAlignment="Center">
+                        <Button x:Name="previewSortButton" Content="Preview sort" Margin="10" HorizontalAlignment="Center" Padding="10 0 10 0"></Button>
+                        <Button x:Name="cancelPreviewSortButton" Content="cancel" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="10 0 10 0"></Button>
+                    </StackPanel>
+                    <Grid DockPanel.Dock="Bottom">
+                        <ProgressBar x:Name="progressBarSortingReplays" Minimum="0" Maximum="100"></ProgressBar>
+                        <Label x:Name="progressBarSortingReplaysLabel" Content="{Binding ElementName=progressBarSortingReplays, Path=Value, StringFormat={}{0:0}%}" HorizontalAlignment="Center"></Label>
+                    </Grid>
+                    <Canvas></Canvas>
+                </DockPanel>
+            </TabItem>
+            <TabItem Header="Search">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Type search criteria here..."></TextBlock>
+                        <CheckBox Content="Select All"></CheckBox>
+                    </StackPanel>
+                    <ListBox></ListBox>
+                </StackPanel>
+            </TabItem>
+            <TabItem Header="Pool">
+                <DockPanel>
+                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+                        <Button Content="Rename"></Button>
+                        <Button Content="Send to folder"></Button>
+                    </StackPanel>
+                    <ListBox DockPanel.Dock="Top"></ListBox>
+                </DockPanel>
+            </TabItem>
+        </TabControl>
+    </DockPanel>
+</Window>

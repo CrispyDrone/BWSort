@@ -56,6 +56,7 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="PresentationFramework" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -66,27 +67,29 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Diagnostics\ErrorLogger.cs" />
+    <Compile Include="Diagnostics\ProgressBar.cs" />
     <Compile Include="Replays.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Replays.resx</DependentUpon>
     </Compile>
     <Compile Include="Sorting\Enums\Criteria.cs" />
-    <Compile Include="ReplayRenamer\CustomReplayFormat.cs" />
-    <Compile Include="ReplayRenamer\CustomReplayNameSyntax.cs" />
+    <Compile Include="ReplayRenamer\Custom Format\CustomReplayFormat.cs" />
+    <Compile Include="ReplayRenamer\Enums\CustomReplayNameSyntax.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ReplayHandler\ReplayHandler.cs" />
-    <Compile Include="ReplayRenamer\Date.cs" />
-    <Compile Include="ReplayRenamer\Duration.cs" />
-    <Compile Include="ReplayRenamer\IReplayNameSection.cs" />
-    <Compile Include="ReplayRenamer\LosingRace.cs" />
-    <Compile Include="ReplayRenamer\LosingTeam.cs" />
-    <Compile Include="ReplayRenamer\Map.cs" />
-    <Compile Include="ReplayRenamer\MatchUp.cs" />
-    <Compile Include="ReplayRenamer\Team.cs" />
-    <Compile Include="ReplayRenamer\WinningRace.cs" />
-    <Compile Include="ReplayRenamer\WinningTeam.cs" />
+    <Compile Include="ReplayRenamer\ReplayNameSections\Date.cs" />
+    <Compile Include="ReplayRenamer\ReplayNameSections\Duration.cs" />
+    <Compile Include="ReplayRenamer\ReplayNameSections\IReplayNameSection.cs" />
+    <Compile Include="ReplayRenamer\ReplayNameSections\LosingRace.cs" />
+    <Compile Include="ReplayRenamer\ReplayNameSections\LosingTeam.cs" />
+    <Compile Include="ReplayRenamer\ReplayNameSections\Map.cs" />
+    <Compile Include="ReplayRenamer\ReplayNameSections\MatchUp.cs" />
+    <Compile Include="ReplayRenamer\ReplayNameSections\Team.cs" />
+    <Compile Include="ReplayRenamer\ReplayNameSections\WinningRace.cs" />
+    <Compile Include="ReplayRenamer\ReplayNameSections\WinningTeam.cs" />
     <Compile Include="Sorting\Enums\PlayerType.cs" />
     <Compile Include="Sorting\SortCommands\ISortCommand.cs" />
     <Compile Include="Sorting\SortCommands\SortCommandFactory.cs" />
@@ -101,6 +104,7 @@
     <Compile Include="Sorting\Enums\RaceType.cs" />
     <Compile Include="Sorting\EqualityComparers\ReplayMapEqualityComparer.cs" />
     <Compile Include="Sorting\Sorter\Sorter.cs" />
+    <Compile Include="Sorting\SortResult\DirectoryFileTree.cs" />
     <Compile Include="UserInput\Answer.cs" />
     <Compile Include="UserInput\BaseDirectory.cs" />
     <Compile Include="UserInput\OutputDirectory.cs" />

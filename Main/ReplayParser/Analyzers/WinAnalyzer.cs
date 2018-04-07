@@ -85,23 +85,28 @@ namespace ReplayParser.Analyzers
                 //}
             }
             // your code for IsObserver doesn't make much sense, it's not remembered past this function!! 
-            if (players.Count() > 1)
+            if (players.Count() == 0)
             {
-                //for (int i = players.Count - 1; i >= 0; i--)
-                //{
-                //    if (players[i].IsObserver == null)
-                //    {
-                //        players[i].IsObserver = true;
-                //        players.RemoveAt(i);
-                //    }
-                //}
-                for (int i = players.Count - 1; i>=0; i--)
+                return players.AsEnumerable();
+            }
+            //for (int i = players.Count - 1; i >= 0; i--)
+            //{
+            //    if (players[i].IsObserver == null)
+            //    {
+            //        players[i].IsObserver = true;
+            //        players.RemoveAt(i);
+            //    }
+            //}
+            for (int i = players.Count - 1; i >= 0; i--)
+            {
+                if (observers.Contains(players[i]))
                 {
-                    if (observers.Contains(players[i]))
-                    {
-                        players.RemoveAt(i);
-                    }
+                    players.RemoveAt(i);
                 }
+            }
+            if (players.Count() == 0)
+            {
+                return players.AsEnumerable();
             }
             // should be ExtractWinnerSSSS => what about 2v2, 3v3, 4v4 !!? 
             return players.AsEnumerable<IPlayer>();

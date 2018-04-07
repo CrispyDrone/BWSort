@@ -36,14 +36,15 @@ namespace ReplayParser.ReplaySorter.Sorting
 
         private string RemoveInvalidCharsMapName(string MapName)
         {
-            foreach (char invalidChar in Sorter.InvalidFileChars)
-            {
-                MapName = MapName.Replace(invalidChar.ToString(), "");
-            }
-            foreach (char invalidChar in Sorter.InvalidFileCharsAdditional)
-            {
-                MapName = MapName.Replace(invalidChar.ToString(), "");
-            }
+            //foreach (char invalidChar in Sorter.InvalidFileChars)
+            //{
+            //    MapName = MapName.Replace(invalidChar.ToString(), "");
+            //}
+            //foreach (char invalidChar in Sorter.InvalidFileCharsAdditional)
+            //{
+            //    MapName = MapName.Replace(invalidChar.ToString(), "");
+            //}
+            MapName = Sorter.RemoveInvalidChars(MapName);
             return MapName;
         }
     }

@@ -17,9 +17,14 @@ namespace ReplayParser.Analyzers
 
             foreach (IAction action in replay.Actions)
             {
-                if (action.ActionType == ActionType.Build || action.ActionType == ActionType.Train || action.ActionType == ActionType.UnitMorph)
+                // make collection of actions instead + what is ActionType.Target ?? how is A-Move recorded? Which actions can and can't observers do???
+                if (action.ActionType == ActionType.Build || action.ActionType == ActionType.Train || action.ActionType == ActionType.UnitMorph || action.ActionType == ActionType.BuildingMorph || action.ActionType == ActionType.Research || action.ActionType == ActionType.UseCheat)
                 {
-                    players.Remove(action.Player);
+                    if (players.Count > 0)
+                        players.Remove(action.Player);
+                    else
+                        break;
+                        //return null;
                 }
             }
             foreach (var player in players)

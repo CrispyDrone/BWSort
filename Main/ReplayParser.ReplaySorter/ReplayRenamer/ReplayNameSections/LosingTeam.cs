@@ -18,6 +18,9 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
 
         public string[] Names { get; set; }
 
+        // option 2
+        //public IEnumerable<IGrouping<int, IPlayer>> GroupedPlayers { get; set; }
+
         public CustomReplayNameSyntax Type { get { return CustomReplayNameSyntax.LT; } }
 
         public void GenerateSection()
@@ -57,7 +60,15 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
                 //}
 
                 var winner = Replay.Winner;
-                var loserTeam = Replay.Players.Where(x => !winner.Contains(x)).ToList();
+                List<IPlayer> loserTeam;
+                if (winner != null && winner.Count() != 0)
+                {
+                    loserTeam = Replay.Players.Where(x => !winner.Contains(x)).ToList();
+                }
+                else
+                {
+                    loserTeam = Replay.Players.ToList();
+                }
                 var observers = Replay.Observers;
                 foreach (var observer in observers)
                 {
@@ -65,6 +76,10 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
                 }
                 // observers???
                 // could check on resources mined/units made/...
+
+                // Option 2
+                // this will be used in Team extraction
+                //GroupedPlayers = loserTeam.GroupBy(x => (int)x.ForceIdentifier);
 
                 int NumberOfLosers = loserTeam.Count();
                 Names = new string[NumberOfLosers];

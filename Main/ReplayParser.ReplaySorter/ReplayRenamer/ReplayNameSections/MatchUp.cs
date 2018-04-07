@@ -8,9 +8,10 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
 {
     class MatchUp : IReplayNameSection
     {
-        public MatchUp(IReplay areplay)
+        public MatchUp(IReplay areplay, Team team)
         {
             Replay = areplay;
+            teams = team;
             GenerateSection();
         }
 
@@ -20,10 +21,12 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
 
         public CustomReplayNameSyntax Type { get { return CustomReplayNameSyntax.MU; } }
 
+        public Team teams { get; set; }
+
         public void GenerateSection()
         {
             // should pass Team as a parameter to the MatchUp constructor
-            Team teams = new Team(this.Replay);
+            //Team teams = new Team(this.Replay);
             if (teams.Teams != null)
             {
                 TeamRaces = new string[teams.Teams.Count];

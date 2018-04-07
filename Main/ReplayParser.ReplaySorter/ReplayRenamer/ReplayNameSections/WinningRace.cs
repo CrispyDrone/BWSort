@@ -47,7 +47,7 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
                 //}
                 var winnerTeam = Replay.Winner;
 
-                if (winnerTeam.Count() == 0)
+                if (winnerTeam == null || winnerTeam.Count() == 0)
                 {
                     throw new NullReferenceException();
                 }
@@ -60,10 +60,10 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
                     index++;
                 }
             }
-            catch (NullReferenceException nullex)
+            catch (NullReferenceException /*nullex*/)
             {
-                Console.WriteLine("No winner.");
-                Console.WriteLine(nullex.Message);
+                //Console.WriteLine("No winner.");
+                //Console.WriteLine(nullex.Message);
                 Races = new string[] { "NoWinner" };
             }
             

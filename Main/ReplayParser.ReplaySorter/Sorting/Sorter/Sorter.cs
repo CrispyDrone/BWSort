@@ -9,6 +9,9 @@ using ReplayParser.ReplaySorter.Sorting;
 using ReplayParser.Interfaces;
 using ReplayParser.ReplaySorter.UserInput;
 using ReplayParser.ReplaySorter.Sorting.SortCommands;
+using ReplayParser.ReplaySorter.Sorting.SortResult;
+using System.ComponentModel;
+using System.Windows;
 
 namespace ReplayParser.ReplaySorter
 {
@@ -51,6 +54,13 @@ namespace ReplayParser.ReplaySorter
             set;
         }
 
+        // I lose currentdirectory because I only use one sorter
+        public string OriginalDirectory
+        {
+            get;
+            set;
+        }
+
         public IEnumerable<string> Files
         {
             get;
@@ -59,27 +69,17 @@ namespace ReplayParser.ReplaySorter
 
         public CustomReplayFormat CustomReplayFormat { get; set; }
 
+        public SortCriteriaParameters SortCriteriaParameters { get; set; }
+
         private SortCommandFactory Factory = new SortCommandFactory();
 
         public void ExecuteSort(SortCriteriaParameters sortcriteriaparameters, bool keeporiginalreplaynames)
         {
-            // this is useless, you could have just written the if statements you do in passoncriteria here!!
-            // you need to dynamically call functions at runtime somehow
-            // because by doing this you will always execute the sort criteria in a SPECIFIC ORDER as defined in your ENUM instead of as given by your user!!
-
-            //foreach (var aCriteria in Enum.GetNames(typeof(Criteria)))
-            //{
-            //    if (SortCriteria.HasFlag(((Criteria)Enum.Parse(typeof(Criteria), aCriteria))))
-            //    {
-
-            //        PassOnCriteria(((Criteria)Enum.Parse(typeof(Criteria), aCriteria)), sortcriteriaparamaters, keeporiginalreplaynames);
-            //    }
-            //}
-
             // why do i need this silly string array with the original order...
             IDictionary<string, IDictionary<string, IReplay>> SortOnXResult = new Dictionary<string, IDictionary<string, IReplay>>();
             for (int i = 0; i < CriteriaStringOrder.Length; i++)
             {
+                // should I pass a new sorter instead of this?? Then I don't have to make separate property OriginalDirectory
                 var SortOnX = Factory.GetSortCommand((Criteria)Enum.Parse(typeof(Criteria), CriteriaStringOrder[i]), sortcriteriaparameters, keeporiginalreplaynames, this);
                 if (i == 0)
                 {
@@ -91,7 +91,6 @@ namespace ReplayParser.ReplaySorter
                     SortOnX.IsNested = true;
                     SortOnXResult = NestedSort(SortOnX, SortOnXResult);
                 }
-
             }
         }
 
@@ -121,6 +120,196 @@ namespace ReplayParser.ReplaySorter
             // not implemented yet
             return DirectoryFileReplay;
         }
+
+        public DirectoryFileTree ExecuteSortAsync(bool keeporiginalreplaynames, BackgroundWorker worker_ReplaySorter)
+        {
+            // Sort Result ! 
+            DirectoryFileTree TotalSortResult = new DirectoryFileTree(new DirectoryInfo(OriginalDirectory));
+
+            // why do i need this silly string array with the original order...
+            IDictionary<string, IDictionary<string, IReplay>> SortOnXResult = new Dictionary<string, IDictionary<string, IReplay>>();
+            for (int i = 0; i < CriteriaStringOrder.Length; i++)
+            {
+                // should I pass a new sorter instead of this?? Then I don't have to make separate property OriginalDirectory
+                var SortOnX = Factory.GetSortCommand((Criteria)Enum.Parse(typeof(Criteria), CriteriaStringOrder[i]), SortCriteriaParameters, keeporiginalreplaynames, this);
+                if (i == 0)
+                {
+                    SortOnXResult = SortOnX.SortAsync(worker_ReplaySorter, i + 1, CriteriaStringOrder.Count());
+                    if (worker_ReplaySorter.CancellationPending == true)
+                    {
+                        return null;
+                    }
+                    // make separate functions for this
+                    DirectoryFileTree FirstSort = new DirectoryFileTree(new DirectoryInfo(CurrentDirectory + @"\" + SortCriteria.ToString()));
+                    foreach (var directory in SortOnXResult.Keys)
+                    {
+                        if (FirstSort.Children != null)
+                        {
+                            FirstSort.Children.Add(new DirectoryFileTree(new DirectoryInfo(directory), SortOnXResult[directory].Keys.ToList()));
+                        }
+                        else
+                        {
+                            FirstSort.Children = new List<DirectoryFileTree>();
+                            FirstSort.Children.Add(new DirectoryFileTree(new DirectoryInfo(directory), SortOnXResult[directory].Keys.ToList()));
+                        }
+                    }
+                    if (TotalSortResult.Children != null)
+                    {
+                        TotalSortResult.Children.Add(FirstSort);
+                    }
+                    else
+                    {
+                        TotalSortResult.Children = new List<DirectoryFileTree>();
+                        TotalSortResult.Children.Add(FirstSort);
+                    }
+                    
+                }
+                else
+                {
+                    // nested sort
+                    SortOnX.IsNested = true;
+                    SortOnXResult = NestedSortAsync(SortOnX, SortOnXResult, worker_ReplaySorter, i + 1, CriteriaStringOrder.Count());
+                    if (worker_ReplaySorter.CancellationPending == true)
+                    {
+                        return null;
+                    }
+                    // make separate functions for this 
+                    // adjust the FirstSort... for each child you need to make the changes... inside the actual NestedSort function....
+                }
+
+            }
+            return TotalSortResult;
+        }
+
+        // not async yet
+        public IDictionary<string, IDictionary<string, IReplay>> NestedSortAsync(ISortCommand SortOnX, IDictionary<string, IDictionary<string, IReplay>> SortOnXResult, BackgroundWorker worker_ReplaySorter, int currentCriteria, int numberOfCriteria)
+        {
+            // Dictionary<directory, dictionary<file, replay>>
+            IDictionary<string, IDictionary<string, IReplay>> DirectoryFileReplay = new Dictionary<string, IDictionary<string, IReplay>>();
+
+            // get replays
+            // get files
+            // set currentdirectory
+            // on sorter
+            // for replays and files, need to make return type for sort, which gives a dictionary for replays per directory
+
+            SortOnX.Sorter.SortCriteria = SortOnX.SortCriteria;
+            int currentPostion = 0;
+            int numberOfPositions = SortOnXResult.Keys.Count();
+            foreach (var directory in SortOnXResult.Keys)
+            {
+                currentPostion++;
+                var FileReplaysDictionary = SortOnXResult[directory];
+                var Files = FileReplaysDictionary.Keys;
+                var Replays = FileReplaysDictionary.Values.ToList();
+                SortOnX.Sorter.CurrentDirectory = directory;
+                SortOnX.Sorter.Files = Files;
+                SortOnX.Sorter.ListReplays = Replays;
+                var result = SortOnX.SortAsync(worker_ReplaySorter, currentCriteria, numberOfCriteria, currentPostion, numberOfPositions);
+                if (worker_ReplaySorter.CancellationPending == true)
+                {
+                    return null;
+                }
+
+                DirectoryFileReplay = DirectoryFileReplay.Concat(result).ToDictionary(k => k.Key, k => k.Value);
+            }
+            // not implemented yet
+            return DirectoryFileReplay;
+        }
+
+        public static string AdjustName(string fullPath, bool isDirectory)
+        {
+            int count = 1;
+
+            string fileNameOnly = Path.GetFileNameWithoutExtension(fullPath);
+            string extension = Path.GetExtension(fullPath);
+            string path = Path.GetDirectoryName(fullPath);
+            string newFullPath = fullPath;
+
+            if (isDirectory)
+            {
+                while (Directory.Exists(newFullPath))
+                {
+                    newFullPath = IncrementName(fileNameOnly, extension, path, ref count);
+                }
+            }
+            else
+            {
+                while (File.Exists(newFullPath))
+                {
+                    newFullPath = IncrementName(fileNameOnly, extension, path, ref count);
+                }
+            }
+            return newFullPath;
+        }
+
+        public static string IncrementName(string fileNameOnly, string extension, string path, ref int count)
+        {
+            string tempFileName = string.Format("{0}({1})", fileNameOnly, count++);
+            return Path.Combine(path, tempFileName + extension);
+        }
+
+        public string CreateDirectory(string sortDirectory, bool UI = false)
+        {
+            if (!UI)
+            {
+                if (Directory.Exists(sortDirectory))
+                {
+                    Console.WriteLine("Sort directory already exists.");
+                    Console.WriteLine("Write to same directory? Yes/No.");
+                    var WriteToSameDirectory = User.AskYesNo();
+                    if (WriteToSameDirectory.Yes != null)
+                    {
+                        if ((bool)!WriteToSameDirectory.Yes)
+                        {
+                            sortDirectory = AdjustName(sortDirectory, true);
+                            Directory.CreateDirectory(sortDirectory);
+                        }
+                    }
+                }
+                else
+                {
+                    Directory.CreateDirectory(sortDirectory);
+                }
+            }
+            else
+            {
+                if (Directory.Exists(sortDirectory))
+                {
+                    var result = MessageBox.Show("Directory already exists. Write to a new directory?", "Warning", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.Yes);
+                    if (result == MessageBoxResult.Yes)
+                    {
+                        sortDirectory = AdjustName(sortDirectory, true);
+                        Directory.CreateDirectory(sortDirectory);
+                    }
+                }
+                else
+                {
+                    Directory.CreateDirectory(sortDirectory);
+                }
+            }
+            return sortDirectory;
+        }
+
+        public static char[] InvalidFileChars = Path.GetInvalidFileNameChars();
+        public static char[] InvalidPathChars = Path.GetInvalidPathChars();
+        public static string RemoveInvalidChars(string name)
+        {
+            foreach (var InvalidChar in InvalidPathChars)
+            {
+                name = name.Replace(InvalidChar.ToString(), string.Empty);
+            }
+            foreach (var InvalidChar in InvalidFileChars)
+            {
+                name = name.Replace(InvalidChar.ToString(), string.Empty);
+            }
+            //foreach (var InvalidChar in InvalidFileCharsAdditional)
+            //{
+            //    name = name.Replace(InvalidChar.ToString(), string.Empty);
+            //}
+            return name;
+        }
+
 
         // I think you could make a command object for each SortOn function, and have one function that will return the proper object depending on which sortcriteria gets passed to it
         // then you execute the Sort() function on that command object, and it will execute?
@@ -585,17 +774,7 @@ namespace ReplayParser.ReplaySorter
         //    }
         //}
 
-        public IDictionary<RaceType, int> EncodeRacesFrequency(string raceCombination)
-        {
-            IDictionary<RaceType, int> EncodedRacesFrequency = new Dictionary<RaceType, int>();
 
-            foreach (var Race in Enum.GetNames(typeof(RaceType)))
-            {
-                int RaceFrequency = raceCombination.Select((r, i) => r == Race.First() ? i : -1).Where(i => i != -1).Count();
-                EncodedRacesFrequency.Add(new KeyValuePair<RaceType, int>((RaceType)Enum.Parse(typeof(RaceType), Race), RaceFrequency));
-            }
-            return EncodedRacesFrequency;
-        }
 
         //public string MatchUpToString(ICollection<IDictionary<RaceType, int>> MatchUpValues)
         //{
@@ -611,118 +790,103 @@ namespace ReplayParser.ReplaySorter
         //    MatchUpString.Remove(MatchUpString.Length - 2, 2);
         //    return MatchUpString.ToString();
         //}
-        public string MatchUpToString(IDictionary<int, IDictionary<RaceType, int>> MatchUpValues)
-        {
-            StringBuilder MatchUpString = new StringBuilder();
-            foreach (var team in MatchUpValues)
-            {
-                foreach (var Race in team.Value)
-                {
-                    MatchUpString.Append(Race.Key.ToString().First(), Race.Value);
-                }
-                MatchUpString.Append("vs");
-            }
-            MatchUpString.Remove(MatchUpString.Length - 2, 2);
-            return MatchUpString.ToString();
-        }
-        
-
-        public static char[] InvalidFileChars = Path.GetInvalidPathChars();
-        public static char[] InvalidPathChars = Path.GetInvalidPathChars();
-        public static char[] InvalidFileCharsAdditional = new char[] { '*', ':'};
-        public void SortOnMap(bool KeepOriginalReplayNames)
-        {
-            // extract maps from replays, try to group the duplicates
-            // implement an actual map comparison based on byte array and euclidean distance + thresholds!
-            ReplayMapEqualityComparer MapEq = new ReplayMapEqualityComparer();
-            IDictionary<IReplayMap, List<IReplay>> Maps = new Dictionary<IReplayMap, List<IReplay>>(MapEq);
 
 
-            foreach (var replay in ListReplays)
-            {
-                if (!Maps.Keys.Contains(replay.ReplayMap))
-                {
-                    Maps.Add(new KeyValuePair<IReplayMap, List<IReplay>>(replay.ReplayMap, new List<IReplay> { replay }));
-                }
-                //if (!Maps.ContainsKey(replay.ReplayMap))
-                //{
-                //    Maps.Add(new KeyValuePair<IReplayMap, List<IReplay>>(replay.ReplayMap, new List<IReplay> { replay }));
-                //}
-                else
-                {
-                    Maps[replay.ReplayMap].Add(replay);
-                }
-            }
+        //public static char[] InvalidFileCharsAdditional = new char[] { '*', ':'};
 
-            string sortDirectory = CurrentDirectory + @"\" + SortCriteria.ToString();
-            CreateDirectory(sortDirectory);
+        //public void SortOnMap(bool KeepOriginalReplayNames)
+        //{
+        //    // extract maps from replays, try to group the duplicates
+        //    // implement an actual map comparison based on byte array and euclidean distance + thresholds!
+        //    ReplayMapEqualityComparer MapEq = new ReplayMapEqualityComparer();
+        //    IDictionary<IReplayMap, List<IReplay>> Maps = new Dictionary<IReplayMap, List<IReplay>>(MapEq);
 
-            foreach (var map in Maps)
-            {
-                var MapName = map.Key.MapName;
-                foreach (char invalidChar in InvalidFileChars)
-                {
-                    MapName = MapName.Replace(invalidChar.ToString(), "");
-                }
-                foreach (char invalidChar in InvalidFileCharsAdditional)
-                {
-                    MapName = MapName.Replace(invalidChar.ToString(), "");
-                }
-                try
-                {
-                    Directory.CreateDirectory(sortDirectory + @"\" + MapName);
-                    var MapReplays = Maps[map.Key];
-                    foreach (var replay in MapReplays)
-                    {
-                        try
-                        {
-                            ReplayHandler.CopyReplay(ListReplays, replay, Files, sortDirectory, MapName, KeepOriginalReplayNames, CustomReplayFormat);
-                            //var index = ListReplays.IndexOf(replay);
-                            //var FilePath = Files.ElementAt(index);
-                            //var DirectoryName = Directory.GetParent(FilePath);
-                            //var FileName = FilePath.Substring(DirectoryName.ToString().Length);
-                            //var DestinationFilePath = sortDirectory + @"\" + MapName + FileName;
 
-                            //if (!KeepOriginalReplayNames)
-                            //{
-                            //    DestinationFilePath = sortDirectory + @"\" + MapName + @"\" + ReplayHandler.GenerateReplayName(replay, CustomReplayFormat) + ".rep";
-                            //}
+        //    foreach (var replay in ListReplays)
+        //    {
+        //        if (!Maps.Keys.Contains(replay.ReplayMap))
+        //        {
+        //            Maps.Add(new KeyValuePair<IReplayMap, List<IReplay>>(replay.ReplayMap, new List<IReplay> { replay }));
+        //        }
+        //        //if (!Maps.ContainsKey(replay.ReplayMap))
+        //        //{
+        //        //    Maps.Add(new KeyValuePair<IReplayMap, List<IReplay>>(replay.ReplayMap, new List<IReplay> { replay }));
+        //        //}
+        //        else
+        //        {
+        //            Maps[replay.ReplayMap].Add(replay);
+        //        }
+        //    }
 
-                            //while (File.Exists(DestinationFilePath))
-                            //{
-                            //    DestinationFilePath = AdjustName(DestinationFilePath, false);
-                            //}
-                            //File.Copy(FilePath, DestinationFilePath);
-                        }
-                        catch (IOException IOex)
-                        {
-                            Console.WriteLine(IOex.Message);
-                        }
-                        catch (NotSupportedException NSE)
-                        {
-                            Console.WriteLine(NSE.Message);
-                        }
-                        catch (NullReferenceException nullex)
-                        {
-                            Console.WriteLine(nullex.Message);
-                        }
-                        catch (ArgumentException AEX)
-                        {
-                            Console.WriteLine(AEX.Message);
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine(ex.Message);
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex.Message);
-                    //Console.WriteLine(MapName);
-                }
-            }
-        }
+        //    string sortDirectory = CurrentDirectory + @"\" + SortCriteria.ToString();
+        //    CreateDirectory(sortDirectory);
+
+        //    foreach (var map in Maps)
+        //    {
+        //        var MapName = map.Key.MapName;
+        //        foreach (char invalidChar in InvalidFileChars)
+        //        {
+        //            MapName = MapName.Replace(invalidChar.ToString(), "");
+        //        }
+        //        foreach (char invalidChar in InvalidFileCharsAdditional)
+        //        {
+        //            MapName = MapName.Replace(invalidChar.ToString(), "");
+        //        }
+        //        try
+        //        {
+        //            Directory.CreateDirectory(sortDirectory + @"\" + MapName);
+        //            var MapReplays = Maps[map.Key];
+        //            foreach (var replay in MapReplays)
+        //            {
+        //                try
+        //                {
+        //                    ReplayHandler.CopyReplay(ListReplays, replay, Files, sortDirectory, MapName, KeepOriginalReplayNames, CustomReplayFormat);
+        //                    //var index = ListReplays.IndexOf(replay);
+        //                    //var FilePath = Files.ElementAt(index);
+        //                    //var DirectoryName = Directory.GetParent(FilePath);
+        //                    //var FileName = FilePath.Substring(DirectoryName.ToString().Length);
+        //                    //var DestinationFilePath = sortDirectory + @"\" + MapName + FileName;
+
+        //                    //if (!KeepOriginalReplayNames)
+        //                    //{
+        //                    //    DestinationFilePath = sortDirectory + @"\" + MapName + @"\" + ReplayHandler.GenerateReplayName(replay, CustomReplayFormat) + ".rep";
+        //                    //}
+
+        //                    //while (File.Exists(DestinationFilePath))
+        //                    //{
+        //                    //    DestinationFilePath = AdjustName(DestinationFilePath, false);
+        //                    //}
+        //                    //File.Copy(FilePath, DestinationFilePath);
+        //                }
+        //                catch (IOException IOex)
+        //                {
+        //                    Console.WriteLine(IOex.Message);
+        //                }
+        //                catch (NotSupportedException NSE)
+        //                {
+        //                    Console.WriteLine(NSE.Message);
+        //                }
+        //                catch (NullReferenceException nullex)
+        //                {
+        //                    Console.WriteLine(nullex.Message);
+        //                }
+        //                catch (ArgumentException AEX)
+        //                {
+        //                    Console.WriteLine(AEX.Message);
+        //                }
+        //                catch (Exception ex)
+        //                {
+        //                    Console.WriteLine(ex.Message);
+        //                }
+        //            }
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            Console.WriteLine(ex.Message);
+        //            //Console.WriteLine(MapName);
+        //        }
+        //    }
+        //}
 
         // durations = sorted array. First range is 0 - duration1, 2nd is from duration1 to duration2,... last one is from durationx to infinity
         //private void SortOnDuration(bool KeepOriginalReplayNames, int[] durations)
@@ -855,18 +1019,6 @@ namespace ReplayParser.ReplaySorter
 
         //}
 
-        public int GetFirstIndex(int[] array, int number)
-        {
-            for (int i = 0; i < array.Length; i++)
-            {
-                if (array[i] == number)
-                {
-                    return i;
-                }
-            }
-            return -1;
-        }
-
         //private string FullName(string abbreviatedRaces)
         //{
         //    // maybe i should work with a stringbuilder somehow?
@@ -886,86 +1038,6 @@ namespace ReplayParser.ReplaySorter
         //}
 
         // is there a better way to do this, than to write 3 functions with slightly different functionality??
-
-        public List<string> ExtractPlayers(PlayerType playertype, List<string> players)
-        {
-            if (playertype.HasFlag(PlayerType.Winner))
-            {
-                foreach (var replay in ListReplays)
-                {
-                    var parseplayers = replay.Players.ToList();
-                    foreach (var aplayer in parseplayers)
-                    {
-                        // checking a list for each replay is slow... maybe define a Dictionary instead??
-                        // I really think I need a player class with match history, wins/losses/...
-                        if (!players.Contains(aplayer.Name))
-                        {
-                            try
-                            {
-                                if (replay.Winner.Contains(aplayer))
-                                {
-                                    players.Add(aplayer.Name);
-                                }
-                            }
-                            catch (Exception /*ex*/)
-                            {
-                                Console.WriteLine("No winner.");
-                                //Console.WriteLine(ex.Message);
-                            }
-                        }
-                    }
-                }
-            }
-            if (playertype.HasFlag(PlayerType.Loser))
-            {
-                foreach (var replay in ListReplays)
-                {
-                    var parseplayers = replay.Players.ToList();
-                    foreach (var aplayer in parseplayers)
-                    {
-                        // checking a list for each replay is slow... maybe define a Dictionary instead??
-                        // I really think I need a player class with match history, wins/losses/...
-                        if (!players.Contains(aplayer.Name))
-                        {
-                            try
-                            {
-                                if (!replay.Winner.Contains(aplayer))
-                                {
-                                    players.Add(aplayer.Name);
-                                }
-                            }
-                            catch (Exception /*ex*/)
-                            {
-                                Console.WriteLine("No winner.");
-                                //Console.WriteLine(ex.Message);
-                            }
-                        }
-                    }
-                }
-            }
-            if (playertype.HasFlag(PlayerType.Player))
-            {
-                // without observers..
-            }
-            if (playertype.HasFlag(PlayerType.All))
-            {
-                foreach (var replay in ListReplays)
-                {
-                    var parseplayers = replay.Players.ToList();
-                    foreach (var aplayer in parseplayers)
-                    {
-                        // checking a list for each replay is slow... maybe define a Dictionary instead??
-                        // I really think I need a player class with match history, wins/losses/...
-                        if (!players.Contains(aplayer.Name))
-                        {
-                            players.Add(aplayer.Name);
-                        }
-                    }
-                }
-            }
-            return players;
-        }
-
 
         //public List<string> ExtractPlayers(List<string> players)
         //{
@@ -1091,76 +1163,5 @@ namespace ReplayParser.ReplaySorter
         //    AddOne = true;
         //    return false;
         //}
-
-        public static string AdjustName(string fullPath, bool isDirectory)
-        {
-            int count = 1;
-
-            string fileNameOnly = Path.GetFileNameWithoutExtension(fullPath);
-            string extension = Path.GetExtension(fullPath);
-            string path = Path.GetDirectoryName(fullPath);
-            string newFullPath = fullPath;
-
-            if (isDirectory)
-            {
-                while (Directory.Exists(newFullPath))
-                {
-                    newFullPath = IncrementName(fileNameOnly, extension, path, ref count);
-                }
-            }
-            else
-            {
-                while (File.Exists(newFullPath))
-                {
-                    newFullPath = IncrementName(fileNameOnly, extension, path, ref count);
-                }
-            }
-            return newFullPath;
-        }
-
-        public static string IncrementName(string fileNameOnly, string extension, string path, ref int count)
-        {
-            string tempFileName = string.Format("{0}({1})", fileNameOnly, count++);
-            return Path.Combine(path, tempFileName + extension);
-        }
-
-        public void CreateDirectory(string sortDirectory)
-        {
-            if (Directory.Exists(sortDirectory))
-            {
-                Console.WriteLine("Sort directory already exists.");
-                Console.WriteLine("Write to same directory? Yes/No.");
-                var WriteToSameDirectory = User.AskYesNo();
-                if (WriteToSameDirectory.Yes != null)
-                {
-                    if ((bool)!WriteToSameDirectory.Yes)
-                    {
-                        sortDirectory = AdjustName(sortDirectory, true);
-                        Directory.CreateDirectory(sortDirectory);
-                    }
-                }
-            }
-            else
-            {
-                Directory.CreateDirectory(sortDirectory);
-            }
-        }
-
-        public static string RemoveInvalidChars(string name)
-        {
-            foreach (var InvalidChar in InvalidPathChars)
-            {
-                name = name.Replace(InvalidChar.ToString(), string.Empty);
-            }
-            foreach (var InvalidChar in InvalidFileChars)
-            {
-                name = name.Replace(InvalidChar.ToString(), string.Empty);
-            }
-            foreach (var InvalidChar in InvalidFileCharsAdditional)
-            {
-                name = name.Replace(InvalidChar.ToString(), string.Empty);
-            }
-            return name;
-        }
     }
 }
