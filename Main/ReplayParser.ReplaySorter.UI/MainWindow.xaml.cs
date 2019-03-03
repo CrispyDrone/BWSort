@@ -399,6 +399,7 @@ namespace ReplayParser.ReplaySorter.UI
                     CheckBox All = new CheckBox();
                     All.Content = "All";
                     All.Name = "All";
+                    All.Click += All_Clicked;
                     gametypesPanel.Children.Add(All);
                     foreach (var aGametype in Enum.GetNames(typeof(Entities.GameType)))
                     {
@@ -410,6 +411,30 @@ namespace ReplayParser.ReplaySorter.UI
                     return gametypesPanel;
                 default:
                     return null;
+            }
+        }
+
+        private static void All_Clicked(object sender, RoutedEventArgs e)
+        {
+            var allCheckbox = sender as CheckBox;
+            if (allCheckbox == null)
+                return;
+
+            if (!allCheckbox.IsChecked.HasValue)
+                return;
+
+            var gametypesPanel = allCheckbox.Parent as StackPanel;
+            if (gametypesPanel == null)
+                return;
+
+            foreach (var child in gametypesPanel.Children)
+            {
+                var gametypeCheckbox = child as CheckBox;
+                if (gametypeCheckbox != null && gametypeCheckbox.Name != "All")
+                {
+                    gametypeCheckbox.IsEnabled = allCheckbox.IsChecked.Value ? false : true;
+                    gametypeCheckbox.IsChecked = allCheckbox.IsChecked.Value;
+                }
             }
         }
 
