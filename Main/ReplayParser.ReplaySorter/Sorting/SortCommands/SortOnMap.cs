@@ -24,25 +24,25 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
         public bool IsNested { get; set; }
         public Sorter Sorter { get; set; }
 
-        public IDictionary<string, IDictionary<string, IReplay>> Sort()
+        public IDictionary<string, List<File<IReplay>>> Sort()
         {
             // Dictionary<directory, dictionary<file, replay>>
-            IDictionary<string, IDictionary<string, IReplay>> DirectoryFileReplay = new Dictionary<string, IDictionary<string, IReplay>>();
+            IDictionary<string, List<File<IReplay>>> DirectoryFileReplay = new Dictionary<string, List<File<IReplay>>>();
 
             // extract maps from replays, try to group the duplicates
             ReplayMapEqualityComparer MapEq = new ReplayMapEqualityComparer();
-            IDictionary<IReplayMap, List<IReplay>> Maps = new Dictionary<IReplayMap, List<IReplay>>(MapEq);
+            IDictionary<IReplayMap, List<File<IReplay>>> Maps = new Dictionary<IReplayMap, List<File<IReplay>>>(MapEq);
 
 
             foreach (var replay in Sorter.ListReplays)
             {
-                if (!Maps.Keys.Contains(replay.ReplayMap))
+                if (!Maps.Keys.Contains(replay.Content.ReplayMap))
                 {
-                    Maps.Add(new KeyValuePair<IReplayMap, List<IReplay>>(replay.ReplayMap, new List<IReplay> { replay }));
+                    Maps.Add(new KeyValuePair<IReplayMap, List<File<IReplay>>>(replay.Content.ReplayMap, new List<File<IReplay>> { replay }));
                 }
                 else
                 {
-                    Maps[replay.ReplayMap].Add(replay);
+                    Maps[replay.Content.ReplayMap].Add(replay);
                 }
             }
 
@@ -52,18 +52,9 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
             foreach (var map in Maps)
             {
                 var MapName = map.Key.MapName;
-                IDictionary<string, IReplay> FileReplays = new Dictionary<string, IReplay>();
+                List<File<IReplay>> FileReplays = new List<File<IReplay>>();
 
-                MapName = Sorter.RemoveInvalidChars(MapName);
-
-                //foreach (char invalidChar in Sorter.InvalidFileChars)
-                //{
-                //    MapName = MapName.Replace(invalidChar.ToString(), string.Empty);
-                //}
-                //foreach (char invalidChar in Sorter.InvalidFileCharsAdditional)
-                //{
-                //    MapName = MapName.Replace(invalidChar.ToString(), string.Empty);
-                //}
+                MapName = ReplayHandler.RemoveInvalidChars(MapName);
 
                 try
                 {
@@ -87,22 +78,20 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                     {
                         try
                         {
-                            string File = string.Empty;
                             if (IsNested == false)
                             {
-                                File = ReplayHandler.CopyReplay(Sorter.ListReplays, replay, Sorter.Files, sortDirectory, MapName, KeepOriginalReplayNames, Sorter.CustomReplayFormat);
+                                ReplayHandler.CopyReplay(replay, sortDirectory, MapName, KeepOriginalReplayNames, Sorter.CustomReplayFormat);
                             }
                             else
                             {
-                                File = ReplayHandler.MoveReplay(Sorter.ListReplays, replay, Sorter.Files, sortDirectory, MapName, KeepOriginalReplayNames, Sorter.CustomReplayFormat);
+                                ReplayHandler.MoveReplay(replay, sortDirectory, MapName, KeepOriginalReplayNames, Sorter.CustomReplayFormat);
                             }
 
-                            FileReplays.Add(new KeyValuePair<string, IReplay>(/*Sorter.Files.ElementAt(Sorter.ListReplays.IndexOf(replay))*/File, replay));
+                            FileReplays.Add(replay);
                         }
                         catch (IOException IOex)
                         {
                             ErrorLogger.LogError("SortOnGameType IOException.", Sorter.OriginalDirectory + @"\LogErrors", IOex);
-                            //Console.WriteLine(IOex.Message);
                         }
                         catch (NotSupportedException NSE)
                         {
@@ -133,7 +122,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                     //    TempName = IncrementName(MapFolder, ref count);
                     //MapFolder = TempName;
 
-                    DirectoryFileReplay.Add(new KeyValuePair<string, IDictionary<string, IReplay>>(MapFolder, FileReplays));
+                    DirectoryFileReplay.Add(new KeyValuePair<string, List<File<IReplay>>>(MapFolder, FileReplays));
                 }
                 catch (Exception ex)
                 {
@@ -151,25 +140,25 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
             return string.Format("{0}({1})", Name, counter++);
         }
 
-        public IDictionary<string, IDictionary<string, IReplay>> SortAsync(BackgroundWorker worker_ReplaySorter, int currentCriteria, int numberOfCriteria, int currentPositionNested, int numberOfPositions)
+        public IDictionary<string, List<File<IReplay>>> SortAsync(List<string> replaysThrowingExceptions, BackgroundWorker worker_ReplaySorter, int currentCriteria, int numberOfCriteria, int currentPositionNested, int numberOfPositions)
         {
             // Dictionary<directory, dictionary<file, replay>>
-            IDictionary<string, IDictionary<string, IReplay>> DirectoryFileReplay = new Dictionary<string, IDictionary<string, IReplay>>();
+            IDictionary<string, List<File<IReplay>>> DirectoryFileReplay = new Dictionary<string, List<File<IReplay>>>();
 
             // extract maps from replays, try to group the duplicates
             ReplayMapEqualityComparer MapEq = new ReplayMapEqualityComparer();
-            IDictionary<IReplayMap, List<IReplay>> Maps = new Dictionary<IReplayMap, List<IReplay>>(MapEq);
+            IDictionary<IReplayMap, List<File<IReplay>>> Maps = new Dictionary<IReplayMap, List<File<IReplay>>>(MapEq);
 
 
             foreach (var replay in Sorter.ListReplays)
             {
-                if (!Maps.Keys.Contains(replay.ReplayMap))
+                if (!Maps.Keys.Contains(replay.Content.ReplayMap))
                 {
-                    Maps.Add(new KeyValuePair<IReplayMap, List<IReplay>>(replay.ReplayMap, new List<IReplay> { replay }));
+                    Maps.Add(new KeyValuePair<IReplayMap, List<File<IReplay>>>(replay.Content.ReplayMap, new List<File<IReplay>> { replay }));
                 }
                 else
                 {
-                    Maps[replay.ReplayMap].Add(replay);
+                    Maps[replay.Content.ReplayMap].Add(replay);
                 }
             }
 
@@ -181,9 +170,9 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
             foreach (var map in Maps)
             {
                 var MapName = map.Key.MapName;
-                IDictionary<string, IReplay> FileReplays = new Dictionary<string, IReplay>();
+                var FileReplays = new List<File<IReplay>>();
 
-                MapName = Sorter.RemoveInvalidChars(MapName);
+                MapName = ReplayHandler.RemoveInvalidChars(MapName);
 
                 try
                 {
@@ -223,17 +212,16 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
 
                         try
                         {
-                            string File = string.Empty;
                             if (IsNested == false)
                             {
-                                File = ReplayHandler.CopyReplay(Sorter.ListReplays, replay, Sorter.Files, sortDirectory, MapName, KeepOriginalReplayNames, Sorter.CustomReplayFormat);
+                                ReplayHandler.CopyReplay(replay, sortDirectory, MapName, KeepOriginalReplayNames, Sorter.CustomReplayFormat);
                             }
                             else
                             {
-                                File = ReplayHandler.MoveReplay(Sorter.ListReplays, replay, Sorter.Files, sortDirectory, MapName, KeepOriginalReplayNames, Sorter.CustomReplayFormat);
+                                ReplayHandler.MoveReplay(replay, sortDirectory, MapName, KeepOriginalReplayNames, Sorter.CustomReplayFormat);
                             }
 
-                            FileReplays.Add(new KeyValuePair<string, IReplay>(File, replay));
+                            FileReplays.Add(replay);
                         }
                         catch (IOException IOex)
                         {
@@ -263,7 +251,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                     // key already exists... how/why?? "Untitled Scenario"... different maps, same "internal" name
                     var MapFolder = sortDirectory + @"\" + MapName;
 
-                    DirectoryFileReplay.Add(new KeyValuePair<string, IDictionary<string, IReplay>>(MapFolder, FileReplays));
+                    DirectoryFileReplay.Add(new KeyValuePair<string, List<File<IReplay>>>(MapFolder, FileReplays));
                 }
                 catch (Exception ex)
                 {

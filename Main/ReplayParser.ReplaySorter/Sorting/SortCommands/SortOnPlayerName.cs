@@ -23,10 +23,10 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
         public Sorter Sorter { get; set; }
         public Criteria SortCriteria { get { return Criteria.PLAYERNAME; } }
         public bool IsNested { get; set; }
-        public IDictionary<string, IDictionary<string, IReplay>> Sort()
+        public IDictionary<string, List<File<IReplay>>> Sort()
         {
             // Dictionary<directory, dictionary<file, replay>>
-            IDictionary<string, IDictionary<string, IReplay>> DirectoryFileReplay = new Dictionary<string, IDictionary<string, IReplay>>();
+            IDictionary<string, List<File<IReplay>>> DirectoryFileReplay = new Dictionary<string, List<File<IReplay>>>();
 
             List<string> PlayerNames = new List<string>();
             List<string> WinnersAndLosers = new List<string>();
@@ -61,15 +61,15 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                 try
                 {
                     var PlayerName = player;
-                    PlayerName = Sorter.RemoveInvalidChars(PlayerName);
+                    PlayerName = ReplayHandler.RemoveInvalidChars(PlayerName);
                     Directory.CreateDirectory(sortDirectory + @"\" + PlayerName);
-                    IDictionary<string, IReplay> FileReplays = new Dictionary<string, IReplay>();
-                    DirectoryFileReplay.Add(new KeyValuePair<string, IDictionary<string, IReplay>>(sortDirectory + @"\" + PlayerName, FileReplays));
+                    var FileReplays = new List<File<IReplay>>();
+                    DirectoryFileReplay.Add(new KeyValuePair<string, List<File<IReplay>>>(sortDirectory + @"\" + PlayerName, FileReplays));
                 }
-                // check each player name for invalid characters, or just catch exception and then fix it? the latter seems much more efficient, but may be bad practice? 
-                catch (Exception)
+                // check each player name for invalid characters, or just catch exception and then fix it? the latter seems much more efficient, but may be bad practice? WRONG throwing and catching exceptions is very expensive
+                catch (Exception ex)
                 {
-                    Console.WriteLine("Could not create folder for {0}", player);
+                    ErrorLogger.LogError($"Could not create folder for {player}", Sorter.OriginalDirectory + @"\LogErrors", ex);
                 }
                 
             }
@@ -79,11 +79,11 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
             foreach (var replay in Sorter.ListReplays)
             {
                 // get players per replay
-                var ParsePlayers = replay.Players.ToList();
-                var index = Sorter.ListReplays.IndexOf(replay);
-                var FilePath = Sorter.Files.ElementAt(index);
-                var DirectoryName = Directory.GetParent(FilePath);
-                var FileName = FilePath.Substring(DirectoryName.ToString().Length);
+                var ParsePlayers = replay.Content.Players.ToList();
+                // var index = Sorter.ListReplays.IndexOf(replay);
+                var sourceFilePath = replay.FileName;
+                var DirectoryName = Directory.GetParent(sourceFilePath);
+                var FileName = sourceFilePath.Substring(DirectoryName.ToString().Length);
 
                 if (MakeFolderForWinner && MakeFolderForLoser)
                 {
@@ -95,224 +95,105 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                             // find the corresponding replay file
                             // add this file to that folder
                             var PlayerName = aPlayer.Name;
-                            PlayerName = Sorter.RemoveInvalidChars(PlayerName);
-                            var DestinationFilePath = sortDirectory + @"\" + PlayerName + FileName;
-                            if (!KeepOriginalReplayNames)
+                            if (IsNested == true && aPlayer == ParsePlayers.Last())
                             {
-                                DestinationFilePath = sortDirectory + @"\" + PlayerName + @"\" + ReplayHandler.GenerateReplayName(replay, Sorter.CustomReplayFormat) + ".rep";
+                                MoveAndRenameReplay(replay, sortDirectory, PlayerName, false, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
                             }
-                            try
+                            else
                             {
-                                while (File.Exists(DestinationFilePath))
-                                {
-                                    DestinationFilePath = Sorter.AdjustName(DestinationFilePath, false);
-                                }
-                                if (IsNested == true && aPlayer == ParsePlayers.Last()) 
-                                {
-                                    File.Move(FilePath, DestinationFilePath);
-                                }
-                                else
-                                {
-                                    File.Copy(FilePath, DestinationFilePath);
-                                }
-                                DirectoryFileReplay[sortDirectory + @"\" + PlayerName].Add(new KeyValuePair<string, IReplay>(DestinationFilePath, replay));
-                            }
-                            catch (IOException IOex)
-                            {
-                                ErrorLogger.LogError($"SortOnPlayerName IOException", Sorter.OriginalDirectory + @"\\LogErrors", IOex);
-                                //Console.WriteLine(IOex.Message);
-                            }
-                            catch (NotSupportedException NSE)
-                            {
-                                ErrorLogger.LogError($"SortOnPlayerName NotSupportedException", Sorter.OriginalDirectory + @"LogErrors", NSE);
-                                //Console.WriteLine(NSE.Message);
+                                MoveAndRenameReplay(replay, sortDirectory, PlayerName, true, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
                             }
                         }
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
-                        Console.WriteLine("Problem with replay: {0}", FilePath);
+                        ErrorLogger.LogError($"Problem with replay: {replay.FileName}", Sorter.OriginalDirectory + @"\LogErrors", ex);
                     }
                 }
                 else if (MakeFolderForWinner)
                 {
                     try
                     {
-                        foreach (var player in replay.Winner)
+                        foreach (var player in replay.Content.Winner)
                         {
                             var PlayerName = player.Name;
-                            PlayerName = Sorter.RemoveInvalidChars(PlayerName);
-                            var DestinationFilePath = sortDirectory + @"\" + PlayerName + FileName;
-                            if (!KeepOriginalReplayNames)
+
+                            if (IsNested == true && player == ParsePlayers.Last())
                             {
-                                DestinationFilePath = sortDirectory + @"\" + PlayerName + @"\" + ReplayHandler.GenerateReplayName(replay, Sorter.CustomReplayFormat) + ".rep";
+                                MoveAndRenameReplay(replay, sortDirectory, PlayerName, false, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
                             }
-                            try
+                            else
                             {
-                                while (File.Exists(DestinationFilePath))
-                                {
-                                    DestinationFilePath = Sorter.AdjustName(DestinationFilePath, false);
-                                }
-                                if (IsNested == true && player == ParsePlayers.Last())
-                                {
-                                    File.Move(FilePath, DestinationFilePath);
-                                }
-                                else
-                                {
-                                    File.Copy(FilePath, DestinationFilePath);
-                                }
-                                DirectoryFileReplay[sortDirectory + @"\" + PlayerName].Add(new KeyValuePair<string, IReplay>(DestinationFilePath, replay));
-                            }
-                            catch (IOException IOex)
-                            {
-                                ErrorLogger.LogError($"SortOnPlayerName IOException", Sorter.OriginalDirectory + @"\LogErrors", IOex);
-                                //Console.WriteLine(IOex.Message);
-                            }
-                            catch (NotSupportedException NSE)
-                            {
-                                ErrorLogger.LogError($"SortOnPlayerName NotSupportedException", Sorter.OriginalDirectory + @"LogErrors", NSE);
-                                //Console.WriteLine(NSE.Message);
+                                MoveAndRenameReplay(replay, sortDirectory, PlayerName, true, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
                             }
                         }
-
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
-                        Console.WriteLine("Cannot create folder since replay has no winner.");
+                        ErrorLogger.LogError($"Cannot create folder since replay has no winner.", Sorter.OriginalDirectory + @"\LogErrors", ex);
                     }
                 }
                 else if (MakeFolderForLoser)
                 {
                     try
                     {
-                        if (replay.Winner.Count() != 0)
+                        if (replay.Content.Winner.Count() != 0)
                         {
                             foreach (var aPlayer in ParsePlayers)
                             {
-                                if (!replay.Winner.Contains(aPlayer))
+                                if (!replay.Content.Winner.Contains(aPlayer))
                                 {
                                     var PlayerName = aPlayer.Name;
-                                    PlayerName = Sorter.RemoveInvalidChars(PlayerName);
-                                    var DestinationFilePath = sortDirectory + @"\" + PlayerName + FileName;
-                                    if (!KeepOriginalReplayNames)
+
+                                    if (IsNested == true && aPlayer == ParsePlayers.Last())
                                     {
-                                        DestinationFilePath = sortDirectory + @"\" + PlayerName + @"\" + ReplayHandler.GenerateReplayName(replay, Sorter.CustomReplayFormat) + ".rep";
+                                        MoveAndRenameReplay(replay, sortDirectory, PlayerName, false, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
                                     }
-                                    try
+                                    else
                                     {
-                                        while (File.Exists(DestinationFilePath))
-                                        {
-                                            DestinationFilePath = Sorter.AdjustName(DestinationFilePath, false);
-                                        }
-                                        if (IsNested == true && aPlayer == ParsePlayers.Last())
-                                        {
-                                            File.Move(FilePath, DestinationFilePath);
-                                        }
-                                        else
-                                        {
-                                            File.Copy(FilePath, DestinationFilePath);
-                                        }
-                                        DirectoryFileReplay[sortDirectory + @"\" + PlayerName].Add(new KeyValuePair<string, IReplay>(DestinationFilePath, replay));
-                                    }
-                                    catch (IOException IOex)
-                                    {
-                                        ErrorLogger.LogError($"SortOnPlayerName IOException", Sorter.OriginalDirectory + @"\LogErrors", IOex);
-                                        //Console.WriteLine(IOex.Message);
-                                    }
-                                    catch (NotSupportedException NSE)
-                                    {
-                                        ErrorLogger.LogError($"SortOnPlayerName NotSupportedException", Sorter.OriginalDirectory + @"LogErrors", NSE);
-                                        //Console.WriteLine(NSE.Message);
+                                        MoveAndRenameReplay(replay, sortDirectory, PlayerName, true, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
                                     }
                                 }
                             }
                         }
                         else
                         {
-                            //Console.WriteLine("No winner.");
                             foreach (var aPlayer in ParsePlayers)
                             {
                                 var PlayerName = aPlayer.Name;
-                                PlayerName = Sorter.RemoveInvalidChars(PlayerName);
-                                var DestinationFilePath = sortDirectory + @"\" + PlayerName + FileName;
-                                if (!KeepOriginalReplayNames)
+
+                                if (IsNested == true && aPlayer == ParsePlayers.Last())
                                 {
-                                    DestinationFilePath = sortDirectory + @"\" + PlayerName + @"\" + ReplayHandler.GenerateReplayName(replay, Sorter.CustomReplayFormat) + ".rep";
+                                    MoveAndRenameReplay(replay, sortDirectory, PlayerName, false, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
                                 }
-                                try
+                                else
                                 {
-                                    while (File.Exists(DestinationFilePath))
-                                    {
-                                        DestinationFilePath = Sorter.AdjustName(DestinationFilePath, false);
-                                    }
-                                    if (IsNested == true && aPlayer == ParsePlayers.Last())
-                                    {
-                                        File.Move(FilePath, DestinationFilePath);
-                                    }
-                                    else
-                                    {
-                                        File.Copy(FilePath, DestinationFilePath);
-                                    }
-                                    DirectoryFileReplay[sortDirectory + @"\" + PlayerName].Add(new KeyValuePair<string, IReplay>(DestinationFilePath, replay));
-                                }
-                                catch (IOException IOex)
-                                {
-                                    ErrorLogger.LogError($"SortOnPlayerName IOException", Sorter.OriginalDirectory + @"\LogErrors", IOex);
-                                    //Console.WriteLine(IOex.Message);
-                                }
-                                catch (NotSupportedException NSE)
-                                {
-                                    ErrorLogger.LogError($"SortOnPlayerName NotSupportedException", Sorter.OriginalDirectory + @"\LogErrors", NSE);
-                                    //Console.WriteLine(NSE.Message);
+                                    MoveAndRenameReplay(replay, sortDirectory, PlayerName, true, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
                                 }
                             }
                         }
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
-                        //Console.WriteLine("Problem with replay: {0}", FilePath);
-                        Console.WriteLine("Replay has no winner.");
+                        ErrorLogger.LogError("Replay has no winner", Sorter.OriginalDirectory + @"\LogErrors", ex);
                     }
                 }
                 else
                 {
                     try
                     {
-                        var DestinationFilePath = sortDirectory + FileName;
-                        if (!KeepOriginalReplayNames)
+                        if (IsNested == false)
                         {
-                            DestinationFilePath = sortDirectory + @"\" + ReplayHandler.GenerateReplayName(replay, Sorter.CustomReplayFormat) + ".rep";
+                            MoveAndRenameReplay(replay, sortDirectory, string.Empty, true, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
                         }
-                        try
+                        else
                         {
-                            while (File.Exists(DestinationFilePath))
-                            {
-                                DestinationFilePath = Sorter.AdjustName(DestinationFilePath, false);
-                            }
-                            if (IsNested == false)
-                            {
-                                File.Copy(FilePath, DestinationFilePath);
-                            }
-                            else
-                            {
-                                File.Move(FilePath, DestinationFilePath);
-                            }
-                            DirectoryFileReplay[sortDirectory].Add(new KeyValuePair<string, IReplay>(DestinationFilePath, replay));
-                        }
-                        catch (IOException IOex)
-                        {
-                            ErrorLogger.LogError($"SortOnPlayerName IOException", Sorter.OriginalDirectory + @"\LogErrors", IOex);
-                            //Console.WriteLine(IOex.Message);
-                        }
-                        catch (NotSupportedException NSE)
-                        {
-                            ErrorLogger.LogError($"SortOnPlayerName NotSupportedException", Sorter.OriginalDirectory + @"\LogErrors", NSE);
-                            //Console.WriteLine(NSE.Message);
+                            MoveAndRenameReplay(replay, sortDirectory, string.Empty, false, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
                         }
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
-                        Console.WriteLine("Problem with replay: {0}", FilePath);
+                        ErrorLogger.LogError($"Problem with replay: {replay.FileName}", Sorter.OriginalDirectory + @"\LogErrors", ex);
                     }
 
                 }
@@ -327,7 +208,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
             {
                 foreach (var replay in Sorter.ListReplays)
                 {
-                    var parseplayers = replay.Players.ToList();
+                    var parseplayers = replay.Content.Players.ToList();
                     foreach (var aplayer in parseplayers)
                     {
                         // checking a list for each replay is slow... maybe define a Dictionary instead??
@@ -336,7 +217,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                         {
                             try
                             {
-                                if (replay.Winner.Contains(aplayer))
+                                if (replay.Content.Winner.Contains(aplayer))
                                 {
                                     players.Add(aplayer.Name);
                                 }
@@ -344,8 +225,6 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                             catch (Exception ex)
                             {
                                 ErrorLogger.LogError($"ExtractPlayers Winner", Sorter.OriginalDirectory + @"\LogErrors", ex);
-                                //Console.WriteLine("No winner.");
-                                //Console.WriteLine(ex.Message);
                             }
                         }
                     }
@@ -355,7 +234,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
             {
                 foreach (var replay in Sorter.ListReplays)
                 {
-                    var parseplayers = replay.Players.ToList();
+                    var parseplayers = replay.Content.Players.ToList();
                     foreach (var aplayer in parseplayers)
                     {
                         // checking a list for each replay is slow... maybe define a Dictionary instead??
@@ -364,7 +243,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                         {
                             try
                             {
-                                if (!replay.Winner.Contains(aplayer))
+                                if (!replay.Content.Winner.Contains(aplayer))
                                 {
                                     players.Add(aplayer.Name);
                                 }
@@ -373,8 +252,6 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                             {
                                 players.Add(aplayer.Name);
                                 ErrorLogger.LogError($"ExtractPlayers Loser", Sorter.OriginalDirectory + @"\LogErrors", ex);
-                                //Console.WriteLine("No winner.");
-                                //Console.WriteLine(ex.Message);
                             }
                         }
                     }
@@ -388,7 +265,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
             {
                 foreach (var replay in Sorter.ListReplays)
                 {
-                    var parseplayers = replay.Players.ToList();
+                    var parseplayers = replay.Content.Players.ToList();
                     foreach (var aplayer in parseplayers)
                     {
                         // checking a list for each replay is slow... maybe define a Dictionary instead??
@@ -403,10 +280,10 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
             return players;
         }
 
-        public IDictionary<string, IDictionary<string, IReplay>> SortAsync(BackgroundWorker worker_ReplaySorter, int currentCriteria, int numberOfCriteria, int currentPositionNested, int numberOfPositions)
+        public IDictionary<string, List<File<IReplay>>> SortAsync(List<string> replaysThrowingExceptions, BackgroundWorker worker_ReplaySorter, int currentCriteria, int numberOfCriteria, int currentPositionNested, int numberOfPositions)
         {
             // Dictionary<directory, dictionary<file, replay>>
-            IDictionary<string, IDictionary<string, IReplay>> DirectoryFileReplay = new Dictionary<string, IDictionary<string, IReplay>>();
+            IDictionary<string, List<File<IReplay>>> DirectoryFileReplay = new Dictionary<string, List<File<IReplay>>>();
 
             List<string> PlayerNames = new List<string>();
             List<string> WinnersAndLosers = new List<string>();
@@ -441,17 +318,15 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                 try
                 {
                     var PlayerName = player;
-                    PlayerName = Sorter.RemoveInvalidChars(PlayerName);
+                    PlayerName = ReplayHandler.RemoveInvalidChars(PlayerName);
                     Directory.CreateDirectory(sortDirectory + @"\" + PlayerName);
-                    IDictionary<string, IReplay> FileReplays = new Dictionary<string, IReplay>();
-                    DirectoryFileReplay.Add(new KeyValuePair<string, IDictionary<string, IReplay>>(sortDirectory + @"\" + PlayerName, FileReplays));
+                    var FileReplays = new List<File<IReplay>>();
+                    DirectoryFileReplay.Add(new KeyValuePair<string, List<File<IReplay>>>(sortDirectory + @"\" + PlayerName, FileReplays));
                 }
-                // check each player name for invalid characters, or just catch exception and then fix it? the latter seems much more efficient, but may be bad practice? 
-                catch (Exception)
+                catch (Exception ex)
                 {
-                    Console.WriteLine("Could not create folder for {0}", player);
+                    ErrorLogger.LogError($"Could not create folder for {player}", Sorter.OriginalDirectory + @"\LogErrors", ex);
                 }
-
             }
 
             // now add all replays associated with player into the folder
@@ -477,11 +352,10 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                 worker_ReplaySorter.ReportProgress(progressPercentage, "sorting on playername...");
 
                 // get players per replay
-                var ParsePlayers = replay.Players.ToList();
-                var index = Sorter.ListReplays.IndexOf(replay);
-                var FilePath = Sorter.Files.ElementAt(index);
-                var DirectoryName = Directory.GetParent(FilePath);
-                var FileName = FilePath.Substring(DirectoryName.ToString().Length);
+                var ParsePlayers = replay.Content.Players.ToList();
+                var sourceFilePath = replay.FileName;
+                var DirectoryName = Directory.GetParent(sourceFilePath);
+                var FileName = sourceFilePath.Substring(DirectoryName.ToString().Length);
 
                 if (MakeFolderForWinner && MakeFolderForLoser)
                 {
@@ -493,183 +367,85 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                             // find the corresponding replay file
                             // add this file to that folder
                             var PlayerName = aPlayer.Name;
-                            PlayerName = Sorter.RemoveInvalidChars(PlayerName);
-                            var DestinationFilePath = sortDirectory + @"\" + PlayerName + FileName;
-                            if (!KeepOriginalReplayNames)
+                            if (IsNested == true && aPlayer == ParsePlayers.Last())
                             {
-                                DestinationFilePath = sortDirectory + @"\" + PlayerName + @"\" + ReplayHandler.GenerateReplayName(replay, Sorter.CustomReplayFormat) + ".rep";
+                                MoveAndRenameReplay(replay, sortDirectory, PlayerName, false, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
                             }
-                            try
+                            else
                             {
-                                while (File.Exists(DestinationFilePath))
-                                {
-                                    DestinationFilePath = Sorter.AdjustName(DestinationFilePath, false);
-                                }
-                                if (IsNested == true && aPlayer == ParsePlayers.Last())
-                                {
-                                    File.Move(FilePath, DestinationFilePath);
-                                }
-                                else
-                                {
-                                    File.Copy(FilePath, DestinationFilePath);
-                                }
-                                DirectoryFileReplay[sortDirectory + @"\" + PlayerName].Add(new KeyValuePair<string, IReplay>(DestinationFilePath, replay));
-                            }
-                            catch (IOException IOex)
-                            {
-                                ErrorLogger.LogError($"SortOnPlayerName IOException", Sorter.OriginalDirectory + @"\\LogErrors", IOex);
-                                //Console.WriteLine(IOex.Message);
-                            }
-                            catch (NotSupportedException NSE)
-                            {
-                                ErrorLogger.LogError($"SortOnPlayerName NotSupportedException", Sorter.OriginalDirectory + @"LogErrors", NSE);
-                                //Console.WriteLine(NSE.Message);
+                                MoveAndRenameReplay(replay, sortDirectory, PlayerName, true, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
                             }
                         }
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
-                        Console.WriteLine("Problem with replay: {0}", FilePath);
+                        ErrorLogger.LogError($"Problem with replay {sourceFilePath}", Sorter.OriginalDirectory + @"\LogErrors", ex);
                     }
                 }
                 else if (MakeFolderForWinner)
                 {
                     try
                     {
-                        foreach (var player in replay.Winner)
+                        foreach (var player in replay.Content.Winner)
                         {
                             var PlayerName = player.Name;
-                            PlayerName = Sorter.RemoveInvalidChars(PlayerName);
-                            var DestinationFilePath = sortDirectory + @"\" + PlayerName + FileName;
-                            if (!KeepOriginalReplayNames)
+                            if (IsNested == true && player == ParsePlayers.Last())
                             {
-                                DestinationFilePath = sortDirectory + @"\" + PlayerName + @"\" + ReplayHandler.GenerateReplayName(replay, Sorter.CustomReplayFormat) + ".rep";
+                                MoveAndRenameReplay(replay, sortDirectory, PlayerName, false, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
                             }
-                            try
+                            else
                             {
-                                while (File.Exists(DestinationFilePath))
-                                {
-                                    DestinationFilePath = Sorter.AdjustName(DestinationFilePath, false);
-                                }
-                                if (IsNested == true && player == ParsePlayers.Last())
-                                {
-                                    File.Move(FilePath, DestinationFilePath);
-                                }
-                                else
-                                {
-                                    File.Copy(FilePath, DestinationFilePath);
-                                }
-                                DirectoryFileReplay[sortDirectory + @"\" + PlayerName].Add(new KeyValuePair<string, IReplay>(DestinationFilePath, replay));
-                            }
-                            catch (IOException IOex)
-                            {
-                                ErrorLogger.LogError($"SortOnPlayerName IOException", Sorter.OriginalDirectory + @"\LogErrors", IOex);
-                                //Console.WriteLine(IOex.Message);
-                            }
-                            catch (NotSupportedException NSE)
-                            {
-                                ErrorLogger.LogError($"SortOnPlayerName NotSupportedException", Sorter.OriginalDirectory + @"LogErrors", NSE);
-                                //Console.WriteLine(NSE.Message);
+                                MoveAndRenameReplay(replay, sortDirectory, PlayerName, true, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
                             }
                         }
-
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
-                        Console.WriteLine("Cannot create folder since replay has no winner.");
+                        ErrorLogger.LogError("Cannot create folder since replay has no winner.", Sorter.OriginalDirectory + @"\LogErrors", ex);
                     }
                 }
                 else if (MakeFolderForLoser)
                 {
                     try
                     {
-                        if (replay.Winner.Count() != 0)
+                        if (replay.Content.Winner.Count() != 0)
                         {
                             foreach (var aPlayer in ParsePlayers)
                             {
-                                if (!replay.Winner.Contains(aPlayer))
+                                if (!replay.Content.Winner.Contains(aPlayer))
                                 {
                                     var PlayerName = aPlayer.Name;
-                                    PlayerName = Sorter.RemoveInvalidChars(PlayerName);
-                                    var DestinationFilePath = sortDirectory + @"\" + PlayerName + FileName;
-                                    if (!KeepOriginalReplayNames)
+                                    if (IsNested == true && aPlayer == ParsePlayers.Last())
                                     {
-                                        DestinationFilePath = sortDirectory + @"\" + PlayerName + @"\" + ReplayHandler.GenerateReplayName(replay, Sorter.CustomReplayFormat) + ".rep";
+                                        MoveAndRenameReplay(replay, sortDirectory, PlayerName, false, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
                                     }
-                                    try
+                                    else
                                     {
-                                        while (File.Exists(DestinationFilePath))
-                                        {
-                                            DestinationFilePath = Sorter.AdjustName(DestinationFilePath, false);
-                                        }
-                                        if (IsNested == true && aPlayer == ParsePlayers.Last())
-                                        {
-                                            File.Move(FilePath, DestinationFilePath);
-                                        }
-                                        else
-                                        {
-                                            File.Copy(FilePath, DestinationFilePath);
-                                        }
-                                        DirectoryFileReplay[sortDirectory + @"\" + PlayerName].Add(new KeyValuePair<string, IReplay>(DestinationFilePath, replay));
-                                    }
-                                    catch (IOException IOex)
-                                    {
-                                        ErrorLogger.LogError($"SortOnPlayerName IOException", Sorter.OriginalDirectory + @"\LogErrors", IOex);
-                                        //Console.WriteLine(IOex.Message);
-                                    }
-                                    catch (NotSupportedException NSE)
-                                    {
-                                        ErrorLogger.LogError($"SortOnPlayerName NotSupportedException", Sorter.OriginalDirectory + @"LogErrors", NSE);
-                                        //Console.WriteLine(NSE.Message);
+                                        MoveAndRenameReplay(replay, sortDirectory, PlayerName, true, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
                                     }
                                 }
                             }
                         }
                         else
                         {
-                            //Console.WriteLine("No winner.");
                             foreach (var aPlayer in ParsePlayers)
                             {
                                 var PlayerName = aPlayer.Name;
-                                PlayerName = Sorter.RemoveInvalidChars(PlayerName);
-                                var DestinationFilePath = sortDirectory + @"\" + PlayerName + FileName;
-                                if (!KeepOriginalReplayNames)
+
+                                if (IsNested == true && aPlayer == ParsePlayers.Last())
                                 {
-                                    DestinationFilePath = sortDirectory + @"\" + PlayerName + @"\" + ReplayHandler.GenerateReplayName(replay, Sorter.CustomReplayFormat) + ".rep";
+                                    MoveAndRenameReplay(replay, sortDirectory, PlayerName, false, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
                                 }
-                                try
+                                else
                                 {
-                                    while (File.Exists(DestinationFilePath))
-                                    {
-                                        DestinationFilePath = Sorter.AdjustName(DestinationFilePath, false);
-                                    }
-                                    if (IsNested == true && aPlayer == ParsePlayers.Last())
-                                    {
-                                        File.Move(FilePath, DestinationFilePath);
-                                    }
-                                    else
-                                    {
-                                        File.Copy(FilePath, DestinationFilePath);
-                                    }
-                                    DirectoryFileReplay[sortDirectory + @"\" + PlayerName].Add(new KeyValuePair<string, IReplay>(DestinationFilePath, replay));
-                                }
-                                catch (IOException IOex)
-                                {
-                                    ErrorLogger.LogError($"SortOnPlayerName IOException", Sorter.OriginalDirectory + @"\LogErrors", IOex);
-                                    //Console.WriteLine(IOex.Message);
-                                }
-                                catch (NotSupportedException NSE)
-                                {
-                                    ErrorLogger.LogError($"SortOnPlayerName NotSupportedException", Sorter.OriginalDirectory + @"\LogErrors", NSE);
-                                    //Console.WriteLine(NSE.Message);
+                                    MoveAndRenameReplay(replay, sortDirectory, PlayerName, true, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
                                 }
                             }
                         }
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
-                        //Console.WriteLine("Problem with replay: {0}", FilePath);
-                        Console.WriteLine("Replay has no winner.");
+                        ErrorLogger.LogError("Replay has no winner.", Sorter.OriginalDirectory + @"\LogErrors", ex);
                     }
                 }
                 else
@@ -677,46 +453,50 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                     try
                     {
                         var DestinationFilePath = sortDirectory + FileName;
-                        if (!KeepOriginalReplayNames)
+                        if (IsNested == false)
                         {
-                            DestinationFilePath = sortDirectory + @"\" + ReplayHandler.GenerateReplayName(replay, Sorter.CustomReplayFormat) + ".rep";
+                            MoveAndRenameReplay(replay, sortDirectory, string.Empty, true, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
                         }
-                        try
+                        else
                         {
-                            while (File.Exists(DestinationFilePath))
-                            {
-                                DestinationFilePath = Sorter.AdjustName(DestinationFilePath, false);
-                            }
-                            if (IsNested == false)
-                            {
-                                File.Copy(FilePath, DestinationFilePath);
-                            }
-                            else
-                            {
-                                File.Move(FilePath, DestinationFilePath);
-                            }
-                            DirectoryFileReplay[sortDirectory].Add(new KeyValuePair<string, IReplay>(DestinationFilePath, replay));
-                        }
-                        catch (IOException IOex)
-                        {
-                            ErrorLogger.LogError($"SortOnPlayerName IOException", Sorter.OriginalDirectory + @"\LogErrors", IOex);
-                            //Console.WriteLine(IOex.Message);
-                        }
-                        catch (NotSupportedException NSE)
-                        {
-                            ErrorLogger.LogError($"SortOnPlayerName NotSupportedException", Sorter.OriginalDirectory + @"\LogErrors", NSE);
-                            //Console.WriteLine(NSE.Message);
+                            MoveAndRenameReplay(replay, sortDirectory, string.Empty, false, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
                         }
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
-                        Console.WriteLine("Problem with replay: {0}", FilePath);
+                        ErrorLogger.LogError("Problem with replay: {0}", Sorter.OriginalDirectory + @"\LogErrors", ex);
                     }
 
                 }
             }
             // not implemented yet
             return DirectoryFileReplay;
+        }
+
+        private void MoveAndRenameReplay(File<IReplay> replay, string sortDirectory, string FolderName, bool shouldCopy, bool KeepOriginalReplayNames, CustomReplayFormat CustomReplayFormat, IDictionary<string, List<File<IReplay>>> directoryFileReplay)
+        {
+            FolderName = ReplayHandler.RemoveInvalidChars(FolderName);
+
+            try
+            {
+                if (shouldCopy)
+                {
+                    ReplayHandler.CopyReplay(replay, sortDirectory, FolderName, KeepOriginalReplayNames, Sorter.CustomReplayFormat);
+                }
+                else
+                {
+                    ReplayHandler.MoveReplay(replay, sortDirectory, FolderName, KeepOriginalReplayNames, Sorter.CustomReplayFormat);
+                }
+                directoryFileReplay[sortDirectory + @"\" + FolderName].Add(replay);
+            }
+            catch (IOException IOex)
+            {
+                ErrorLogger.LogError($"SortOnPlayerName IOException", Sorter.OriginalDirectory + @"\\LogErrors", IOex);
+            }
+            catch (NotSupportedException NSE)
+            {
+                ErrorLogger.LogError($"SortOnPlayerName NotSupportedException", Sorter.OriginalDirectory + @"LogErrors", NSE);
+            }
         }
     }
 }

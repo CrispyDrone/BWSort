@@ -1,82 +1,62 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.IO;
-using System.Text.RegularExpressions;
-using ReplayParser.ReplaySorter.ReplayRenamer;
 using ReplayParser.ReplaySorter.Sorting;
 using ReplayParser.Interfaces;
 using ReplayParser.ReplaySorter.UserInput;
 using ReplayParser.ReplaySorter.Sorting.SortCommands;
-using ReplayParser.ReplaySorter.Sorting.SortResult;
 using System.ComponentModel;
 using System.Windows;
+using ReplayParser.ReplaySorter.Sorting.SortResult;
 
 namespace ReplayParser.ReplaySorter
 {
     public class Sorter
     {
-        public Sorter()
-        {
+        #region private fields
 
-        }
+        private SortCommandFactory Factory = new SortCommandFactory();
 
-        public Sorter(string directory, IEnumerable<string> files, List<IReplay> listreplays, Criteria sortcriteria)
+        #endregion
+
+        #region constructors
+
+        public Sorter() { }
+
+        public Sorter(string originalDirectory, List<File<IReplay>> listreplays)
         {
-            this.SortCriteria = sortcriteria;
             this.ListReplays = listreplays;
-            this.CurrentDirectory = directory;
-            this.Files = files;
+            this.CurrentDirectory = originalDirectory;
         }
 
-        public Criteria SortCriteria
-        {
-            get;
-            set;
-        }
+        #endregion
 
-        public string[] CriteriaStringOrder
-        {
-            get;
-            set;
-        }
+        #region public
+        #region public properties
 
-        public List<IReplay> ListReplays
-        {
-            get;
-            set;
-        }
+        public Criteria SortCriteria { get; set; }
 
-        public string CurrentDirectory
-        {
-            get;
-            set;
-        }
+        public string[] CriteriaStringOrder { get; set; }
 
-        // I lose currentdirectory because I only use one sorter
-        public string OriginalDirectory
-        {
-            get;
-            set;
-        }
+        public List<File<IReplay>> ListReplays { get; set; }
 
-        public IEnumerable<string> Files
-        {
-            get;
-            set;
-        }
+        public string CurrentDirectory { get; set; }
 
         public CustomReplayFormat CustomReplayFormat { get; set; }
 
         public SortCriteriaParameters SortCriteriaParameters { get; set; }
 
-        private SortCommandFactory Factory = new SortCommandFactory();
+        public string OriginalDirectory { get; }
+
+        #endregion
+
+        #region public methods
 
         public void ExecuteSort(SortCriteriaParameters sortcriteriaparameters, bool keeporiginalreplaynames)
         {
             // why do i need this silly string array with the original order...
-            IDictionary<string, IDictionary<string, IReplay>> SortOnXResult = new Dictionary<string, IDictionary<string, IReplay>>();
+            IDictionary<string, List<File<IReplay>>> SortOnXResult = new Dictionary<string, List<File<IReplay>>>();
             for (int i = 0; i < CriteriaStringOrder.Length; i++)
             {
                 // should I pass a new sorter instead of this?? Then I don't have to make separate property OriginalDirectory
@@ -94,26 +74,17 @@ namespace ReplayParser.ReplaySorter
             }
         }
 
-        public IDictionary<string, IDictionary<string, IReplay>> NestedSort(ISortCommand SortOnX, IDictionary<string, IDictionary<string, IReplay>> SortOnXResult)
+        public IDictionary<string, List<File<IReplay>>> NestedSort(ISortCommand SortOnX, IDictionary<string, List<File<IReplay>>> SortOnXResult)
         {
-            // Dictionary<directory, dictionary<file, replay>>
-            IDictionary<string, IDictionary<string, IReplay>> DirectoryFileReplay = new Dictionary<string, IDictionary<string, IReplay>>();
-
-            // get replays
-            // get files
-            // set currentdirectory
-            // on sorter
-            // for replays and files, need to make return type for sort, which gives a dictionary for replays per directory
+            // Dictionary<directory, Files>
+            IDictionary<string, List<File<IReplay>>> DirectoryFileReplay = new Dictionary<string, List<File<IReplay>>>();
 
             SortOnX.Sorter.SortCriteria = SortOnX.SortCriteria;
             foreach (var directory in SortOnXResult.Keys)
             {
-                var FileReplaysDictionary = SortOnXResult[directory];
-                var Files = FileReplaysDictionary.Keys;
-                var Replays = FileReplaysDictionary.Values.ToList();
+                var FileReplays = SortOnXResult[directory];
                 SortOnX.Sorter.CurrentDirectory = directory;
-                SortOnX.Sorter.Files = Files;
-                SortOnX.Sorter.ListReplays = Replays;
+                SortOnX.Sorter.ListReplays = FileReplays;
                 var result = SortOnX.Sort();
                 DirectoryFileReplay = DirectoryFileReplay.Concat(result).ToDictionary(k => k.Key, k => k.Value);
             }
@@ -121,36 +92,36 @@ namespace ReplayParser.ReplaySorter
             return DirectoryFileReplay;
         }
 
-        public DirectoryFileTree ExecuteSortAsync(bool keeporiginalreplaynames, BackgroundWorker worker_ReplaySorter)
+        public DirectoryFileTree<IReplay> ExecuteSortAsync(bool keeporiginalreplaynames, BackgroundWorker worker_ReplaySorter, List<string> replaysThrowingExceptions)
         {
             // Sort Result ! 
-            DirectoryFileTree TotalSortResult = new DirectoryFileTree(new DirectoryInfo(OriginalDirectory));
+            DirectoryFileTree<IReplay> TotalSortResult = new DirectoryFileTree<IReplay>(new DirectoryInfo(OriginalDirectory));
 
             // why do i need this silly string array with the original order...
-            IDictionary<string, IDictionary<string, IReplay>> SortOnXResult = new Dictionary<string, IDictionary<string, IReplay>>();
+            IDictionary<string, List<File<IReplay>>> SortOnXResult = new Dictionary<string, List<File<IReplay>>>();
             for (int i = 0; i < CriteriaStringOrder.Length; i++)
             {
                 // should I pass a new sorter instead of this?? Then I don't have to make separate property OriginalDirectory
                 var SortOnX = Factory.GetSortCommand((Criteria)Enum.Parse(typeof(Criteria), CriteriaStringOrder[i]), SortCriteriaParameters, keeporiginalreplaynames, this);
                 if (i == 0)
                 {
-                    SortOnXResult = SortOnX.SortAsync(worker_ReplaySorter, i + 1, CriteriaStringOrder.Count());
+                    SortOnXResult = SortOnX.SortAsync(replaysThrowingExceptions, worker_ReplaySorter, i + 1, CriteriaStringOrder.Count());
                     if (worker_ReplaySorter.CancellationPending == true)
                     {
                         return null;
                     }
                     // make separate functions for this
-                    DirectoryFileTree FirstSort = new DirectoryFileTree(new DirectoryInfo(CurrentDirectory + @"\" + SortCriteria.ToString()));
+                    DirectoryFileTree<IReplay> FirstSort = new DirectoryFileTree<IReplay>(new DirectoryInfo(CurrentDirectory + @"\" + SortCriteria.ToString()));
                     foreach (var directory in SortOnXResult.Keys)
                     {
                         if (FirstSort.Children != null)
                         {
-                            FirstSort.Children.Add(new DirectoryFileTree(new DirectoryInfo(directory), SortOnXResult[directory].Keys.ToList()));
+                            FirstSort.Children.Add(new DirectoryFileTree<IReplay>(new DirectoryInfo(directory), SortOnXResult[directory]));
                         }
                         else
                         {
-                            FirstSort.Children = new List<DirectoryFileTree>();
-                            FirstSort.Children.Add(new DirectoryFileTree(new DirectoryInfo(directory), SortOnXResult[directory].Keys.ToList()));
+                            FirstSort.Children = new List<DirectoryFileTree<IReplay>>();
+                            FirstSort.Children.Add(new DirectoryFileTree<IReplay>(new DirectoryInfo(directory), SortOnXResult[directory]));
                         }
                     }
                     if (TotalSortResult.Children != null)
@@ -159,7 +130,7 @@ namespace ReplayParser.ReplaySorter
                     }
                     else
                     {
-                        TotalSortResult.Children = new List<DirectoryFileTree>();
+                        TotalSortResult.Children = new List<DirectoryFileTree<IReplay>>();
                         TotalSortResult.Children.Add(FirstSort);
                     }
                     
@@ -168,7 +139,7 @@ namespace ReplayParser.ReplaySorter
                 {
                     // nested sort
                     SortOnX.IsNested = true;
-                    SortOnXResult = NestedSortAsync(SortOnX, SortOnXResult, worker_ReplaySorter, i + 1, CriteriaStringOrder.Count());
+                    SortOnXResult = NestedSortAsync(replaysThrowingExceptions, SortOnX, SortOnXResult, worker_ReplaySorter, i + 1, CriteriaStringOrder.Count());
                     if (worker_ReplaySorter.CancellationPending == true)
                     {
                         return null;
@@ -182,10 +153,10 @@ namespace ReplayParser.ReplaySorter
         }
 
         // not async yet
-        public IDictionary<string, IDictionary<string, IReplay>> NestedSortAsync(ISortCommand SortOnX, IDictionary<string, IDictionary<string, IReplay>> SortOnXResult, BackgroundWorker worker_ReplaySorter, int currentCriteria, int numberOfCriteria)
+        public IDictionary<string, List<File<IReplay>>> NestedSortAsync(List<string> replaysThrowingExceptions, ISortCommand SortOnX, IDictionary<string, List<File<IReplay>>> SortOnXResult, BackgroundWorker worker_ReplaySorter, int currentCriteria, int numberOfCriteria)
         {
             // Dictionary<directory, dictionary<file, replay>>
-            IDictionary<string, IDictionary<string, IReplay>> DirectoryFileReplay = new Dictionary<string, IDictionary<string, IReplay>>();
+            IDictionary<string, List<File<IReplay>>> DirectoryFileReplay = new Dictionary<string, List<File<IReplay>>>();
 
             // get replays
             // get files
@@ -199,13 +170,10 @@ namespace ReplayParser.ReplaySorter
             foreach (var directory in SortOnXResult.Keys)
             {
                 currentPostion++;
-                var FileReplaysDictionary = SortOnXResult[directory];
-                var Files = FileReplaysDictionary.Keys;
-                var Replays = FileReplaysDictionary.Values.ToList();
+                var FileReplays = SortOnXResult[directory];
                 SortOnX.Sorter.CurrentDirectory = directory;
-                SortOnX.Sorter.Files = Files;
-                SortOnX.Sorter.ListReplays = Replays;
-                var result = SortOnX.SortAsync(worker_ReplaySorter, currentCriteria, numberOfCriteria, currentPostion, numberOfPositions);
+                SortOnX.Sorter.ListReplays = FileReplays;
+                var result = SortOnX.SortAsync(replaysThrowingExceptions, worker_ReplaySorter, currentCriteria, numberOfCriteria, currentPostion, numberOfPositions);
                 if (worker_ReplaySorter.CancellationPending == true)
                 {
                     return null;
@@ -241,12 +209,6 @@ namespace ReplayParser.ReplaySorter
                 }
             }
             return newFullPath;
-        }
-
-        public static string IncrementName(string fileNameOnly, string extension, string path, ref int count)
-        {
-            string tempFileName = string.Format("{0}({1})", fileNameOnly, count++);
-            return Path.Combine(path, tempFileName + extension);
         }
 
         public string CreateDirectory(string sortDirectory, bool UI = false)
@@ -291,25 +253,18 @@ namespace ReplayParser.ReplaySorter
             return sortDirectory;
         }
 
-        public static char[] InvalidFileChars = Path.GetInvalidFileNameChars();
-        public static char[] InvalidPathChars = Path.GetInvalidPathChars();
-        public static string RemoveInvalidChars(string name)
+        public static string IncrementName(string fileNameOnly, string extension, string path, ref int count)
         {
-            foreach (var InvalidChar in InvalidPathChars)
-            {
-                name = name.Replace(InvalidChar.ToString(), string.Empty);
-            }
-            foreach (var InvalidChar in InvalidFileChars)
-            {
-                name = name.Replace(InvalidChar.ToString(), string.Empty);
-            }
-            //foreach (var InvalidChar in InvalidFileCharsAdditional)
-            //{
-            //    name = name.Replace(InvalidChar.ToString(), string.Empty);
-            //}
-            return name;
+            string tempFileName = string.Format("{0}({1})", fileNameOnly, count++);
+            return Path.Combine(path, tempFileName + extension);
         }
 
+        #endregion
+        #endregion
+
+        #region private methods
+
+        #endregion
 
         // I think you could make a command object for each SortOn function, and have one function that will return the proper object depending on which sortcriteria gets passed to it
         // then you execute the Sort() function on that command object, and it will execute?

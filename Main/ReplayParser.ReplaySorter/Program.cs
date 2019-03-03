@@ -60,7 +60,7 @@ namespace ReplayParser.ReplaySorter
 
             // for your UI, you should be able to put these things in a separate class and methods so you can make use of them instead of having to rewrite this...
             var searchDirectory = (SearchDirectory)User.AskDirectory(typeof(SearchDirectory));
-            List<IReplay> ListReplays = new List<IReplay>();
+            List<File<IReplay>> ListReplays = new List<File<IReplay>>();
             IEnumerable<string> files = Directory.EnumerateFiles(searchDirectory.Directory, "*.rep", searchDirectory.SearchOption);
 
             while (files.Count() == 0)
@@ -90,7 +90,7 @@ namespace ReplayParser.ReplaySorter
                 try
                 {
                     var ParsedReplay = ReplayLoader.LoadReplay(replay);
-                    ListReplays.Add(ParsedReplay);
+                    ListReplays.Add(new File<IReplay> { Content = ParsedReplay, FileName = replay });
                     //WriteUncompressedReplay(@"C:\testreplays\UncompressedReplays", replay);
                 }
                 catch (Exception ex)
@@ -162,7 +162,8 @@ namespace ReplayParser.ReplaySorter
                     return;
                 }
                 // remove bad replay from files
-                files = files.Where(x => !ReplaysThrowingExceptions.Contains(x));
+                // not necessary anymore since I use ReplayFile now
+                // files = files.Where(x => !ReplaysThrowingExceptions.Contains(x));
             }
 
             // you might want to extract information and put everything into some sort of data structure, so you don't have to go through the list of replays for each
@@ -208,7 +209,7 @@ namespace ReplayParser.ReplaySorter
             Console.WriteLine("Please enter criteria to sort replays on.");
             Console.WriteLine("Provide a space separated list of criteria.");
             var SortCriteria = User.AskCriteria();
-            Sorter sorter = new Sorter();
+            Sorter sorter = new Sorter(SortResultOutputDirectory.Directory, ListReplays);
             while (SortCriteria.StopProgram != null)
             {
                 if ((bool)!SortCriteria.StopProgram)
@@ -245,10 +246,6 @@ namespace ReplayParser.ReplaySorter
                     }
 
                     sorter.CurrentDirectory = SortResultOutputDirectory.Directory;
-                    // I lose currentdirectory because I only use one sorter
-                    sorter.OriginalDirectory = SortResultOutputDirectory.Directory;
-                    sorter.Files = files;
-                    sorter.ListReplays = ListReplays;
                     sorter.SortCriteria = SortCriteria.ChosenCriteria;
                     sorter.CriteriaStringOrder = SortCriteria.CriteriaStringOrder;
                     try

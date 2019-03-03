@@ -8,10 +8,10 @@ namespace ReplayParser.ReplaySorter.UI
 {
     public class BoolAnswer
     {
-        public BoolAnswer(string message, bool error)
+        public BoolAnswer(string message, bool success)
         {
             Message = message;
-            GoodToGo = error;
+            GoodToGo = success;
         }
 
         public string Message { get; set; }

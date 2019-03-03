@@ -24,14 +24,14 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
         public bool IsNested { get; set; }
         public Sorter Sorter { get; set; }
 
-        public IDictionary<string, IDictionary<string, IReplay>> Sort()
+        public IDictionary<string, List<File<IReplay>>> Sort()
         {
             // Dictionary<directory, dictionary<file, replay>>
-            IDictionary<string, IDictionary<string, IReplay>> DirectoryFileReplay = new Dictionary<string, IDictionary<string, IReplay>>();
+            IDictionary<string, List<File<IReplay>>> DirectoryFileReplay = new Dictionary<string, List<File<IReplay>>>();
 
             // replays grouped by gametype
             var ReplaysByGameTypes = from replay in Sorter.ListReplays
-                                     group replay by replay.GameType;
+                                     group replay by replay.Content.GameType;
 
             // make sortdirectory
             string sortDirectory = Sorter.CurrentDirectory + @"\" + Sorter.SortCriteria.ToString();
@@ -43,24 +43,23 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
             {
                 var GameType = gametype.Key.ToString();
                 Directory.CreateDirectory(sortDirectory + @"\" + GameType);
-                IDictionary<string, IReplay> FileReplays = new Dictionary<string, IReplay>();
-                DirectoryFileReplay.Add(new KeyValuePair<string, IDictionary<string, IReplay>>(sortDirectory + @"\" + GameType, FileReplays));
+                var FileReplays = new List<File<IReplay>>();
+                DirectoryFileReplay.Add(new KeyValuePair<string, List<File<IReplay>>>(sortDirectory + @"\" + GameType, FileReplays));
 
                 foreach (var replay in gametype)
                 {
                     try
                     {
-                        string File = string.Empty;
                         if (IsNested == false)
                         {
-                            File = ReplayHandler.CopyReplay(Sorter.ListReplays, replay, Sorter.Files, sortDirectory, GameType, KeepOriginalReplayNames, Sorter.CustomReplayFormat);
+                            ReplayHandler.CopyReplay(replay, sortDirectory, GameType, KeepOriginalReplayNames, Sorter.CustomReplayFormat);
                         }
                         else
                         {
-                            File = ReplayHandler.MoveReplay(Sorter.ListReplays, replay, Sorter.Files, sortDirectory, GameType, KeepOriginalReplayNames, Sorter.CustomReplayFormat);
+                            ReplayHandler.MoveReplay(replay, sortDirectory, GameType, KeepOriginalReplayNames, Sorter.CustomReplayFormat);
                         }
                         
-                        FileReplays.Add(new KeyValuePair<string, IReplay>(/*Sorter.Files.ElementAt(Sorter.ListReplays.IndexOf(replay))*/File, replay));
+                        FileReplays.Add(replay);
                     }
                     catch (IOException IOex)
                     {
@@ -88,14 +87,14 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
             return DirectoryFileReplay;
         }
 
-        public IDictionary<string, IDictionary<string, IReplay>> SortAsync(BackgroundWorker worker_ReplaySorter, int currentCriteria, int numberOfCriteria, int currentPositionNested, int numberOfPositions)
+        public IDictionary<string, List<File<IReplay>>> SortAsync(List<string> replaysThrowingExceptions, BackgroundWorker worker_ReplaySorter, int currentCriteria, int numberOfCriteria, int currentPositionNested, int numberOfPositions)
         {
             // Dictionary<directory, dictionary<file, replay>>
-            IDictionary<string, IDictionary<string, IReplay>> DirectoryFileReplay = new Dictionary<string, IDictionary<string, IReplay>>();
+            IDictionary<string, List<File<IReplay>>> DirectoryFileReplay = new Dictionary<string, List<File<IReplay>>>();
 
             // replays grouped by gametype
             var ReplaysByGameTypes = from replay in Sorter.ListReplays
-                                     group replay by replay.GameType;
+                                     group replay by replay.Content.GameType;
 
             // make sortdirectory
             string sortDirectory = Sorter.CurrentDirectory + @"\" + Sorter.SortCriteria.ToString();
@@ -109,8 +108,8 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
             {
                 var GameType = gametype.Key.ToString();
                 Directory.CreateDirectory(sortDirectory + @"\" + GameType);
-                IDictionary<string, IReplay> FileReplays = new Dictionary<string, IReplay>();
-                DirectoryFileReplay.Add(new KeyValuePair<string, IDictionary<string, IReplay>>(sortDirectory + @"\" + GameType, FileReplays));
+                var FileReplays = new List<File<IReplay>>();
+                DirectoryFileReplay.Add(new KeyValuePair<string, List<File<IReplay>>>(sortDirectory + @"\" + GameType, FileReplays));
 
                 foreach (var replay in gametype)
                 {
@@ -118,6 +117,48 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                     {
                         return null;
                     }
+                    bool threwError = false;
+                    try
+                    {
+                        if (IsNested == false)
+                        {
+                            ReplayHandler.CopyReplay(replay, sortDirectory, GameType, KeepOriginalReplayNames, Sorter.CustomReplayFormat);
+                        }
+                        else
+                        {
+                            ReplayHandler.MoveReplay(replay, sortDirectory, GameType, KeepOriginalReplayNames, Sorter.CustomReplayFormat);
+                        }
+
+                        FileReplays.Add(replay);
+                    }
+                    catch (IOException IOex)
+                    {
+                        threwError = true;
+                        ErrorLogger.LogError("SortOnGameType IOException.", Sorter.OriginalDirectory + @"\LogErrors", IOex);
+                        //Console.WriteLine(IOex.Message);
+                    }
+                    catch (NotSupportedException NSE)
+                    {
+                        threwError = true;
+                        ErrorLogger.LogError("SortOnGameType NotSupportedException.", Sorter.OriginalDirectory + @"\LogErrors", NSE);
+                        //Console.WriteLine(NSE.Message);
+                    }
+                    catch (NullReferenceException nullex)
+                    {
+                        threwError = true;
+                        ErrorLogger.LogError("SortOnGameType NullReferenceException.", Sorter.OriginalDirectory + @"\LogErrors", nullex);
+                        //Console.WriteLine(nullex.Message);
+                    }
+                    catch (ArgumentException AEX)
+                    {
+                        threwError = true;
+                        ErrorLogger.LogError("SortOnGameType ArgumentException.", Sorter.OriginalDirectory + @"\LogErrors", AEX);
+                        //Console.WriteLine(AEX.Message);
+                    }
+
+                    if (threwError)
+                        replaysThrowingExceptions.Add(replay.FileName);
+
                     currentPosition++;
                     if (this.IsNested == false)
                     {
@@ -129,40 +170,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                         progressPercentage += (currentCriteria - 1) * 100 / numberOfCriteria;
                     }
                     worker_ReplaySorter.ReportProgress(progressPercentage, "sorting on gametype...");
-                    try
-                    {
-                        string File = string.Empty;
-                        if (IsNested == false)
-                        {
-                            File = ReplayHandler.CopyReplay(Sorter.ListReplays, replay, Sorter.Files, sortDirectory, GameType, KeepOriginalReplayNames, Sorter.CustomReplayFormat);
-                        }
-                        else
-                        {
-                            File = ReplayHandler.MoveReplay(Sorter.ListReplays, replay, Sorter.Files, sortDirectory, GameType, KeepOriginalReplayNames, Sorter.CustomReplayFormat);
-                        }
 
-                        FileReplays.Add(new KeyValuePair<string, IReplay>(/*Sorter.Files.ElementAt(Sorter.ListReplays.IndexOf(replay))*/File, replay));
-                    }
-                    catch (IOException IOex)
-                    {
-                        ErrorLogger.LogError("SortOnGameType IOException.", Sorter.OriginalDirectory + @"\LogErrors", IOex);
-                        //Console.WriteLine(IOex.Message);
-                    }
-                    catch (NotSupportedException NSE)
-                    {
-                        ErrorLogger.LogError("SortOnGameType NotSupportedException.", Sorter.OriginalDirectory + @"\LogErrors", NSE);
-                        //Console.WriteLine(NSE.Message);
-                    }
-                    catch (NullReferenceException nullex)
-                    {
-                        ErrorLogger.LogError("SortOnGameType NullReferenceException.", Sorter.OriginalDirectory + @"\LogErrors", nullex);
-                        //Console.WriteLine(nullex.Message);
-                    }
-                    catch (ArgumentException AEX)
-                    {
-                        ErrorLogger.LogError("SortOnGameType ArgumentException.", Sorter.OriginalDirectory + @"\LogErrors", AEX);
-                        //Console.WriteLine(AEX.Message);
-                    }
                 }
             }
             // not implemented yet

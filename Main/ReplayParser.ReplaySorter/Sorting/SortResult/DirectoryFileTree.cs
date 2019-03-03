@@ -7,9 +7,9 @@ using System.IO;
 
 namespace ReplayParser.ReplaySorter.Sorting.SortResult
 {
-    public class DirectoryFileTree
+    public class DirectoryFileTree<T>
     {
-        public DirectoryFileTree(DirectoryInfo self, List<string> files = null, List<DirectoryFileTree> children = null)
+        public DirectoryFileTree(DirectoryInfo self, List<File<T>> files = null, List<DirectoryFileTree<T>> children = null)
         {
             Self = self;
             Files = files;
@@ -17,8 +17,8 @@ namespace ReplayParser.ReplaySorter.Sorting.SortResult
         }
 
         public DirectoryInfo Self { get; set; }
-        public List<string> Files { get; set; }
-        public List<DirectoryFileTree> Children { get; set; }
+        public List<File<T>> Files { get; set; }
+        public List<DirectoryFileTree<T>> Children { get; set; }
 
     }
 }

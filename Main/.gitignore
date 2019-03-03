@@ -64,7 +64,7 @@ local.properties
 *.dotCover
 
 ## TODO: If you have NuGet Package Restore enabled, uncomment this
-#packages/
+packages/
 
 # Visual C++ cache files
 ipch/
@@ -93,13 +93,11 @@ DocProject/Help/*.hhp
 DocProject/Help/Html2
 DocProject/Help/html
 
-
-*.rep
-
 # Click-Once directory
 publish
 
 # Others
+.vs/
 [Bb]in
 [Oo]bj
 sql

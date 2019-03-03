@@ -69,6 +69,7 @@
   <ItemGroup>
     <Compile Include="Diagnostics\ErrorLogger.cs" />
     <Compile Include="Diagnostics\ProgressBar.cs" />
+    <Compile Include="File.cs" />
     <Compile Include="Replays.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -140,7 +141,9 @@
     <EmbeddedResource Include="Resources\235958-Fighting Spirit 1.3_.rep">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
-    <None Include="Resources\192042-%284%29투혼1.3.rep" />
+    <EmbeddedResource Include="Resources\192042-%284%29투혼1.3.rep">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ReplayParser\ReplayParser.csproj">

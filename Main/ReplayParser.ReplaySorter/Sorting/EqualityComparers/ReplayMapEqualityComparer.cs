@@ -44,7 +44,7 @@ namespace ReplayParser.ReplaySorter.Sorting
             //{
             //    MapName = MapName.Replace(invalidChar.ToString(), "");
             //}
-            MapName = Sorter.RemoveInvalidChars(MapName);
+            MapName = ReplayHandler.RemoveInvalidChars(MapName);
             return MapName;
         }
     }

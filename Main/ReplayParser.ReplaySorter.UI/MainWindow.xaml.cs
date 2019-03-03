@@ -1,24 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using ReplayParser.Interfaces;
 using ReplayParser.Loader;
 using ReplayParser.ReplaySorter.UserInput;
 using System.IO;
 using System.Diagnostics;
 using System.ComponentModel;
-using Microsoft.WindowsAPICodePack;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using ReplayParser.ReplaySorter.Sorting;
 
@@ -37,7 +27,7 @@ namespace ReplayParser.ReplaySorter.UI
         }
 
         // parsing
-        private List<IReplay> ListReplays = new List<IReplay>();
+        private List<File<IReplay>> ListReplays = new List<File<IReplay>>();
         private IEnumerable<string> files;
         List<string> ReplaysThrowingExceptions = new List<string>();
         private BackgroundWorker worker_ReplayParser = null;
@@ -49,7 +39,7 @@ namespace ReplayParser.ReplaySorter.UI
         private string BadReplayDirectory = string.Empty;
 
         // sorting
-        private Sorter sorter = new Sorter();
+        private Sorter sorter;
         private BackgroundWorker worker_ReplaySorter = null;
         bool SortingReplays = false;
         bool KeepOriginalReplayNames = true;
@@ -132,7 +122,7 @@ namespace ReplayParser.ReplaySorter.UI
                 try
                 {
                     var ParsedReplay = ReplayLoader.LoadReplay(replay);
-                    ListReplays.Add(ParsedReplay);
+                    ListReplays.Add(new File<IReplay> { Content = ParsedReplay, FileName = replay });
                 }
                 catch (Exception)
                 {
@@ -320,7 +310,7 @@ namespace ReplayParser.ReplaySorter.UI
                     combobox.SelectionChanged -= ComboBox_SelectionChanged;
                     combobox.ItemsSource = null;
                     combobox.ItemsSource = ComboBoxSortCriteriaDictionary[combobox].OrderBy(x => KeepDefinedOrdering(x));
-                    combobox.SelectedIndex = combobox.Items.IndexOf(ComboBoxSortCriteriaDictionary[combobox].ElementAt(ComboBoxSortCriteriaDictionary[combobox].IndexOf(nonChangedComboBoxSelectedItem)));
+                    combobox.SelectedIndex = combobox.Items.IndexOf(nonChangedComboBoxSelectedItem);
                     combobox.SelectionChanged += ComboBox_SelectionChanged;
                 }
             }
@@ -364,79 +354,62 @@ namespace ReplayParser.ReplaySorter.UI
 
         private static Panel GetSortCriteriaParametersPanel(string selectedItem)
         {
-            if (selectedItem == "none")
+            switch (selectedItem)
             {
-                return null;
-            }
-            else if (selectedItem == "playername")
-            {
-                StackPanel playername = new StackPanel();
-                playername.Name = "PLAYERNAME";
-                playername.Orientation = Orientation.Vertical;
-                RadioButton winner = new RadioButton();
-                winner.Name = "Winner";
-                winner.Content = "Winner";
-                winner.GroupName = "MakeFolderFor";
-                RadioButton loser = new RadioButton();
-                loser.Name = "Loser";
-                loser.Content = "Loser";
-                loser.GroupName = "MakeFolderFor";
-                RadioButton both = new RadioButton();
-                both.Name = "Both";
-                both.Content = "Both";
-                both.GroupName = "MakeFolderFor";
-                RadioButton none = new RadioButton();
-                none.Name = "None";
-                none.Content = "None";
-                none.GroupName = "MakeFolderFor";
-                playername.Children.Add(winner);
-                playername.Children.Add(loser);
-                playername.Children.Add(both);
-                playername.Children.Add(none);
-                return playername;
-            }
-            else if (selectedItem == "matchup")
-            {
-                StackPanel matchup = new StackPanel();
-                matchup.Name = "MATCHUP";
-                matchup.Orientation = Orientation.Vertical;
-                CheckBox All = new CheckBox();
-                All.Content = "All";
-                All.Name = "All";
-                matchup.Children.Add(All);
-                foreach (var aGametype in Enum.GetNames(typeof(Entities.GameType)))
-                {
-                    CheckBox gametype = new CheckBox();
-                    gametype.Name = aGametype;
-                    gametype.Content = aGametype;
-                    matchup.Children.Add(gametype);
-                }
-                return matchup;
-            }
-            else if (selectedItem == "map")
-            {
-                return null;
-            }
-            else if (selectedItem == "duration")
-            {
-                StackPanel duration = new StackPanel();
-                duration.Name = "DURATION";
-                duration.Orientation = Orientation.Horizontal;
-                Label DurationIntervalsLabel = new Label();
-                DurationIntervalsLabel.Content = "Duration intervals: ";
-                TextBox DurationIntervalsTextBox = new TextBox();
-                DurationIntervalsTextBox.MinWidth = 200;
-                duration.Children.Add(DurationIntervalsLabel);
-                duration.Children.Add(DurationIntervalsTextBox);
-                return duration;
-            }
-            else if (selectedItem == "gametype")
-            {
-                return null;
-            }
-            else
-            {
-                return null;
+                case "playername":
+                    StackPanel playername = new StackPanel();
+                    playername.Name = "PLAYERNAME";
+                    playername.Orientation = Orientation.Vertical;
+                    RadioButton winner = new RadioButton();
+                    winner.Name = "Winner";
+                    winner.Content = "Winner";
+                    winner.GroupName = "MakeFolderFor";
+                    RadioButton loser = new RadioButton();
+                    loser.Name = "Loser";
+                    loser.Content = "Loser";
+                    loser.GroupName = "MakeFolderFor";
+                    RadioButton both = new RadioButton();
+                    both.Name = "Both";
+                    both.Content = "Both";
+                    both.GroupName = "MakeFolderFor";
+                    RadioButton none = new RadioButton();
+                    none.Name = "None";
+                    none.Content = "None";
+                    none.GroupName = "MakeFolderFor";
+                    playername.Children.Add(winner);
+                    playername.Children.Add(loser);
+                    playername.Children.Add(both);
+                    playername.Children.Add(none);
+                    return playername;
+                case "duration":
+                    StackPanel duration = new StackPanel();
+                    duration.Name = "DURATION";
+                    duration.Orientation = Orientation.Horizontal;
+                    Label DurationIntervalsLabel = new Label();
+                    DurationIntervalsLabel.Content = "Duration intervals: ";
+                    TextBox DurationIntervalsTextBox = new TextBox();
+                    DurationIntervalsTextBox.MinWidth = 200;
+                    duration.Children.Add(DurationIntervalsLabel);
+                    duration.Children.Add(DurationIntervalsTextBox);
+                    return duration;
+                case "gametype":
+                    StackPanel gametypesPanel = new StackPanel();
+                    gametypesPanel.Name = "MATCHUP";
+                    gametypesPanel.Orientation = Orientation.Vertical;
+                    CheckBox All = new CheckBox();
+                    All.Content = "All";
+                    All.Name = "All";
+                    gametypesPanel.Children.Add(All);
+                    foreach (var aGametype in Enum.GetNames(typeof(Entities.GameType)))
+                    {
+                        CheckBox gametype = new CheckBox();
+                        gametype.Name = aGametype;
+                        gametype.Content = aGametype;
+                        gametypesPanel.Children.Add(gametype);
+                    }
+                    return gametypesPanel;
+                default:
+                    return null;
             }
         }
 
@@ -536,7 +509,7 @@ namespace ReplayParser.ReplaySorter.UI
                             break;
                     }
                 }
-                else if (chosencriteria == "MATCHUP")
+                else if (chosencriteria == "GAMETYPE")
                 {
                     validgametypes = new Dictionary<Entities.GameType, bool>();
                     foreach (var checkbox in chosenCriteriaPanel.Children.OfType<CheckBox>())
@@ -583,21 +556,21 @@ namespace ReplayParser.ReplaySorter.UI
                     durations = durations.OrderBy(x => x).ToArray();
                 }
             }
-
-            SortCriteriaParameters = new SortCriteriaParameters(makefolderforwinner, makefolderforloser, validgametypes, durations);
-            sorter.SortCriteriaParameters = SortCriteriaParameters;
             // only if directory exists
             if (Directory.Exists(sortOutputDirectoryTextBox.Text))
+            {
+                sorter = new Sorter(sortOutputDirectoryTextBox.Text, ListReplays);
                 sorter.CurrentDirectory = sortOutputDirectoryTextBox.Text;
+            }
             else
             {
                 MessageBox.Show(String.Format("Could not find directory {0}", sortOutputDirectoryTextBox.Text), "Failed to start sort: directory error", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
                 return;
             }
-            // I lose currentdirectory because I only use one sorter
-            sorter.OriginalDirectory = sortOutputDirectoryTextBox.Text;
 
-            sorter.Files = files;
+            SortCriteriaParameters = new SortCriteriaParameters(makefolderforwinner, makefolderforloser, validgametypes, durations);
+            sorter.SortCriteriaParameters = SortCriteriaParameters;
+
             sorter.ListReplays = ListReplays;
             if (CriteriaStringOrder.Length > 1)
             {
@@ -628,7 +601,7 @@ namespace ReplayParser.ReplaySorter.UI
             if (SorterConditions.GoodToGo == true)
             {
                 SortingReplays = true;
-                e.Result = sorter.ExecuteSortAsync(KeepOriginalReplayNames, worker_ReplaySorter);
+                e.Result = sorter.ExecuteSortAsync(KeepOriginalReplayNames, worker_ReplaySorter, ReplaysThrowingExceptions);
                 if (worker_ReplaySorter.CancellationPending == true)
                 {
                     e.Cancel = true;
@@ -692,8 +665,10 @@ namespace ReplayParser.ReplaySorter.UI
             else
             {
                 statusBarAction.Content = "Finished sorting replays";
-                MessageBox.Show(string.Format("Finished sorting replays! It took {0} seconds to sort {1} replays. {{2}} replays encountered exceptions.", swSort.Elapsed, ListReplays.Count), "Finished Sorting", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);
+                MessageBox.Show(string.Format("Finished sorting replays! It took {0} seconds to sort {1} replays. {2} replays encountered exceptions.", swSort.Elapsed, ListReplays.Count, ReplaysThrowingExceptions.Count()), "Finished Sorting", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);
+                ReplayHandler.LogBadReplays(ReplaysThrowingExceptions, sorter.OriginalDirectory + @"\failedSorts");
                 ResetReplaySortingVariables();
+                ReplaysThrowingExceptions.Clear();
             }
         }
 
@@ -708,13 +683,9 @@ namespace ReplayParser.ReplaySorter.UI
 
         private static BoolAnswer CheckSorterConditions(Sorter aSorter)
         {
-            if (aSorter.Files == null || aSorter.Files.Count() == 0)
-            {
-                return new BoolAnswer("You have to parse replays before you can sort. File list is empty!", false);
-            }
             if (aSorter.ListReplays == null || aSorter.ListReplays.Count() == 0)
             {
-                return new BoolAnswer("You have to parse replays before you can sort. Replay list is empty!", false);
+                return new BoolAnswer("You have to parse replays before you can sort. File list is empty!", false);
             }
             if (!Directory.Exists(aSorter.CurrentDirectory))
             {
