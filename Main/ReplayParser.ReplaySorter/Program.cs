@@ -90,7 +90,7 @@ namespace ReplayParser.ReplaySorter
                 try
                 {
                     var ParsedReplay = ReplayLoader.LoadReplay(replay);
-                    ListReplays.Add(new File<IReplay> { Content = ParsedReplay, FileName = replay });
+                    ListReplays.Add(new File<IReplay>(replay) { Content = ParsedReplay, FileName = replay });
                     //WriteUncompressedReplay(@"C:\testreplays\UncompressedReplays", replay);
                 }
                 catch (Exception ex)
@@ -267,6 +267,8 @@ namespace ReplayParser.ReplaySorter
                 }
                 else
                     return;
+
+                ReplayHandler.RestoreReplayNames(ListReplays);
             }
             Console.WriteLine("Stop Program can not be null");
             return;

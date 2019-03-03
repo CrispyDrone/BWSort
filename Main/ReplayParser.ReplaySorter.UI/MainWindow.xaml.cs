@@ -122,7 +122,7 @@ namespace ReplayParser.ReplaySorter.UI
                 try
                 {
                     var ParsedReplay = ReplayLoader.LoadReplay(replay);
-                    ListReplays.Add(new File<IReplay> { Content = ParsedReplay, FileName = replay });
+                    ListReplays.Add(new File<IReplay>(replay) { Content = ParsedReplay, FileName = replay });
                 }
                 catch (Exception)
                 {
@@ -392,7 +392,7 @@ namespace ReplayParser.ReplaySorter.UI
                     duration.Children.Add(DurationIntervalsLabel);
                     duration.Children.Add(DurationIntervalsTextBox);
                     return duration;
-                case "gametype":
+                case "matchup":
                     StackPanel gametypesPanel = new StackPanel();
                     gametypesPanel.Name = "MATCHUP";
                     gametypesPanel.Orientation = Orientation.Vertical;
@@ -509,7 +509,7 @@ namespace ReplayParser.ReplaySorter.UI
                             break;
                     }
                 }
-                else if (chosencriteria == "GAMETYPE")
+                else if (chosencriteria == "MATCHUP")
                 {
                     validgametypes = new Dictionary<Entities.GameType, bool>();
                     foreach (var checkbox in chosenCriteriaPanel.Children.OfType<CheckBox>())
@@ -670,6 +670,7 @@ namespace ReplayParser.ReplaySorter.UI
                 ResetReplaySortingVariables();
                 ReplaysThrowingExceptions.Clear();
             }
+            ReplayHandler.RestoreReplayNames(ListReplays);
         }
 
         private void ResetReplaySortingVariables()

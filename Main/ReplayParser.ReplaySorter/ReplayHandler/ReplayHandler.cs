@@ -178,5 +178,12 @@ namespace ReplayParser.ReplaySorter
             return name;
         }
 
+        public static void RestoreReplayNames(List<File<IReplay>> listReplays)
+        {
+            foreach (var replay in listReplays)
+            {
+                replay.FileName = replay.OriginalFileName;
+            }
+        }
     }
 }

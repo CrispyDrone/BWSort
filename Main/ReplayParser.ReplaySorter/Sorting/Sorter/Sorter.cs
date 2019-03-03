@@ -28,6 +28,7 @@ namespace ReplayParser.ReplaySorter
         {
             this.ListReplays = listreplays;
             this.CurrentDirectory = originalDirectory;
+            this.OriginalDirectory = originalDirectory;
         }
 
         #endregion
@@ -56,7 +57,7 @@ namespace ReplayParser.ReplaySorter
         public void ExecuteSort(SortCriteriaParameters sortcriteriaparameters, bool keeporiginalreplaynames)
         {
             // why do i need this silly string array with the original order...
-            IDictionary<string, List<File<IReplay>>> SortOnXResult = new Dictionary<string, List<File<IReplay>>>();
+            IDictionary<string, List<File<IReplay>>> SortOnXResult = null;
             for (int i = 0; i < CriteriaStringOrder.Length; i++)
             {
                 // should I pass a new sorter instead of this?? Then I don't have to make separate property OriginalDirectory
