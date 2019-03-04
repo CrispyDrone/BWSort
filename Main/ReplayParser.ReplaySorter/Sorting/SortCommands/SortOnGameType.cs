@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.IO;
 using ReplayParser.Interfaces;
 using ReplayParser.ReplaySorter.Diagnostics;
@@ -24,7 +23,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
         public bool IsNested { get; set; }
         public Sorter Sorter { get; set; }
 
-        public IDictionary<string, List<File<IReplay>>> Sort()
+        public IDictionary<string, List<File<IReplay>>> Sort(List<string> replaysThrowingExceptions)
         {
             // Dictionary<directory, dictionary<file, replay>>
             IDictionary<string, List<File<IReplay>>> DirectoryFileReplay = new Dictionary<string, List<File<IReplay>>>();
@@ -48,6 +47,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
 
                 foreach (var replay in gametype)
                 {
+                    bool threwException = false;
                     try
                     {
                         if (IsNested == false)
@@ -63,24 +63,26 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                     }
                     catch (IOException IOex)
                     {
+                        threwException = true;
                         ErrorLogger.LogError("SortOnGameType IOException.", Sorter.OriginalDirectory + @"\LogErrors", IOex);
-                        //Console.WriteLine(IOex.Message);
                     }
                     catch (NotSupportedException NSE)
                     {
+                        threwException = true;
                         ErrorLogger.LogError("SortOnGameType NotSupportedException.", Sorter.OriginalDirectory + @"\LogErrors", NSE);
-                        //Console.WriteLine(NSE.Message);
                     }
                     catch (NullReferenceException nullex)
                     {
+                        threwException = true;
                         ErrorLogger.LogError("SortOnGameType NullReferenceException.", Sorter.OriginalDirectory + @"\LogErrors", nullex);
-                        //Console.WriteLine(nullex.Message);
                     }
                     catch (ArgumentException AEX)
                     {
+                        threwException = true;
                         ErrorLogger.LogError("SortOnGameType ArgumentException.", Sorter.OriginalDirectory + @"\LogErrors", AEX);
-                        //Console.WriteLine(AEX.Message);
                     }
+                    if (threwException)
+                        replaysThrowingExceptions.Add(replay.OriginalFileName);
                 }
             }
             // not implemented yet
@@ -157,7 +159,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                     }
 
                     if (threwError)
-                        replaysThrowingExceptions.Add(replay.FileName);
+                        replaysThrowingExceptions.Add(replay.OriginalFileName);
 
                     currentPosition++;
                     if (this.IsNested == false)

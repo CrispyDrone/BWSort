@@ -23,7 +23,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
         public Criteria SortCriteria { get { return Criteria.MATCHUP; } }
         public bool IsNested { get; set; }
         public Sorter Sorter { get; set; }
-        public IDictionary<string, List<File<IReplay>>> Sort()
+        public IDictionary<string, List<File<IReplay>>> Sort(List<string> replaysThrowingExceptions)
         {
             // Dictionary<directory, dictionary<file, replay>>
             IDictionary<string, List<File<IReplay>>> DirectoryFileReplay = new Dictionary<string, List<File<IReplay>>>();
@@ -89,6 +89,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                 var MatchUpReplays = ReplayMatchUps[matchup];
                 foreach (var replay in MatchUpReplays)
                 {
+                    bool threwException = false;
                     try
                     {
                         if (IsNested == false)
@@ -104,29 +105,31 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                     }
                     catch (IOException IOex)
                     {
+                        threwException = true;
                         ErrorLogger.LogError($"SortOnMatchUp IOException", Sorter.OriginalDirectory + @"\LogErrors", IOex);
-                        //Console.WriteLine(IOex.Message);
                     }
                     catch (NotSupportedException NSE)
                     {
+                        threwException = true;
                         ErrorLogger.LogError($"SortOnMatchUp NotSupportedException", Sorter.OriginalDirectory + @"\LogErrors", NSE);
-                        //Console.WriteLine(NSE.Message);
                     }
                     catch (NullReferenceException nullex)
                     {
+                        threwException = true;
                         ErrorLogger.LogError($"SortOnMatchUp NullReferenceException", Sorter.OriginalDirectory + @"\LogErrors", nullex);
-                        //Console.WriteLine(nullex.Message);
                     }
                     catch (ArgumentException AEX)
                     {
+                        threwException = true;
                         ErrorLogger.LogError($"SortOnMatchUp ArgumentException", Sorter.OriginalDirectory + @"\LogErrors", AEX);
-                        //Console.WriteLine(AEX.Message);
                     }
                     catch (Exception ex)
                     {
+                        threwException = true;
                         ErrorLogger.LogError($"SortOnMatchUp Exception", Sorter.OriginalDirectory + @"\LogErrors", ex);
-                        //Console.WriteLine(ex.Message);
                     }
+                    if (threwException)
+                        replaysThrowingExceptions.Add(replay.OriginalFileName);
                 }
             }
             // not implemented yet
@@ -224,12 +227,13 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                 var MatchUpReplays = ReplayMatchUp[matchup];
                 foreach (var replay in MatchUpReplays)
                 {
+                    bool threwException = false;
                     if (worker_ReplaySorter.CancellationPending == true)
                     {
                         return null;
                     }
                     currentPosition++;
-                    if (this.IsNested == false)
+                    if (IsNested == false)
                     {
                         progressPercentage = Convert.ToInt32(((double)currentPosition / Sorter.ListReplays.Count) * 1 / numberOfCriteria * 100);
                     }
@@ -254,24 +258,30 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                     }
                     catch (IOException IOex)
                     {
+                        threwException = true;
                         ErrorLogger.LogError($"SortOnMatchUp IOException", Sorter.OriginalDirectory + @"\LogErrors", IOex);
                     }
                     catch (NotSupportedException NSE)
                     {
+                        threwException = true;
                         ErrorLogger.LogError($"SortOnMatchUp NotSupportedException", Sorter.OriginalDirectory + @"\LogErrors", NSE);
                     }
                     catch (NullReferenceException nullex)
                     {
+                        threwException = true;
                         ErrorLogger.LogError($"SortOnMatchUp NullReferenceException", Sorter.OriginalDirectory + @"\LogErrors", nullex);
                     }
                     catch (ArgumentException AEX)
                     {
+                        threwException = true;
                         ErrorLogger.LogError($"SortOnMatchUp ArgumentException", Sorter.OriginalDirectory + @"\LogErrors", AEX);
                     }
                     catch (Exception ex)
                     {
+                        threwException = true;
                         ErrorLogger.LogError($"SortOnMatchUp Exception", Sorter.OriginalDirectory + @"\LogErrors", ex);
                     }
+                    replaysThrowingExceptions.Add(replay.OriginalFileName);
                 }
             }
             // not implemented yet

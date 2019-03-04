@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.IO;
 using ReplayParser.Interfaces;
 using ReplayParser.ReplaySorter.Diagnostics;
@@ -24,7 +22,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
         public bool IsNested { get; set; }
         public Sorter Sorter { get; set; }
 
-        public IDictionary<string, List<File<IReplay>>> Sort()
+        public IDictionary<string, List<File<IReplay>>> Sort(List<string> replaysThrowingExceptions)
         {
             // Dictionary<directory, dictionary<file, replay>>
             IDictionary<string, List<File<IReplay>>> DirectoryFileReplay = new Dictionary<string, List<File<IReplay>>>();
@@ -76,6 +74,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                     var MapReplays = Maps[map.Key];
                     foreach (var replay in MapReplays)
                     {
+                        bool threwException = false;
                         try
                         {
                             if (IsNested == false)
@@ -91,28 +90,31 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                         }
                         catch (IOException IOex)
                         {
+                            threwException = true;
                             ErrorLogger.LogError("SortOnGameType IOException.", Sorter.OriginalDirectory + @"\LogErrors", IOex);
                         }
                         catch (NotSupportedException NSE)
                         {
+                            threwException = true;
                             ErrorLogger.LogError("SortOnGameType NotSupportedException.", Sorter.OriginalDirectory + @"\LogErrors", NSE);
-                            Console.WriteLine(NSE.Message);
                         }
                         catch (NullReferenceException nullex)
                         {
+                            threwException = true;
                             ErrorLogger.LogError("SortOnGameType NullReferenceException.", Sorter.OriginalDirectory + @"\LogErrors", nullex);
-                            Console.WriteLine(nullex.Message);
                         }
                         catch (ArgumentException AEX)
                         {
+                            threwException = true;
                             ErrorLogger.LogError("SortOnGameType ArgumentException.", Sorter.OriginalDirectory + @"\LogErrors", AEX);
-                            Console.WriteLine(AEX.Message);
                         }
                         catch (Exception ex)
                         {
+                            threwException = true;
                             ErrorLogger.LogError("SortOnGameType Exception.", Sorter.OriginalDirectory + @"\LogErrors", ex);
-                            Console.WriteLine(ex.Message);
                         }
+                        if (threwException)
+                            replaysThrowingExceptions.Add(replay.OriginalFileName);
                     }
                     // key already exists... how/why?? "Untitled Scenario"... different maps, same "internal" name
                     var MapFolder = sortDirectory + @"\" + MapName;
@@ -194,12 +196,13 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                     var MapReplays = Maps[map.Key];
                     foreach (var replay in MapReplays)
                     {
+                        bool threwException = false;
                         if (worker_ReplaySorter.CancellationPending == true)
                         {
                             return null;
                         }
                         currentPosition++;
-                        if (this.IsNested == false)
+                        if (IsNested == false)
                         {
                             progressPercentage = Convert.ToInt32(((double)currentPosition / Sorter.ListReplays.Count) * 1 / numberOfCriteria * 100);
                         }
@@ -225,28 +228,31 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                         }
                         catch (IOException IOex)
                         {
+                            threwException = true;
                             ErrorLogger.LogError("SortOnGameType IOException.", Sorter.OriginalDirectory + @"\LogErrors", IOex);
                         }
                         catch (NotSupportedException NSE)
                         {
+                            threwException = true;
                             ErrorLogger.LogError("SortOnGameType NotSupportedException.", Sorter.OriginalDirectory + @"\LogErrors", NSE);
-                            Console.WriteLine(NSE.Message);
                         }
                         catch (NullReferenceException nullex)
                         {
+                            threwException = true;
                             ErrorLogger.LogError("SortOnGameType NullReferenceException.", Sorter.OriginalDirectory + @"\LogErrors", nullex);
-                            Console.WriteLine(nullex.Message);
                         }
                         catch (ArgumentException AEX)
                         {
+                            threwException = true;
                             ErrorLogger.LogError("SortOnGameType ArgumentException.", Sorter.OriginalDirectory + @"\LogErrors", AEX);
-                            Console.WriteLine(AEX.Message);
                         }
                         catch (Exception ex)
                         {
+                            threwException = true;
                             ErrorLogger.LogError("SortOnGameType Exception.", Sorter.OriginalDirectory + @"\LogErrors", ex);
-                            Console.WriteLine(ex.Message);
                         }
+                        if (threwException)
+                            replaysThrowingExceptions.Add(replay.OriginalFileName);
                     }
                     // key already exists... how/why?? "Untitled Scenario"... different maps, same "internal" name
                     var MapFolder = sortDirectory + @"\" + MapName;

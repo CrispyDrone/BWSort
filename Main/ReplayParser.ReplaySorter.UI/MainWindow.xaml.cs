@@ -46,6 +46,12 @@ namespace ReplayParser.ReplaySorter.UI
         BoolAnswer boolAnswer = null;
         Stopwatch swSort = new Stopwatch();
 
+        // renaming
+        private BackgroundWorker worker_ReplayRenamer = null;
+        bool RenamingReplays = false;
+        bool RenameLastSort = false;
+        bool RenameInPlace = false;
+
         private void parseReplaysButton_Click(object sender, RoutedEventArgs e)
         {
             SortingButtons(false);
@@ -691,7 +697,7 @@ namespace ReplayParser.ReplaySorter.UI
             {
                 statusBarAction.Content = "Finished sorting replays";
                 MessageBox.Show(string.Format("Finished sorting replays! It took {0} seconds to sort {1} replays. {2} replays encountered exceptions.", swSort.Elapsed, ListReplays.Count, ReplaysThrowingExceptions.Count()), "Finished Sorting", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);
-                ReplayHandler.LogBadReplays(ReplaysThrowingExceptions, sorter.OriginalDirectory + @"\failedSorts");
+                ReplayHandler.LogBadReplays(ReplaysThrowingExceptions, sorter.OriginalDirectory + @"\FailedSorts");
                 ResetReplaySortingVariables();
                 ReplaysThrowingExceptions.Clear();
             }
@@ -772,6 +778,115 @@ namespace ReplayParser.ReplaySorter.UI
         private void MenuItemClose_Click(object sender, RoutedEventArgs e)
         {
             this.Close();
+        }
+
+        private void renameLastSortCheckBox_Click(object sender, RoutedEventArgs e)
+        {
+            disableSiblingCheckBoxAndRenamingStackPanel(sender as CheckBox, "renameInPlaceCheckBox");
+        }
+
+        private void renameInPlaceCheckBox_Click(object sender, RoutedEventArgs e)
+        {
+            disableSiblingCheckBoxAndRenamingStackPanel(sender as CheckBox, "renameLastSortCheckBox");
+        }
+
+        private void disableSiblingCheckBoxAndRenamingStackPanel(CheckBox checkBox, string siblingName)
+        {
+            if (checkBox == null)
+                return;
+
+            if (!checkBox.IsChecked.HasValue)
+                return;
+
+            var siblingCheckBox = GetSiblingRenameCheckBox(checkBox, siblingName);
+            if (siblingCheckBox == null)
+                return;
+
+            var replayRenamingOutputDirectoryStackPanel = GetRenamingStackPanel(checkBox);
+            if (replayRenamingOutputDirectoryStackPanel == null)
+                return;
+
+            siblingCheckBox.IsEnabled = !checkBox.IsChecked.Value;
+            replayRenamingOutputDirectoryStackPanel.IsEnabled = !checkBox.IsChecked.Value;
+        }
+
+        private CheckBox GetSiblingRenameCheckBox(CheckBox renameCheckBox, string name)
+        {
+            var stackPanel = renameCheckBox.Parent as StackPanel;
+            if (stackPanel == null)
+                return null;
+
+            return stackPanel.Children.OfType<CheckBox>().SingleOrDefault(c => c.Name == name);
+        }
+
+        private StackPanel GetRenamingStackPanel(CheckBox renameCheckBox)
+        {
+            var stackPanel = renameCheckBox.Parent as StackPanel;
+            if (stackPanel == null)
+                return null;
+
+            var dockPanel = (stackPanel.Parent as DockPanel);
+            if (dockPanel == null)
+                return null;
+
+            return dockPanel.Children.OfType<StackPanel>().SingleOrDefault(s => s.Name == "replayRenamingOutputDirectoryStackPanel");
+        }
+
+        private void replayRenamingOutputDirectoryButton_Click(object sender, RoutedEventArgs e)
+        {
+            SelectMapFolder(replayRenamingOutputDirectoryTextBox);
+        }
+
+        private void executeRenamingButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (!Directory.Exists(replayRenamingOutputDirectoryTextBox.Text))
+            {
+                MessageBox.Show("The specified directory does not exist.", "Invalid directory", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
+                return;
+            }
+            statusBarAction.Content = "Renaming replays...";
+
+            worker_ReplayRenamer = new BackgroundWorker();
+            worker_ReplayRenamer.WorkerReportsProgress = true;
+            worker_ReplayRenamer.WorkerSupportsCancellation = true;
+            worker_ReplayRenamer.DoWork += worker_RenameReplays;
+            worker_ReplayRenamer.ProgressChanged += worker_ProgressChangedRenamingReplays;
+            worker_ReplayRenamer.RunWorkerCompleted += worker_RenamingReplaysCompleted;
+            worker_ReplayRenamer.RunWorkerAsync();
+
+        }
+
+        private void worker_RenamingReplaysCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            //TODO
+            throw new NotImplementedException();
+        }
+
+        private void worker_ProgressChangedRenamingReplays(object sender, ProgressChangedEventArgs e)
+        {
+            //TODO
+            throw new NotImplementedException();
+        }
+
+        private void worker_RenameReplays(object sender, DoWorkEventArgs e)
+        {
+            //TODO
+            throw new NotImplementedException();
+        }
+
+        private void cancelRenamingButton_Click(object sender, RoutedEventArgs e)
+        {
+            //TODO
+        }
+
+        private void restoreRenamingButton_Click(object sender, RoutedEventArgs e)
+        {
+            //TODO
+        }
+
+        private void cancelRestoreButton_Click(object sender, RoutedEventArgs e)
+        {
+            //TODO
         }
     }
 }

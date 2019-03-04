@@ -23,7 +23,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
         public Sorter Sorter { get; set; }
         public Criteria SortCriteria { get { return Criteria.PLAYERNAME; } }
         public bool IsNested { get; set; }
-        public IDictionary<string, List<File<IReplay>>> Sort()
+        public IDictionary<string, List<File<IReplay>>> Sort(List<string> replaysThrowingExceptions)
         {
             // Dictionary<directory, dictionary<file, replay>>
             IDictionary<string, List<File<IReplay>>> DirectoryFileReplay = new Dictionary<string, List<File<IReplay>>>();
@@ -78,6 +78,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
 
             foreach (var replay in Sorter.ListReplays)
             {
+                bool threwException = false;
                 // get players per replay
                 var ParsePlayers = replay.Content.Players.ToList();
                 // var index = Sorter.ListReplays.IndexOf(replay);
@@ -97,16 +98,17 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                             var PlayerName = aPlayer.Name;
                             if (IsNested == true && aPlayer == ParsePlayers.Last())
                             {
-                                MoveAndRenameReplay(replay, sortDirectory, PlayerName, false, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
+                                threwException = !MoveAndRenameReplay(replay, sortDirectory, PlayerName, false, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
                             }
                             else
                             {
-                                MoveAndRenameReplay(replay, sortDirectory, PlayerName, true, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
+                                threwException = !MoveAndRenameReplay(replay, sortDirectory, PlayerName, true, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
                             }
                         }
                     }
                     catch (Exception ex)
                     {
+                        threwException = true;
                         ErrorLogger.LogError($"Problem with replay: {replay.FileName}", Sorter.OriginalDirectory + @"\LogErrors", ex);
                     }
                 }
@@ -120,16 +122,17 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
 
                             if (IsNested == true && player == ParsePlayers.Last())
                             {
-                                MoveAndRenameReplay(replay, sortDirectory, PlayerName, false, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
+                                threwException = !MoveAndRenameReplay(replay, sortDirectory, PlayerName, false, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
                             }
                             else
                             {
-                                MoveAndRenameReplay(replay, sortDirectory, PlayerName, true, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
+                                threwException = !MoveAndRenameReplay(replay, sortDirectory, PlayerName, true, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
                             }
                         }
                     }
                     catch (Exception ex)
                     {
+                        threwException = true;
                         ErrorLogger.LogError($"Cannot create folder since replay has no winner.", Sorter.OriginalDirectory + @"\LogErrors", ex);
                     }
                 }
@@ -147,11 +150,11 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
 
                                     if (IsNested == true && aPlayer == ParsePlayers.Last())
                                     {
-                                        MoveAndRenameReplay(replay, sortDirectory, PlayerName, false, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
+                                        threwException = !MoveAndRenameReplay(replay, sortDirectory, PlayerName, false, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
                                     }
                                     else
                                     {
-                                        MoveAndRenameReplay(replay, sortDirectory, PlayerName, true, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
+                                        threwException = !MoveAndRenameReplay(replay, sortDirectory, PlayerName, true, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
                                     }
                                 }
                             }
@@ -164,17 +167,18 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
 
                                 if (IsNested == true && aPlayer == ParsePlayers.Last())
                                 {
-                                    MoveAndRenameReplay(replay, sortDirectory, PlayerName, false, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
+                                    threwException = !MoveAndRenameReplay(replay, sortDirectory, PlayerName, false, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
                                 }
                                 else
                                 {
-                                    MoveAndRenameReplay(replay, sortDirectory, PlayerName, true, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
+                                    threwException = !MoveAndRenameReplay(replay, sortDirectory, PlayerName, true, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
                                 }
                             }
                         }
                     }
                     catch (Exception ex)
                     {
+                        threwException = true;
                         ErrorLogger.LogError("Replay has no winner", Sorter.OriginalDirectory + @"\LogErrors", ex);
                     }
                 }
@@ -184,19 +188,22 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                     {
                         if (IsNested == false)
                         {
-                            MoveAndRenameReplay(replay, sortDirectory, string.Empty, true, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
+                            threwException = !MoveAndRenameReplay(replay, sortDirectory, string.Empty, true, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
                         }
                         else
                         {
-                            MoveAndRenameReplay(replay, sortDirectory, string.Empty, false, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
+                            threwException = !MoveAndRenameReplay(replay, sortDirectory, string.Empty, false, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
                         }
                     }
                     catch (Exception ex)
                     {
+                        threwException = true;
                         ErrorLogger.LogError($"Problem with replay: {replay.FileName}", Sorter.OriginalDirectory + @"\LogErrors", ex);
                     }
 
                 }
+                if (threwException)
+                    replaysThrowingExceptions.Add(replay.OriginalFileName);
             }
             // not implemented yet
             return DirectoryFileReplay;
@@ -335,6 +342,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
 
             foreach (var replay in Sorter.ListReplays)
             {
+                bool threwException = false;
                 if (worker_ReplaySorter.CancellationPending == true)
                 {
                     return null;
@@ -369,16 +377,17 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                             var PlayerName = aPlayer.Name;
                             if (IsNested == true && aPlayer == ParsePlayers.Last())
                             {
-                                MoveAndRenameReplay(replay, sortDirectory, PlayerName, false, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
+                                threwException = !MoveAndRenameReplay(replay, sortDirectory, PlayerName, false, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
                             }
                             else
                             {
-                                MoveAndRenameReplay(replay, sortDirectory, PlayerName, true, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
+                                threwException = !MoveAndRenameReplay(replay, sortDirectory, PlayerName, true, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
                             }
                         }
                     }
                     catch (Exception ex)
                     {
+                        threwException = true;
                         ErrorLogger.LogError($"Problem with replay {sourceFilePath}", Sorter.OriginalDirectory + @"\LogErrors", ex);
                     }
                 }
@@ -391,16 +400,17 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                             var PlayerName = player.Name;
                             if (IsNested == true && player == ParsePlayers.Last())
                             {
-                                MoveAndRenameReplay(replay, sortDirectory, PlayerName, false, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
+                                threwException = !MoveAndRenameReplay(replay, sortDirectory, PlayerName, false, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
                             }
                             else
                             {
-                                MoveAndRenameReplay(replay, sortDirectory, PlayerName, true, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
+                                threwException = !MoveAndRenameReplay(replay, sortDirectory, PlayerName, true, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
                             }
                         }
                     }
                     catch (Exception ex)
                     {
+                        threwException = true;
                         ErrorLogger.LogError("Cannot create folder since replay has no winner.", Sorter.OriginalDirectory + @"\LogErrors", ex);
                     }
                 }
@@ -417,11 +427,11 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                                     var PlayerName = aPlayer.Name;
                                     if (IsNested == true && aPlayer == ParsePlayers.Last())
                                     {
-                                        MoveAndRenameReplay(replay, sortDirectory, PlayerName, false, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
+                                        threwException = !MoveAndRenameReplay(replay, sortDirectory, PlayerName, false, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
                                     }
                                     else
                                     {
-                                        MoveAndRenameReplay(replay, sortDirectory, PlayerName, true, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
+                                        threwException = !MoveAndRenameReplay(replay, sortDirectory, PlayerName, true, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
                                     }
                                 }
                             }
@@ -434,17 +444,18 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
 
                                 if (IsNested == true && aPlayer == ParsePlayers.Last())
                                 {
-                                    MoveAndRenameReplay(replay, sortDirectory, PlayerName, false, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
+                                    threwException = !MoveAndRenameReplay(replay, sortDirectory, PlayerName, false, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
                                 }
                                 else
                                 {
-                                    MoveAndRenameReplay(replay, sortDirectory, PlayerName, true, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
+                                    threwException = !MoveAndRenameReplay(replay, sortDirectory, PlayerName, true, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
                                 }
                             }
                         }
                     }
                     catch (Exception ex)
                     {
+                        threwException = true;
                         ErrorLogger.LogError("Replay has no winner.", Sorter.OriginalDirectory + @"\LogErrors", ex);
                     }
                 }
@@ -455,26 +466,30 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                         var DestinationFilePath = sortDirectory + FileName;
                         if (IsNested == false)
                         {
-                            MoveAndRenameReplay(replay, sortDirectory, string.Empty, true, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
+                            threwException = !MoveAndRenameReplay(replay, sortDirectory, string.Empty, true, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
                         }
                         else
                         {
-                            MoveAndRenameReplay(replay, sortDirectory, string.Empty, false, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
+                            threwException = !MoveAndRenameReplay(replay, sortDirectory, string.Empty, false, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
                         }
                     }
                     catch (Exception ex)
                     {
+                        threwException = true;
                         ErrorLogger.LogError("Problem with replay: {0}", Sorter.OriginalDirectory + @"\LogErrors", ex);
                     }
 
                 }
+                if (threwException)
+                    replaysThrowingExceptions.Add(replay.OriginalFileName);
             }
             // not implemented yet
             return DirectoryFileReplay;
         }
 
-        private void MoveAndRenameReplay(File<IReplay> replay, string sortDirectory, string FolderName, bool shouldCopy, bool KeepOriginalReplayNames, CustomReplayFormat CustomReplayFormat, IDictionary<string, List<File<IReplay>>> directoryFileReplay)
+        private bool MoveAndRenameReplay(File<IReplay> replay, string sortDirectory, string FolderName, bool shouldCopy, bool KeepOriginalReplayNames, CustomReplayFormat CustomReplayFormat, IDictionary<string, List<File<IReplay>>> directoryFileReplay)
         {
+            bool threwException = false;
             FolderName = ReplayHandler.RemoveInvalidChars(FolderName);
 
             try
@@ -491,12 +506,15 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
             }
             catch (IOException IOex)
             {
+                threwException = true;
                 ErrorLogger.LogError($"SortOnPlayerName IOException", Sorter.OriginalDirectory + @"\\LogErrors", IOex);
             }
             catch (NotSupportedException NSE)
             {
+                threwException = true;
                 ErrorLogger.LogError($"SortOnPlayerName NotSupportedException", Sorter.OriginalDirectory + @"LogErrors", NSE);
             }
+            return !threwException;
         }
     }
 }

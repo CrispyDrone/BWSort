@@ -10,7 +10,7 @@
     <DockPanel>
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="Menu">
-                <MenuItem Header="History">
+                <MenuItem IsEnabled="false" Header="History">
                     <StackPanel>
                         <Label Content="Saved Searches/Pools"></Label>
                         <ListBox></ListBox>
@@ -18,7 +18,7 @@
                 </MenuItem>
                 <MenuItem x:Name="MenuItemClose" Header="Close" Click="MenuItemClose_Click"></MenuItem>
             </MenuItem>
-            <MenuItem Header="Edit">
+            <MenuItem IsEnabled="False" Header="Edit">
                 <MenuItem Header="Cut" Command="Cut"></MenuItem>
                 <MenuItem Header="Copy" Command="Copy"></MenuItem>
                 <MenuItem Header="Paste" Command="Paste"></MenuItem>
@@ -37,7 +37,7 @@
                 <MenuItem x:Name="moveBadReplaysDirectoryMenuItem" Header="Set bad replay directory..." Click="moveBadReplaysDirectoryMenuItem_Click"></MenuItem>
                 <MenuItem Header="Advanced Settings"></MenuItem>
             </MenuItem>
-            <MenuItem Header="Help"></MenuItem>
+            <MenuItem IsEnabled="false" Header="Help"></MenuItem>
         </Menu>
         <StatusBar DockPanel.Dock="Bottom">
             <StatusBarItem x:Name="statusBarOutputDir" DockPanel.Dock="Right" Content="{Binding ElementName=sortOutputDirectoryTextBox, Path=Text, Mode=OneWay}" ContentStringFormat="Sort output: {0}"></StatusBarItem>
@@ -54,7 +54,7 @@
                     </StackPanel>
                     <StackPanel DockPanel.Dock="Bottom">
                         <Grid>
-                            <ProgressBar x:Name="progressBarParsingReplays" Minimum="0" Maximum="100"></ProgressBar>
+                            <ProgressBar x:Name="progressBarParsingReplays" Minimum="0" Maximum="100" Margin="10 0"></ProgressBar>
                             <Label x:Name="progressBarLabel" Content="{Binding ElementName=progressBarParsingReplays, Path=Value, StringFormat={}{0:0}%}" HorizontalAlignment="Center"></Label>
                         </Grid>
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
@@ -65,9 +65,9 @@
                     <StackPanel Margin="0 10">
                         <CheckBox x:Name="includeSubdirectoriesCheckbox" Content="Include subdirectories" Margin="10 10 10 0"></CheckBox>
                         <StackPanel Orientation="Horizontal"  Margin="0 0 ">
-                            <CheckBox Content="Ignore specific files and directories" Margin="10"></CheckBox>
-                            <TextBox Text="" MinWidth="100" VerticalContentAlignment="Center" VerticalAlignment="Center" Margin="0 0 10 0"></TextBox>
-                            <Button Content="Use ignore file" VerticalAlignment="Center"></Button>
+                            <CheckBox IsEnabled="false" Content="Ignore specific files and directories" Margin="10"></CheckBox>
+                            <TextBox IsEnabled="false" Text="" MinWidth="100" VerticalContentAlignment="Center" VerticalAlignment="Center" Margin="0 0 10 0"></TextBox>
+                            <Button  IsEnabled="false" Content="Use ignore file" VerticalAlignment="Center"></Button>
                         </StackPanel>
                         <StackPanel Orientation="Horizontal"  Margin="0">
                             <CheckBox x:Name="moveBadReplaysCheckBox" Content="Move bad replays to: " Margin="10"></CheckBox>
@@ -123,17 +123,45 @@
                         <Button x:Name="cancelSortButton" Content="Cancel" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="10 0 10 0" Click="cancelSortButton_Click"></Button>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" DockPanel.Dock="Bottom" HorizontalAlignment="Center">
-                        <Button x:Name="previewSortButton" Content="Preview sort" Margin="10" HorizontalAlignment="Center" Padding="10 0 10 0"></Button>
-                        <Button x:Name="cancelPreviewSortButton" Content="cancel" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="10 0 10 0"></Button>
+                        <Button IsEnabled="false" x:Name="previewSortButton" Content="Preview sort" Margin="10" HorizontalAlignment="Center" Padding="10 0 10 0"></Button>
+                        <Button IsEnabled="false" x:Name="cancelPreviewSortButton" Content="cancel" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="10 0 10 0"></Button>
                     </StackPanel>
                     <Grid DockPanel.Dock="Bottom">
-                        <ProgressBar x:Name="progressBarSortingReplays" Minimum="0" Maximum="100"></ProgressBar>
+                        <ProgressBar x:Name="progressBarSortingReplays" Minimum="0" Maximum="100" Margin="10 0"></ProgressBar>
                         <Label x:Name="progressBarSortingReplaysLabel" Content="{Binding ElementName=progressBarSortingReplays, Path=Value, StringFormat={}{0:0}%}" HorizontalAlignment="Center"></Label>
                     </Grid>
                     <Canvas></Canvas>
                 </DockPanel>
             </TabItem>
-            <TabItem Header="Search">
+            <TabItem Header="Rename">
+                <DockPanel LastChildFill="False">
+                    <StackPanel DockPanel.Dock="Top" Orientation="Vertical" Margin="10 10 10 0">
+                       <CheckBox x:Name="renameLastSortCheckBox" Content="Rename last sort" Margin="10 10 0 0" IsChecked="True" Click="renameLastSortCheckBox_Click"></CheckBox>
+                       <CheckBox x:Name="renameInPlaceCheckBox" Content="Rename in place" Margin="10 10 0 0" IsChecked="True" Click="renameInPlaceCheckBox_Click"></CheckBox>
+                    </StackPanel>
+                    <StackPanel x:Name="replayRenamingOutputDirectoryStackPanel" DockPanel.Dock="Top" Orientation="Horizontal" Margin="10 10 10 0">
+                        <TextBox x:Name="replayRenamingOutputDirectoryTextBox" Text="" HorizontalAlignment="Stretch" MinWidth="300"></TextBox>
+                        <Button x:Name="replayRenamingOutputDirectoryButton" Content="Set directory" Click="replayRenamingOutputDirectoryButton_Click" Margin="10 0 10 0"></Button>
+                    </StackPanel>
+                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="10 10 10 0">
+                        <TextBox x:Name="replayRenamingSyntaxTextBox" Text="" HorizontalAlignment="Stretch" MinWidth="300"></TextBox>
+                        <Label x:Name="replayRenamingSyntaxLabel" Content="Renaming expression" HorizontalAlignment="Center" Margin="10 0"></Label>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Bottom" HorizontalAlignment="Center">
+                        <Button x:Name="restoreRenamingButton" Content="Restore" Click="restoreRenamingButton_Click" Margin ="10" Padding="10 0 10 0"></Button>
+                        <Button x:Name="cancelRestoreButton" Content="Cancel" Click="cancelRestoreButton_Click" Margin ="10" Padding="10 0 10 0"></Button>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Bottom" HorizontalAlignment="Center">
+                        <Button x:Name="executeRenamingButton" Content="Rename" Click="executeRenamingButton_Click" Margin ="10" Padding="10 0 10 0"></Button>
+                        <Button x:Name="cancelRenamingButton" Content="Cancel" Click="cancelRenamingButton_Click" Margin ="10" Padding="10 0 10 0"></Button>
+                    </StackPanel>
+                    <Grid DockPanel.Dock="Bottom">
+                        <ProgressBar x:Name="progressBarRenamingOrRestoringReplays" Minimum="0" Maximum="100" Margin="10 0"></ProgressBar>
+                        <Label x:Name="progressBarRenamingReplaysLabel" Content="{Binding ElementName=progressBarRenamingOrRestoringReplays, Path=Value, StringFormat={}{0:0}%}" HorizontalAlignment="Center"></Label>
+                    </Grid>
+                </DockPanel>
+            </TabItem>
+            <TabItem IsEnabled="false" Header="Search">
                 <StackPanel>
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="Type search criteria here..."></TextBlock>
@@ -142,7 +170,7 @@
                     <ListBox></ListBox>
                 </StackPanel>
             </TabItem>
-            <TabItem Header="Pool">
+            <TabItem IsEnabled="false" Header="Pool">
                 <DockPanel>
                     <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
                         <Button Content="Rename"></Button>

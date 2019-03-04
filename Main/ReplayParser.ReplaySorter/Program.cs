@@ -210,6 +210,7 @@ namespace ReplayParser.ReplaySorter
             Console.WriteLine("Provide a space separated list of criteria.");
             var SortCriteria = User.AskCriteria();
             Sorter sorter = new Sorter(SortResultOutputDirectory.Directory, ListReplays);
+            List<string> replaysThrowingExceptions = new List<string>();
             while (SortCriteria.StopProgram != null)
             {
                 if ((bool)!SortCriteria.StopProgram)
@@ -251,8 +252,9 @@ namespace ReplayParser.ReplaySorter
                     try
                     {
                         // use SortCriteriaParameters
-                        sorter.ExecuteSort(CriteriaParameters.SortCriteriaParameters, (bool)KeepOriginalReplayNames.Yes);
+                        sorter.ExecuteSort(CriteriaParameters.SortCriteriaParameters, (bool)KeepOriginalReplayNames.Yes, replaysThrowingExceptions);
                         Console.WriteLine("Sort finished.");
+                        ReplayHandler.LogBadReplays(replaysThrowingExceptions, sorter.OriginalDirectory + @"\FailedSorts");
                     }
                     catch (Exception ex)
                     {

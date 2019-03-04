@@ -1,12 +1,12 @@
-# BWSort v0.6
+# BWSort v0.8
 
 ## What
-A simple console application to sort and rename replay files from the popular RTS game starcraft brood war.
+A simple GUI/console application to sort and rename replay files from the popular RTS game starcraft brood war.
 
 ## How
-Run the .exe file, provide a directory containing your replays and it will try to parse all the replays (can include subdirectories), and allow you to both rename them according to a custom format, and order them in a mapping hierarchy.
+After installation, run the .exe file (Ending in .UI for the GUI or without .UI for the console. Note the console application is currently implemented as a wizard, I will rewrite this in the future to follow a unix approach, i.e. taking in parameters from the command line instead), provide a directory containing your replays and it will try to parse all the replays (can include subdirectories), and allow you to both rename them according to a custom format, and order them in a mapping hierarchy.
 
-###### Currently supported sort criteria:
+### Currently supported sort criteria:
 
 1) playername
 
@@ -27,7 +27,9 @@ You can specify which gametypes you want to include since it might not be so use
 You can combine multiple sort criteria. For example `map playername` will sort your replays first on the map the game was played on, and then create additional folders
 per playername within the map folder.
 
-###### Syntax for renaming replays:
+In case you just want to rename your replays without sorting, you can choose playername and select the option to not make a folder for winners/losers. This is contrived, but I hadn't considered this option at first. Again something for in the future.
+
+### Syntax for renaming replays:
 
 1) T[separator] with separator being one char (for example , or _ ). This will extract the teams from the replay and separate individual players per team using the separator.
 
@@ -49,21 +51,22 @@ per playername within the map folder.
 
 You have to use | to separate arguments. So for example:
 
-DU|M|WT[_] => will give a replay of the format: 15min13sFightingSpirit(CrispyDrone_Jaedong).rep
+`DU|M|WT[_]` => will give a replay of the format: 15min13sFightingSpirit(CrispyDrone_Jaedong).rep
 
 ## How to install
+Currently there are 3 ways to get the program:
+1. Use the setup.exe installer from .rar archive
+2. Use the non-setup based .exe from the .rar archive labelled as such
+3. Compile from source
 
-1) clone repository, compile
-
-or
-
-2) download zip file under Releases, extract, run the application file. You will need .net framework 4.6, it might prompt you to install it.
+You can find the latest release here: https://github.com/CrispyDrone/BWSort/releases/tag/v0.8
 
 ## Remarks
 
 1. For now only 1.18 or later replays are supported. I was looking into a way to decompress the PKWARE compressed replay files, but the algorithm used in other parsers didn't make much sense to me. If anyone wants to help me implement this, feel free to contact me.
 2. There will be errors for certain criteria like playername. If you specify to make a folder for the winner or for both, but the replay doesn't have a winner, it'll show an error.
 3. Another common error is the "unable to distinguish player from observer", which means that not a single player did a build, unit training, or unit morph action. In most cases, this is a replay of a few seconds long where no player did anything, so you can safely ignore these too.
+4. If a replay shows up in a non-terminal folder (in case of multipe sort criteria), this means one of the errors as mentioned above occurred, meaning it was impossible to determine the winner, the matchup,...
 
 ## Known issues:
 1. When using multiple sort criteria (nested sort), the sort folder's name will not be in the correct order.
@@ -73,9 +76,13 @@ or
 
 
 ## Towards the future:
-1. Bug fixing
-2. Possibly support for 1.16 replays
-3. Fixing team extraction (this will also fix matchups not being determined properly)
-4. Graphical user interface
+For users:
+1. Unix style console application accepting parameters instead of acting like a wizard
+2. Improved GUI, more intuitive with more features
+3. Bug fixing
+4. Trying to improve the parsing which will mean more reliable sorting and renaming
+5. Support for 1.16 replays
+6. Fixing team extraction (this will also fix matchups not being determined properly)
+7. ~~Graphical user interface~~
 
 Many thanks to SimplySerenity for porting the replay parser to C#. You can find the original project here: https://github.com/SimplySerenity/SCReplayFileParser

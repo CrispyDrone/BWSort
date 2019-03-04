@@ -54,7 +54,7 @@ namespace ReplayParser.ReplaySorter
 
         #region public methods
 
-        public void ExecuteSort(SortCriteriaParameters sortcriteriaparameters, bool keeporiginalreplaynames)
+        public void ExecuteSort(SortCriteriaParameters sortcriteriaparameters, bool keeporiginalreplaynames, List<string> replaysThrowingExceptions)
         {
             // why do i need this silly string array with the original order...
             IDictionary<string, List<File<IReplay>>> SortOnXResult = null;
@@ -64,18 +64,18 @@ namespace ReplayParser.ReplaySorter
                 var SortOnX = Factory.GetSortCommand((Criteria)Enum.Parse(typeof(Criteria), CriteriaStringOrder[i]), sortcriteriaparameters, keeporiginalreplaynames, this);
                 if (i == 0)
                 {
-                    SortOnXResult = SortOnX.Sort();
+                    SortOnXResult = SortOnX.Sort(replaysThrowingExceptions);
                 }
                 else
                 {
                     // nested sort
                     SortOnX.IsNested = true;
-                    SortOnXResult = NestedSort(SortOnX, SortOnXResult);
+                    SortOnXResult = NestedSort(SortOnX, SortOnXResult, replaysThrowingExceptions);
                 }
             }
         }
 
-        public IDictionary<string, List<File<IReplay>>> NestedSort(ISortCommand SortOnX, IDictionary<string, List<File<IReplay>>> SortOnXResult)
+        public IDictionary<string, List<File<IReplay>>> NestedSort(ISortCommand SortOnX, IDictionary<string, List<File<IReplay>>> SortOnXResult, List<string> replaysThrowingExceptions)
         {
             // Dictionary<directory, Files>
             IDictionary<string, List<File<IReplay>>> DirectoryFileReplay = new Dictionary<string, List<File<IReplay>>>();
@@ -86,7 +86,7 @@ namespace ReplayParser.ReplaySorter
                 var FileReplays = SortOnXResult[directory];
                 SortOnX.Sorter.CurrentDirectory = directory;
                 SortOnX.Sorter.ListReplays = FileReplays;
-                var result = SortOnX.Sort();
+                var result = SortOnX.Sort(replaysThrowingExceptions);
                 DirectoryFileReplay = DirectoryFileReplay.Concat(result).ToDictionary(k => k.Key, k => k.Value);
             }
             // not implemented yet
