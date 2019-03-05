@@ -11,7 +11,7 @@ using System.Diagnostics;
 using System.ComponentModel;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using ReplayParser.ReplaySorter.Sorting;
-
+using ReplayParser.ReplaySorter.ReplayRenamer;
 
 namespace ReplayParser.ReplaySorter.UI
 {
@@ -27,6 +27,7 @@ namespace ReplayParser.ReplaySorter.UI
         }
 
         // parsing
+        private string replayDirectory;
         private List<File<IReplay>> ListReplays = new List<File<IReplay>>();
         private IEnumerable<string> files;
         List<string> ReplaysThrowingExceptions = new List<string>();
@@ -49,8 +50,8 @@ namespace ReplayParser.ReplaySorter.UI
         // renaming
         private BackgroundWorker worker_ReplayRenamer = null;
         bool RenamingReplays = false;
-        bool RenameLastSort = false;
-        bool RenameInPlace = false;
+        // bool RenameLastSort = false;
+        // bool RenameInPlace = false;
 
         private void parseReplaysButton_Click(object sender, RoutedEventArgs e)
         {
@@ -66,6 +67,7 @@ namespace ReplayParser.ReplaySorter.UI
                 MessageBox.Show("The specified directory does not exist.", "Invalid directory", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
                 return;
             }
+            replayDirectory = replayDirectoryTextBox.Text;
             SearchDirectory searchDirectory = new SearchDirectory(replayDirectoryTextBox.Text, searchOption);
             statusBarAction.Content = "Parsing replays...";
             if (moveBadReplaysCheckBox.IsChecked == true)
@@ -188,7 +190,7 @@ namespace ReplayParser.ReplaySorter.UI
                 else
                 {
                     statusBarAction.Content = string.Format("Finished parsing!");
-                    MessageBox.Show(string.Format("Parsing replays finished! It took {0} seconds to parse {1} replays. {2} replays encountered exceptions during parsing. {3}", (TimeSpan)e.Result, ListReplays.Count(), ReplaysThrowingExceptions.Count(), MoveBadReplays ? "Bad replays have been moved to the specified directory." : ""), "Parsing summary", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);
+                    MessageBox.Show(string.Format("Parsing replays finished! It took {0} to parse {1} replays. {2} replays encountered exceptions during parsing. {3}", (TimeSpan)e.Result, ListReplays.Count(), ReplaysThrowingExceptions.Count(), MoveBadReplays ? "Bad replays have been moved to the specified directory." : ""), "Parsing summary", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);
                     ResetReplayParsingVariables(false, true);
                 }
             }
@@ -682,7 +684,7 @@ namespace ReplayParser.ReplaySorter.UI
             {
                 statusBarAction.Content = "Sorting cancelled...";
                 progressBarSortingReplays.Value = 0;
-                
+
                 if (boolAnswer != null)
                 {
                     MessageBox.Show(boolAnswer.Message, "Failed to start sort", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
@@ -696,7 +698,7 @@ namespace ReplayParser.ReplaySorter.UI
             else
             {
                 statusBarAction.Content = "Finished sorting replays";
-                MessageBox.Show(string.Format("Finished sorting replays! It took {0} seconds to sort {1} replays. {2} replays encountered exceptions.", swSort.Elapsed, ListReplays.Count, ReplaysThrowingExceptions.Count()), "Finished Sorting", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);
+                MessageBox.Show(string.Format("Finished sorting replays! It took {0} to sort {1} replays. {2} replays encountered exceptions.", swSort.Elapsed, ListReplays.Count, ReplaysThrowingExceptions.Count()), "Finished Sorting", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);
                 ReplayHandler.LogBadReplays(ReplaysThrowingExceptions, sorter.OriginalDirectory + @"\FailedSorts");
                 ResetReplaySortingVariables();
                 ReplaysThrowingExceptions.Clear();
@@ -839,11 +841,32 @@ namespace ReplayParser.ReplaySorter.UI
 
         private void executeRenamingButton_Click(object sender, RoutedEventArgs e)
         {
-            if (!Directory.Exists(replayRenamingOutputDirectoryTextBox.Text))
+            bool? renameInPlace = renameInPlaceCheckBox.IsChecked;
+            bool? renameLastSort = renameLastSortCheckBox.IsChecked;
+            string replayRenamingSyntax = replayRenamingSyntaxTextBox.Text;
+            string replayRenamingOutputDirectory = replayRenamingOutputDirectoryTextBox.Text;
+
+            CustomReplayFormat customReplayFormat = null;
+            if (string.IsNullOrEmpty(replayRenamingSyntax))
             {
-                MessageBox.Show("The specified directory does not exist.", "Invalid directory", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
+                MessageBox.Show("Could not find the textbox containing the custom replay format.", "Error finding textbox", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
+            }
+            try
+            {
+                customReplayFormat = new CustomReplayFormat(replayRenamingSyntax);
+            }
+            catch (ArgumentException)
+            {
+                MessageBox.Show("Invalid custom replay format. Check help section for correct syntax", "Invalid syntax", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
                 return;
             }
+
+            var renamingParameters = RenamingParameters.Create(customReplayFormat, replayDirectory, replayRenamingOutputDirectory, renameInPlace, renameLastSort);
+            if (renamingParameters == null)
+                return;
+
+            var replayRenamer = new Renamer(renamingParameters, ListReplays);
+
             statusBarAction.Content = "Renaming replays...";
 
             worker_ReplayRenamer = new BackgroundWorker();
@@ -852,23 +875,70 @@ namespace ReplayParser.ReplaySorter.UI
             worker_ReplayRenamer.DoWork += worker_RenameReplays;
             worker_ReplayRenamer.ProgressChanged += worker_ProgressChangedRenamingReplays;
             worker_ReplayRenamer.RunWorkerCompleted += worker_RenamingReplaysCompleted;
-            worker_ReplayRenamer.RunWorkerAsync();
+            worker_ReplayRenamer.RunWorkerAsync(replayRenamer);
 
         }
 
-        private void worker_RenamingReplaysCompleted(object sender, RunWorkerCompletedEventArgs e)
+        private void worker_RenameReplays(object sender, DoWorkEventArgs e)
         {
-            //TODO
-            throw new NotImplementedException();
+            var replayRenamer = e.Argument as Renamer;
+            var renameInPlace = replayRenamer.RenameInPlace;
+            var renameLastSort = replayRenamer.RenameLastSort;
+            var customReplayFormat = replayRenamer.CustomReplayFormat;
+            var replayRenamingOutputDirectory = replayRenamer.OutputDirectory;
+
+            if ((renameInPlace) || (renameLastSort))
+            {
+                // don't care about output directory since we don't use it
+                if (renameInPlace)
+                {
+                    var response = replayRenamer.RenameInPlaceAsync(sender as BackgroundWorker, false);
+                    if (!response.Success)
+                    {
+                        MessageBox.Show(string.Join(". ", response.Errors), "Invalid rename", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
+                    }
+                    else
+                    {
+                        MessageBox.Show(response.Result, "Finished renaming", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);
+                    }
+                }
+                else
+                {
+                    var response = replayRenamer.RenameInPlaceAsync(sender as BackgroundWorker, true);
+                    if (!response.Success)
+                    {
+                        MessageBox.Show(string.Join(". ", response.Errors), "Invalid rename", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
+                    }
+                    else
+                    {
+                        MessageBox.Show(response.Result, "Finished renaming", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);
+                    }
+                }
+            }
+            else
+            {
+                // renaming into another directory
+                //TODO
+            }
         }
 
         private void worker_ProgressChangedRenamingReplays(object sender, ProgressChangedEventArgs e)
         {
-            //TODO
-            throw new NotImplementedException();
+            if (e.UserState == null)
+            {
+                progressBarRenamingOrRestoringReplays.Value = e.ProgressPercentage;
+                if (ErrorMessage != string.Empty)
+                {
+                    statusBarErrors.Content = ErrorMessage;
+                }
+                if (RenamingReplays)
+                {
+                    statusBarAction.Content = "Renaming replays...";
+                }
+            }
         }
 
-        private void worker_RenameReplays(object sender, DoWorkEventArgs e)
+        private void worker_RenamingReplaysCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             //TODO
             throw new NotImplementedException();

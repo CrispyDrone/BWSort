@@ -136,8 +136,8 @@
             <TabItem Header="Rename">
                 <DockPanel LastChildFill="False">
                     <StackPanel DockPanel.Dock="Top" Orientation="Vertical" Margin="10 10 10 0">
-                       <CheckBox x:Name="renameLastSortCheckBox" Content="Rename last sort" Margin="10 10 0 0" IsChecked="True" Click="renameLastSortCheckBox_Click"></CheckBox>
-                       <CheckBox x:Name="renameInPlaceCheckBox" Content="Rename in place" Margin="10 10 0 0" IsChecked="True" Click="renameInPlaceCheckBox_Click"></CheckBox>
+                       <CheckBox x:Name="renameLastSortCheckBox" Content="Rename last sort" Margin="10 10 0 0" IsChecked="False" Click="renameLastSortCheckBox_Click"></CheckBox>
+                       <CheckBox x:Name="renameInPlaceCheckBox" Content="Rename in place" Margin="10 10 0 0" IsChecked="False" Click="renameInPlaceCheckBox_Click"></CheckBox>
                     </StackPanel>
                     <StackPanel x:Name="replayRenamingOutputDirectoryStackPanel" DockPanel.Dock="Top" Orientation="Horizontal" Margin="10 10 10 0">
                         <TextBox x:Name="replayRenamingOutputDirectoryTextBox" Text="" HorizontalAlignment="Stretch" MinWidth="300"></TextBox>

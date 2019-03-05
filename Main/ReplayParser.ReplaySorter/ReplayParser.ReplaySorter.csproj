@@ -70,11 +70,14 @@
     <Compile Include="Diagnostics\ErrorLogger.cs" />
     <Compile Include="Diagnostics\ProgressBar.cs" />
     <Compile Include="File.cs" />
+    <Compile Include="ReplayRenamer\Renamer\RenamingParameters.cs" />
+    <Compile Include="ReplayRenamer\Renamer\Renamer.cs" />
     <Compile Include="Replays.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Replays.resx</DependentUpon>
     </Compile>
+    <Compile Include="ServiceResult.cs" />
     <Compile Include="Sorting\Enums\Criteria.cs" />
     <Compile Include="ReplayRenamer\Custom Format\CustomReplayFormat.cs" />
     <Compile Include="ReplayRenamer\Enums\CustomReplayNameSyntax.cs" />
