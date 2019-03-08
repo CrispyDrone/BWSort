@@ -78,6 +78,7 @@
       <DependentUpon>Replays.resx</DependentUpon>
     </Compile>
     <Compile Include="ServiceResult.cs" />
+    <Compile Include="ServiceResultSummary.cs" />
     <Compile Include="Sorting\Enums\Criteria.cs" />
     <Compile Include="ReplayRenamer\Custom Format\CustomReplayFormat.cs" />
     <Compile Include="ReplayRenamer\Enums\CustomReplayNameSyntax.cs" />

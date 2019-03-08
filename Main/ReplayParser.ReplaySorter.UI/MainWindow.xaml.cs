@@ -886,40 +886,27 @@ namespace ReplayParser.ReplaySorter.UI
             var renameLastSort = replayRenamer.RenameLastSort;
             var customReplayFormat = replayRenamer.CustomReplayFormat;
             var replayRenamingOutputDirectory = replayRenamer.OutputDirectory;
+            ServiceResult<ServiceResultSummary> response = null;
 
             if ((renameInPlace) || (renameLastSort))
             {
                 // don't care about output directory since we don't use it
                 if (renameInPlace)
                 {
-                    var response = replayRenamer.RenameInPlaceAsync(sender as BackgroundWorker, false);
-                    if (!response.Success)
-                    {
-                        MessageBox.Show(string.Join(". ", response.Errors), "Invalid rename", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
-                    }
-                    else
-                    {
-                        MessageBox.Show(response.Result, "Finished renaming", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);
-                    }
+                    response = replayRenamer.RenameInPlaceAsync(sender as BackgroundWorker, false);
                 }
                 else
                 {
-                    var response = replayRenamer.RenameInPlaceAsync(sender as BackgroundWorker, true);
-                    if (!response.Success)
-                    {
-                        MessageBox.Show(string.Join(". ", response.Errors), "Invalid rename", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
-                    }
-                    else
-                    {
-                        MessageBox.Show(response.Result, "Finished renaming", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);
-                    }
+                    response = replayRenamer.RenameInPlaceAsync(sender as BackgroundWorker, true);
                 }
             }
             else
             {
                 // renaming into another directory
                 //TODO
+                response = replayRenamer.RenameToDirectoryAsync(sender as BackgroundWorker);
             }
+            e.Result = response;
         }
 
         private void worker_ProgressChangedRenamingReplays(object sender, ProgressChangedEventArgs e)
@@ -936,27 +923,56 @@ namespace ReplayParser.ReplaySorter.UI
                     statusBarAction.Content = "Renaming replays...";
                 }
             }
+            else
+            {
+                progressBarRenamingOrRestoringReplays.Value = e.ProgressPercentage;
+                statusBarAction.Content = (string)e.UserState;
+            }
         }
 
         private void worker_RenamingReplaysCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            //TODO
-            throw new NotImplementedException();
+            var response = e.Result as ServiceResult<ServiceResultSummary>;
+            progressBarSortingReplays.Value = 0;
+
+            if (e.Cancelled == true)
+            {
+                statusBarAction.Content = "Renaming cancelled...";
+                MessageBox.Show(response.Result.Message, "Renaming cancelled", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);
+            }
+            else
+            {
+                statusBarAction.Content = "Finished renaming replays";
+                // ??
+                if (!response.Success)
+                {
+                    MessageBox.Show(string.Join(". ", response.Errors), "Invalid rename", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
+                }
+                else
+                {
+                    MessageBox.Show(response.Result.Message, "Finished renaming", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);
+                }
+            }
         }
 
         private void cancelRenamingButton_Click(object sender, RoutedEventArgs e)
         {
-            //TODO
+            if (worker_ReplayRenamer != null)
+            {
+                worker_ReplayRenamer.CancelAsync();
+            }
         }
 
         private void restoreRenamingButton_Click(object sender, RoutedEventArgs e)
         {
             //TODO
+            throw new NotImplementedException();
         }
 
         private void cancelRestoreButton_Click(object sender, RoutedEventArgs e)
         {
             //TODO
+            throw new NotImplementedException();
         }
     }
 }
