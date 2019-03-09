@@ -1,5 +1,6 @@
 ﻿using ReplayParser.Interfaces;
 using ReplayParser.ReplaySorter.Diagnostics;
+using ReplayParser.ReplaySorter.IO;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -22,7 +23,7 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
 
         #region methods
 
-        private ServiceResult<ServiceResultSummary> ComputeNames(BackgroundWorker worker_ReplayRenamer, bool ignoreSorted, string outputDirectory)
+        private ServiceResult<ServiceResultSummary> ComputeNames(BackgroundWorker worker_ReplayRenamer, bool ignoreSorted, string outputDirectory, bool restore = false)
         {
             worker_ReplayRenamer.ReportProgress(0, "Computing names...");
             // report progress... with "Generating names..."
@@ -32,9 +33,9 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
                 return new ServiceResult<ServiceResultSummary>(ServiceResultSummary.Default, false, new List<string> { "You have to parse replays before you can sort. Replay list is empty!" });
             }
 
-            if (!ignoreSorted && (firstReplay.OriginalFileName != firstReplay.FileName))
+            if (!ignoreSorted && (firstReplay.OriginalFilePath != firstReplay.FilePath))
             {
-                return new ServiceResult<ServiceResultSummary>(ServiceResultSummary.Default, false, new List<string> { "Replays have been sorted already. Please execute restore before attempting to rename in place." });
+                return new ServiceResult<ServiceResultSummary>(ServiceResultSummary.Default, false, new List<string> { "Replays have been sorted already. Please execute restore before attempting to rename in place. This will make it impossible to rename your last sort." });
             }
 
             if (!string.IsNullOrWhiteSpace(outputDirectory) && !Directory.Exists(outputDirectory))
@@ -61,13 +62,13 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
                 worker_ReplayRenamer.ReportProgress(progressPercentage);
                 try
                 {
-                    replay.FileName = (string.IsNullOrWhiteSpace(outputDirectory) ? Directory.GetParent(replay.FileName).ToString() : outputDirectory ) + @"\" + ReplayHandler.GenerateReplayName(replay.Content, CustomReplayFormat) + ".rep";
+                    replay.FutureFilePath = (string.IsNullOrWhiteSpace(outputDirectory) ? Directory.GetParent(replay.FilePath).ToString() : outputDirectory ) + @"\" + (restore ?  FileHandler.GetFileName(replay.OriginalFilePath) : ReplayHandler.GenerateReplayName(replay.Content, CustomReplayFormat) + ".rep");
                 }
                 catch (Exception ex)
                 {
                     replaysThrowingExceptions++;
                     //TODO add to serviceresult instead... log later?
-                    ErrorLogger.LogError($"Error while renaming replay: {replay.OriginalFileName}", OriginalDirectory + @"\LogErrors", ex);
+                    ErrorLogger.GetInstance()?.LogError($"Error while renaming replay: {replay.OriginalFilePath}", OriginalDirectory + @"\LogErrors", ex);
                 }
             }
 
@@ -124,18 +125,20 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
                     //TODO identical names => failed to create file (add incrementor)
                     if (shouldCopy)
                     {
-                        File.Copy(replay.OriginalFileName, replay.FileName);
+                        ReplayHandler.CopyReplay(replay); 
+                        // File.Copy(replay.OriginalFilePath, replay.FilePath);
                     }
                     else
                     {
-                        File.Move(replay.OriginalFileName, replay.FileName);
+                        ReplayHandler.MoveReplay(replay);
+                        // File.Move(replay.OriginalFilePath, replay.FilePath);
                     }
                 }
                 catch (Exception ex)
                 {
                     replaysThrowingExceptions++;
                     //TODO add to serviceresult instead... log later?
-                    ErrorLogger.LogError($"Error while renaming replay: {replay.OriginalFileName}", OriginalDirectory + @"\LogErrors", ex);
+                    ErrorLogger.GetInstance()?.LogError($"Error while renaming replay: {replay.OriginalFilePath}", OriginalDirectory + @"\LogErrors", ex);
                 }
             }
 
@@ -156,9 +159,9 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
 
         }
 
-        private ServiceResult<ServiceResultSummary> ComputeAndExecuteRenaming(BackgroundWorker worker_ReplayRenamer, bool ignoreSorted, string outputDirectory)
+        private ServiceResult<ServiceResultSummary> ComputeAndExecuteRenaming(BackgroundWorker worker_ReplayRenamer, bool ignoreSorted, string outputDirectory, bool restore = false)
         {
-            var computationResponse = ComputeNames(worker_ReplayRenamer, ignoreSorted, OutputDirectory);
+            var computationResponse = ComputeNames(worker_ReplayRenamer, ignoreSorted, OutputDirectory, restore);
 
             if (!computationResponse.Success)
             {
@@ -242,8 +245,17 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
             return ComputeAndExecuteRenaming(worker_ReplayRenamer, true, OutputDirectory);
         }
 
+        public ServiceResult<ServiceResultSummary> RestoreOriginalNames(BackgroundWorker worker_ReplayRenamer)
+        {
+            // rename in place => names changed => restore => names restored back to originals
+            // sort with name change => names changed => restore => keep sorted, but revert names to originals
+            // rename last sort => names changed => restore => restore names to originals
+            return ComputeAndExecuteRenaming(worker_ReplayRenamer, true, string.Empty, true);
+        }
+
         #endregion
 
         #endregion
     }
 }
+

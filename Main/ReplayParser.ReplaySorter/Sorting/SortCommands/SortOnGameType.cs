@@ -5,6 +5,7 @@ using System.IO;
 using ReplayParser.Interfaces;
 using ReplayParser.ReplaySorter.Diagnostics;
 using System.ComponentModel;
+using ReplayParser.ReplaySorter.IO;
 
 namespace ReplayParser.ReplaySorter.Sorting.SortCommands
 {
@@ -34,7 +35,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
 
             // make sortdirectory
             string sortDirectory = Sorter.CurrentDirectory + @"\" + Sorter.SortCriteria.ToString();
-            sortDirectory = Sorter.CreateDirectory(sortDirectory);
+            sortDirectory = FileHandler.CreateDirectory(sortDirectory);
 
             // make subdirectory per gametype, and put all associated replays into it
 
@@ -64,25 +65,25 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                     catch (IOException IOex)
                     {
                         threwException = true;
-                        ErrorLogger.LogError("SortOnGameType IOException.", Sorter.OriginalDirectory + @"\LogErrors", IOex);
+                        ErrorLogger.GetInstance()?.LogError("SortOnGameType IOException.", Sorter.OriginalDirectory + @"\LogErrors", IOex);
                     }
                     catch (NotSupportedException NSE)
                     {
                         threwException = true;
-                        ErrorLogger.LogError("SortOnGameType NotSupportedException.", Sorter.OriginalDirectory + @"\LogErrors", NSE);
+                        ErrorLogger.GetInstance()?.LogError("SortOnGameType NotSupportedException.", Sorter.OriginalDirectory + @"\LogErrors", NSE);
                     }
                     catch (NullReferenceException nullex)
                     {
                         threwException = true;
-                        ErrorLogger.LogError("SortOnGameType NullReferenceException.", Sorter.OriginalDirectory + @"\LogErrors", nullex);
+                        ErrorLogger.GetInstance()?.LogError("SortOnGameType NullReferenceException.", Sorter.OriginalDirectory + @"\LogErrors", nullex);
                     }
                     catch (ArgumentException AEX)
                     {
                         threwException = true;
-                        ErrorLogger.LogError("SortOnGameType ArgumentException.", Sorter.OriginalDirectory + @"\LogErrors", AEX);
+                        ErrorLogger.GetInstance()?.LogError("SortOnGameType ArgumentException.", Sorter.OriginalDirectory + @"\LogErrors", AEX);
                     }
                     if (threwException)
-                        replaysThrowingExceptions.Add(replay.OriginalFileName);
+                        replaysThrowingExceptions.Add(replay.OriginalFilePath);
                 }
             }
             // not implemented yet
@@ -100,7 +101,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
 
             // make sortdirectory
             string sortDirectory = Sorter.CurrentDirectory + @"\" + Sorter.SortCriteria.ToString();
-            sortDirectory = Sorter.CreateDirectory(sortDirectory, true);
+            sortDirectory = FileHandler.CreateDirectory(sortDirectory, true);
 
             // make subdirectory per gametype, and put all associated replays into it
 
@@ -136,30 +137,30 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                     catch (IOException IOex)
                     {
                         threwError = true;
-                        ErrorLogger.LogError("SortOnGameType IOException.", Sorter.OriginalDirectory + @"\LogErrors", IOex);
+                        ErrorLogger.GetInstance()?.LogError("SortOnGameType IOException.", Sorter.OriginalDirectory + @"\LogErrors", IOex);
                         //Console.WriteLine(IOex.Message);
                     }
                     catch (NotSupportedException NSE)
                     {
                         threwError = true;
-                        ErrorLogger.LogError("SortOnGameType NotSupportedException.", Sorter.OriginalDirectory + @"\LogErrors", NSE);
+                        ErrorLogger.GetInstance()?.LogError("SortOnGameType NotSupportedException.", Sorter.OriginalDirectory + @"\LogErrors", NSE);
                         //Console.WriteLine(NSE.Message);
                     }
                     catch (NullReferenceException nullex)
                     {
                         threwError = true;
-                        ErrorLogger.LogError("SortOnGameType NullReferenceException.", Sorter.OriginalDirectory + @"\LogErrors", nullex);
+                        ErrorLogger.GetInstance()?.LogError("SortOnGameType NullReferenceException.", Sorter.OriginalDirectory + @"\LogErrors", nullex);
                         //Console.WriteLine(nullex.Message);
                     }
                     catch (ArgumentException AEX)
                     {
                         threwError = true;
-                        ErrorLogger.LogError("SortOnGameType ArgumentException.", Sorter.OriginalDirectory + @"\LogErrors", AEX);
+                        ErrorLogger.GetInstance()?.LogError("SortOnGameType ArgumentException.", Sorter.OriginalDirectory + @"\LogErrors", AEX);
                         //Console.WriteLine(AEX.Message);
                     }
 
                     if (threwError)
-                        replaysThrowingExceptions.Add(replay.OriginalFileName);
+                        replaysThrowingExceptions.Add(replay.OriginalFilePath);
 
                     currentPosition++;
                     if (this.IsNested == false)

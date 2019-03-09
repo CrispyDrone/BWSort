@@ -54,6 +54,7 @@ namespace ReplayParser.ReplaySorter
 
         #region public methods
 
+        //TODO sorting needs to start with the original names, and then progressively work with the filename....??
         public void ExecuteSort(SortCriteriaParameters sortcriteriaparameters, bool keeporiginalreplaynames, List<string> replaysThrowingExceptions)
         {
             // why do i need this silly string array with the original order...
@@ -186,79 +187,6 @@ namespace ReplayParser.ReplaySorter
             return DirectoryFileReplay;
         }
 
-        public static string AdjustName(string fullPath, bool isDirectory)
-        {
-            int count = 1;
-
-            string fileNameOnly = Path.GetFileNameWithoutExtension(fullPath);
-            string extension = Path.GetExtension(fullPath);
-            string path = Path.GetDirectoryName(fullPath);
-            string newFullPath = fullPath;
-
-            if (isDirectory)
-            {
-                while (Directory.Exists(newFullPath))
-                {
-                    newFullPath = IncrementName(fileNameOnly, extension, path, ref count);
-                }
-            }
-            else
-            {
-                while (File.Exists(newFullPath))
-                {
-                    newFullPath = IncrementName(fileNameOnly, extension, path, ref count);
-                }
-            }
-            return newFullPath;
-        }
-
-        public string CreateDirectory(string sortDirectory, bool UI = false)
-        {
-            if (!UI)
-            {
-                if (Directory.Exists(sortDirectory))
-                {
-                    Console.WriteLine("Sort directory already exists.");
-                    Console.WriteLine("Write to same directory? Yes/No.");
-                    var WriteToSameDirectory = User.AskYesNo();
-                    if (WriteToSameDirectory.Yes != null)
-                    {
-                        if ((bool)!WriteToSameDirectory.Yes)
-                        {
-                            sortDirectory = AdjustName(sortDirectory, true);
-                            Directory.CreateDirectory(sortDirectory);
-                        }
-                    }
-                }
-                else
-                {
-                    Directory.CreateDirectory(sortDirectory);
-                }
-            }
-            else
-            {
-                if (Directory.Exists(sortDirectory))
-                {
-                    var result = MessageBox.Show("Directory already exists. Write to a new directory?", "Warning", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.Yes);
-                    if (result == MessageBoxResult.Yes)
-                    {
-                        sortDirectory = AdjustName(sortDirectory, true);
-                        Directory.CreateDirectory(sortDirectory);
-                    }
-                }
-                else
-                {
-                    Directory.CreateDirectory(sortDirectory);
-                }
-            }
-            return sortDirectory;
-        }
-
-        public static string IncrementName(string fileNameOnly, string extension, string path, ref int count)
-        {
-            string tempFileName = string.Format("{0}({1})", fileNameOnly, count++);
-            return Path.Combine(path, tempFileName + extension);
-        }
 
         #endregion
         #endregion

@@ -4,6 +4,7 @@ using System.IO;
 using ReplayParser.Interfaces;
 using ReplayParser.ReplaySorter.Diagnostics;
 using System.ComponentModel;
+using ReplayParser.ReplaySorter.IO;
 
 namespace ReplayParser.ReplaySorter.Sorting.SortCommands
 {
@@ -45,7 +46,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
             }
 
             string sortDirectory = Sorter.CurrentDirectory + @"\" + Sorter.SortCriteria.ToString();
-            sortDirectory = Sorter.CreateDirectory(sortDirectory);
+            sortDirectory = FileHandler.CreateDirectory(sortDirectory);
 
             foreach (var map in Maps)
             {
@@ -91,30 +92,30 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                         catch (IOException IOex)
                         {
                             threwException = true;
-                            ErrorLogger.LogError("SortOnGameType IOException.", Sorter.OriginalDirectory + @"\LogErrors", IOex);
+                            ErrorLogger.GetInstance()?.LogError("SortOnGameType IOException.", Sorter.OriginalDirectory + @"\LogErrors", IOex);
                         }
                         catch (NotSupportedException NSE)
                         {
                             threwException = true;
-                            ErrorLogger.LogError("SortOnGameType NotSupportedException.", Sorter.OriginalDirectory + @"\LogErrors", NSE);
+                            ErrorLogger.GetInstance()?.LogError("SortOnGameType NotSupportedException.", Sorter.OriginalDirectory + @"\LogErrors", NSE);
                         }
                         catch (NullReferenceException nullex)
                         {
                             threwException = true;
-                            ErrorLogger.LogError("SortOnGameType NullReferenceException.", Sorter.OriginalDirectory + @"\LogErrors", nullex);
+                            ErrorLogger.GetInstance()?.LogError("SortOnGameType NullReferenceException.", Sorter.OriginalDirectory + @"\LogErrors", nullex);
                         }
                         catch (ArgumentException AEX)
                         {
                             threwException = true;
-                            ErrorLogger.LogError("SortOnGameType ArgumentException.", Sorter.OriginalDirectory + @"\LogErrors", AEX);
+                            ErrorLogger.GetInstance()?.LogError("SortOnGameType ArgumentException.", Sorter.OriginalDirectory + @"\LogErrors", AEX);
                         }
                         catch (Exception ex)
                         {
                             threwException = true;
-                            ErrorLogger.LogError("SortOnGameType Exception.", Sorter.OriginalDirectory + @"\LogErrors", ex);
+                            ErrorLogger.GetInstance()?.LogError("SortOnGameType Exception.", Sorter.OriginalDirectory + @"\LogErrors", ex);
                         }
                         if (threwException)
-                            replaysThrowingExceptions.Add(replay.OriginalFileName);
+                            replaysThrowingExceptions.Add(replay.OriginalFilePath);
                     }
                     // key already exists... how/why?? "Untitled Scenario"... different maps, same "internal" name
                     var MapFolder = sortDirectory + @"\" + MapName;
@@ -128,7 +129,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                 }
                 catch (Exception ex)
                 {
-                    ErrorLogger.LogError($"SortOnGameType Exception Outer: {DirectoryFileReplay.Count.ToString()}.", Sorter.OriginalDirectory + @"\LogErrors", ex);
+                    ErrorLogger.GetInstance()?.LogError($"SortOnGameType Exception Outer: {DirectoryFileReplay.Count.ToString()}.", Sorter.OriginalDirectory + @"\LogErrors", ex);
                     //Console.WriteLine(ex.Message);
                     //Console.WriteLine(DirectoryFileReplay.Count.ToString());
                 }
@@ -165,7 +166,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
             }
 
             string sortDirectory = Sorter.CurrentDirectory + @"\" + Sorter.SortCriteria.ToString();
-            sortDirectory = Sorter.CreateDirectory(sortDirectory, true);
+            sortDirectory = FileHandler.CreateDirectory(sortDirectory, true);
             int currentPosition = 0;
             int progressPercentage = 0;
 
@@ -229,30 +230,30 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                         catch (IOException IOex)
                         {
                             threwException = true;
-                            ErrorLogger.LogError("SortOnGameType IOException.", Sorter.OriginalDirectory + @"\LogErrors", IOex);
+                            ErrorLogger.GetInstance()?.LogError("SortOnGameType IOException.", Sorter.OriginalDirectory + @"\LogErrors", IOex);
                         }
                         catch (NotSupportedException NSE)
                         {
                             threwException = true;
-                            ErrorLogger.LogError("SortOnGameType NotSupportedException.", Sorter.OriginalDirectory + @"\LogErrors", NSE);
+                            ErrorLogger.GetInstance()?.LogError("SortOnGameType NotSupportedException.", Sorter.OriginalDirectory + @"\LogErrors", NSE);
                         }
                         catch (NullReferenceException nullex)
                         {
                             threwException = true;
-                            ErrorLogger.LogError("SortOnGameType NullReferenceException.", Sorter.OriginalDirectory + @"\LogErrors", nullex);
+                            ErrorLogger.GetInstance()?.LogError("SortOnGameType NullReferenceException.", Sorter.OriginalDirectory + @"\LogErrors", nullex);
                         }
                         catch (ArgumentException AEX)
                         {
                             threwException = true;
-                            ErrorLogger.LogError("SortOnGameType ArgumentException.", Sorter.OriginalDirectory + @"\LogErrors", AEX);
+                            ErrorLogger.GetInstance()?.LogError("SortOnGameType ArgumentException.", Sorter.OriginalDirectory + @"\LogErrors", AEX);
                         }
                         catch (Exception ex)
                         {
                             threwException = true;
-                            ErrorLogger.LogError("SortOnGameType Exception.", Sorter.OriginalDirectory + @"\LogErrors", ex);
+                            ErrorLogger.GetInstance()?.LogError("SortOnGameType Exception.", Sorter.OriginalDirectory + @"\LogErrors", ex);
                         }
                         if (threwException)
-                            replaysThrowingExceptions.Add(replay.OriginalFileName);
+                            replaysThrowingExceptions.Add(replay.OriginalFilePath);
                     }
                     // key already exists... how/why?? "Untitled Scenario"... different maps, same "internal" name
                     var MapFolder = sortDirectory + @"\" + MapName;
@@ -261,7 +262,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                 }
                 catch (Exception ex)
                 {
-                    ErrorLogger.LogError($"SortOnGameType Exception Outer: {DirectoryFileReplay.Count.ToString()}.", Sorter.OriginalDirectory + @"\LogErrors", ex);
+                    ErrorLogger.GetInstance()?.LogError($"SortOnGameType Exception Outer: {DirectoryFileReplay.Count.ToString()}.", Sorter.OriginalDirectory + @"\LogErrors", ex);
                 }
             }
             // not implemented yet

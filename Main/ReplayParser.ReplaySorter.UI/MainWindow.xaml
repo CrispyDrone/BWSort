@@ -136,8 +136,9 @@
             <TabItem Header="Rename">
                 <DockPanel LastChildFill="False">
                     <StackPanel DockPanel.Dock="Top" Orientation="Vertical" Margin="10 10 10 0">
-                       <CheckBox x:Name="renameLastSortCheckBox" Content="Rename last sort" Margin="10 10 0 0" IsChecked="False" Click="renameLastSortCheckBox_Click"></CheckBox>
-                       <CheckBox x:Name="renameInPlaceCheckBox" Content="Rename in place" Margin="10 10 0 0" IsChecked="False" Click="renameInPlaceCheckBox_Click"></CheckBox>
+                        <CheckBox x:Name="renameLastSortCheckBox" Content="Rename last sort" Margin="10 10 0 0" IsChecked="False" Click="renameLastSortCheckBox_Click"></CheckBox>
+                        <CheckBox x:Name="renameInPlaceCheckBox" Content="Rename in place" Margin="10 10 0 0" IsChecked="False" Click="renameInPlaceCheckBox_Click"></CheckBox>
+                        <Button x:Name="restoreOriginalReplayNamesButton" Content="Restore replay names" Click="RestoreOriginalReplayNamesButton_Click" HorizontalAlignment="Left" Margin ="10" Padding="10 0 10 0"></Button>
                     </StackPanel>
                     <StackPanel x:Name="replayRenamingOutputDirectoryStackPanel" DockPanel.Dock="Top" Orientation="Horizontal" Margin="10 10 10 0">
                         <TextBox x:Name="replayRenamingOutputDirectoryTextBox" Text="" HorizontalAlignment="Stretch" MinWidth="300"></TextBox>
@@ -148,8 +149,8 @@
                         <Label x:Name="replayRenamingSyntaxLabel" Content="Renaming expression" HorizontalAlignment="Center" Margin="10 0"></Label>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" DockPanel.Dock="Bottom" HorizontalAlignment="Center">
-                        <Button x:Name="restoreRenamingButton" Content="Restore" Click="restoreRenamingButton_Click" Margin ="10" Padding="10 0 10 0"></Button>
-                        <Button x:Name="cancelRestoreButton" Content="Cancel" Click="cancelRestoreButton_Click" Margin ="10" Padding="10 0 10 0"></Button>
+                        <Button x:Name="undoRenamingButton" Content="Undo last rename" Click="undoRenamingButton_Click" Margin ="10" Padding="10 0 10 0"></Button>
+                        <Button x:Name="cancelUndoRenamingButton" Content="Cancel" Click="cancelUndoRenamingButton_Click" Margin ="10" Padding="10 0 10 0"></Button>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" DockPanel.Dock="Bottom" HorizontalAlignment="Center">
                         <Button x:Name="executeRenamingButton" Content="Rename" Click="executeRenamingButton_Click" Margin ="10" Padding="10 0 10 0"></Button>

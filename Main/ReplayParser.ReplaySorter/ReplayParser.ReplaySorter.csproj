@@ -69,7 +69,8 @@
   <ItemGroup>
     <Compile Include="Diagnostics\ErrorLogger.cs" />
     <Compile Include="Diagnostics\ProgressBar.cs" />
-    <Compile Include="File.cs" />
+    <Compile Include="IO\File.cs" />
+    <Compile Include="IO\FileHandler.cs" />
     <Compile Include="ReplayRenamer\Renamer\RenamingParameters.cs" />
     <Compile Include="ReplayRenamer\Renamer\Renamer.cs" />
     <Compile Include="Replays.Designer.cs">
@@ -179,6 +180,7 @@
       <Install>true</Install>
     </BootstrapperPackage>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

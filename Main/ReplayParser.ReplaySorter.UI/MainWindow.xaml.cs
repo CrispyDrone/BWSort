@@ -50,6 +50,7 @@ namespace ReplayParser.ReplaySorter.UI
         // renaming
         private BackgroundWorker worker_ReplayRenamer = null;
         bool RenamingReplays = false;
+        bool isSorted = false;
         // bool RenameLastSort = false;
         // bool RenameInPlace = false;
 
@@ -130,7 +131,7 @@ namespace ReplayParser.ReplaySorter.UI
                 try
                 {
                     var ParsedReplay = ReplayLoader.LoadReplay(replay);
-                    ListReplays.Add(new File<IReplay>(replay) { Content = ParsedReplay, FileName = replay });
+                    ListReplays.Add(new File<IReplay>(replay, ParsedReplay));
                 }
                 catch (Exception)
                 {
@@ -634,7 +635,11 @@ namespace ReplayParser.ReplaySorter.UI
             if (SorterConditions.GoodToGo == true)
             {
                 SortingReplays = true;
+                // Will this take long??
+                ReplayHandler.ResetReplayFilePaths(ListReplays);
+
                 e.Result = sorter.ExecuteSortAsync(KeepOriginalReplayNames, worker_ReplaySorter, ReplaysThrowingExceptions);
+
                 if (worker_ReplaySorter.CancellationPending == true)
                 {
                     e.Cancel = true;
@@ -652,8 +657,6 @@ namespace ReplayParser.ReplaySorter.UI
                 //e.Result = SorterConditions;
                 return;
             }
-
-
         }
 
         private void worker_ProgressChangedSortingReplays(object sender, ProgressChangedEventArgs e)
@@ -692,6 +695,7 @@ namespace ReplayParser.ReplaySorter.UI
                 else
                 {
                     MessageBox.Show("Sorting cancelled...", "Cancelled", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);
+                    isSorted = true;
                 }
                 ResetReplaySortingVariables();
             }
@@ -702,8 +706,8 @@ namespace ReplayParser.ReplaySorter.UI
                 ReplayHandler.LogBadReplays(ReplaysThrowingExceptions, sorter.OriginalDirectory + @"\FailedSorts");
                 ResetReplaySortingVariables();
                 ReplaysThrowingExceptions.Clear();
+                isSorted = true;
             }
-            ReplayHandler.RestoreReplayNames(ListReplays);
         }
 
         private void ResetReplaySortingVariables()
@@ -849,7 +853,7 @@ namespace ReplayParser.ReplaySorter.UI
             CustomReplayFormat customReplayFormat = null;
             if (string.IsNullOrEmpty(replayRenamingSyntax))
             {
-                MessageBox.Show("Could not find the textbox containing the custom replay format.", "Error finding textbox", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
+                MessageBox.Show("Please specify a custom replay format.", "Empty replay format", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
             }
             try
             {
@@ -863,7 +867,10 @@ namespace ReplayParser.ReplaySorter.UI
 
             var renamingParameters = RenamingParameters.Create(customReplayFormat, replayDirectory, replayRenamingOutputDirectory, renameInPlace, renameLastSort);
             if (renamingParameters == null)
+            {
+                MessageBox.Show("Please fill in a proper renaming format and an output directory, or tick off one of the checkboxes.", "Invalid parameters", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
                 return;
+            }
 
             var replayRenamer = new Renamer(renamingParameters, ListReplays);
 
@@ -888,24 +895,27 @@ namespace ReplayParser.ReplaySorter.UI
             var replayRenamingOutputDirectory = replayRenamer.OutputDirectory;
             ServiceResult<ServiceResultSummary> response = null;
 
-            if ((renameInPlace) || (renameLastSort))
+            if (renameInPlace)
             {
-                // don't care about output directory since we don't use it
-                if (renameInPlace)
+                response = replayRenamer.RenameInPlaceAsync(sender as BackgroundWorker, false);
+            }
+            else if (renameLastSort)
+            {
+                if (isSorted)
                 {
-                    response = replayRenamer.RenameInPlaceAsync(sender as BackgroundWorker, false);
+                    response = replayRenamer.RenameInPlaceAsync(sender as BackgroundWorker, true);
                 }
                 else
                 {
-                    response = replayRenamer.RenameInPlaceAsync(sender as BackgroundWorker, true);
+                    response = new ServiceResult<ServiceResultSummary>(ServiceResultSummary.Default, false, new List<string> { "Can not rename last sort output since replays have not been sorted yet." });
                 }
             }
             else
             {
                 // renaming into another directory
-                //TODO
                 response = replayRenamer.RenameToDirectoryAsync(sender as BackgroundWorker);
             }
+
             e.Result = response;
         }
 
@@ -963,16 +973,25 @@ namespace ReplayParser.ReplaySorter.UI
             }
         }
 
-        private void restoreRenamingButton_Click(object sender, RoutedEventArgs e)
+        private void undoRenamingButton_Click(object sender, RoutedEventArgs e)
+        {
+            // undo a rename == apply original filenames to all replays regardless of 
+            throw new NotImplementedException();
+            //TODO after restoring you can set sorted to FALSE again
+        }
+
+        private void cancelUndoRenamingButton_Click(object sender, RoutedEventArgs e)
         {
             //TODO
             throw new NotImplementedException();
         }
 
-        private void cancelRestoreButton_Click(object sender, RoutedEventArgs e)
+        private void RestoreOriginalReplayNamesButton_Click(object sender, RoutedEventArgs e)
         {
-            //TODO
-            throw new NotImplementedException();
+            if (MessageBox.Show("Restoring replay names will make it impossible to rename the last sort. Do you wish to continue?", "Restoring replay names", MessageBoxButton.OK, MessageBoxImage.Warning, MessageBoxResult.Cancel) == MessageBoxResult.OK)
+            {
+                ReplayHandler.ResetReplayFilePaths(ListReplays);
+            }
         }
     }
 }

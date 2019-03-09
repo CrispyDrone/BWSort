@@ -17,14 +17,13 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
         public static RenamingParameters Create(CustomReplayFormat customReplayFormat, string originalDirectory, string outputDirectory, bool? renameInPlace, bool? renameLastSort)
         {
             if (customReplayFormat == null) return null;
-            if (string.IsNullOrEmpty(originalDirectory)) return null;
 
             var renameInPlaceValue = renameInPlace.HasValue && renameInPlace.Value;
             var renameLastSortValue = renameLastSort.HasValue && renameLastSort.Value;
 
             if (!(renameInPlaceValue || renameLastSortValue))
             {
-                if (string.IsNullOrEmpty(outputDirectory))
+                if (string.IsNullOrWhiteSpace(outputDirectory))
                 {
                     return null;
                 }
@@ -43,7 +42,7 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
 
             if (!(renameInPlaceValue ^ renameLastSortValue)) return null;
 
-            return new RenamingParameters(customReplayFormat, originalDirectory, outputDirectory, renameInPlaceValue, renameLastSortValue);
+            return new RenamingParameters(customReplayFormat, string.Empty, outputDirectory, renameInPlaceValue, renameLastSortValue);
         }
 
         private RenamingParameters(CustomReplayFormat customReplayFormat, string originalDirectory, string outputDirectory, bool renameInPlace, bool renameLastSort)
