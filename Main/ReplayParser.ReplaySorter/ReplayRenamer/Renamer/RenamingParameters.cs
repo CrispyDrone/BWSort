@@ -45,6 +45,10 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
             return new RenamingParameters(customReplayFormat, string.Empty, outputDirectory, renameInPlaceValue, renameLastSortValue);
         }
 
+        public static RenamingParameters Default => new RenamingParameters();
+
+        private RenamingParameters() { }
+
         private RenamingParameters(CustomReplayFormat customReplayFormat, string originalDirectory, string outputDirectory, bool renameInPlace, bool renameLastSort)
         {
             _customReplayFormat = customReplayFormat;

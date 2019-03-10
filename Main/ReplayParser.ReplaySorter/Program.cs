@@ -90,7 +90,7 @@ namespace ReplayParser.ReplaySorter
                 try
                 {
                     var ParsedReplay = ReplayLoader.LoadReplay(replay);
-                    ListReplays.Add(new File<IReplay>(replay) { Content = ParsedReplay, FilePath = replay });
+                    ListReplays.Add(new File<IReplay>(replay, ParsedReplay));
                     //WriteUncompressedReplay(@"C:\testreplays\UncompressedReplays", replay);
                 }
                 catch (Exception ex)

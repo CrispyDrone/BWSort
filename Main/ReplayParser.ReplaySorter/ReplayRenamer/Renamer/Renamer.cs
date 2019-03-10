@@ -33,6 +33,7 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
                 return new ServiceResult<ServiceResultSummary>(ServiceResultSummary.Default, false, new List<string> { "You have to parse replays before you can sort. Replay list is empty!" });
             }
 
+            //TODO error prone since it could be that the first replay fails to be moved/copied during sorting...
             if (!ignoreSorted && (firstReplay.OriginalFilePath != firstReplay.FilePath))
             {
                 return new ServiceResult<ServiceResultSummary>(ServiceResultSummary.Default, false, new List<string> { "Replays have been sorted already. Please execute restore before attempting to rename in place. This will make it impossible to rename your last sort." });
@@ -245,12 +246,12 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
             return ComputeAndExecuteRenaming(worker_ReplayRenamer, true, OutputDirectory);
         }
 
-        public ServiceResult<ServiceResultSummary> RestoreOriginalNames(BackgroundWorker worker_ReplayRenamer)
+        public ServiceResult<ServiceResultSummary> RestoreOriginalNames(BackgroundWorker worker_RenameUndoer)
         {
             // rename in place => names changed => restore => names restored back to originals
             // sort with name change => names changed => restore => keep sorted, but revert names to originals
             // rename last sort => names changed => restore => restore names to originals
-            return ComputeAndExecuteRenaming(worker_ReplayRenamer, true, string.Empty, true);
+            return ComputeAndExecuteRenaming(worker_RenameUndoer, true, string.Empty, true);
         }
 
         #endregion
