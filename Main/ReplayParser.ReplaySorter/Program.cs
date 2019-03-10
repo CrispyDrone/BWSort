@@ -12,6 +12,7 @@ using System.Diagnostics;
 using ReplayParser.ReplaySorter.UserInput;
 using ReplayParser.Interfaces;
 using ReplayParser.ReplaySorter.Diagnostics;
+using ReplayParser.ReplaySorter.Configuration;
 
 namespace ReplayParser.ReplaySorter
 {
@@ -59,6 +60,11 @@ namespace ReplayParser.ReplaySorter
 
 
             // for your UI, you should be able to put these things in a separate class and methods so you can make use of them instead of having to rewrite this...
+
+            IReplaySorterConfiguration replaySorterConfiguration = new ReplaySorterAppConfiguration();
+            if (ErrorLogger.GetInstance(replaySorterConfiguration) == null)
+                Console.WriteLine("Issue intializing logger. Logging will be disabled.");
+
             var searchDirectory = (SearchDirectory)User.AskDirectory(typeof(SearchDirectory));
             List<File<IReplay>> ListReplays = new List<File<IReplay>>();
             IEnumerable<string> files = Directory.EnumerateFiles(searchDirectory.Directory, "*.rep", searchDirectory.SearchOption);
@@ -152,7 +158,7 @@ namespace ReplayParser.ReplaySorter
                         {
                             ReplayHandler.RemoveBadReplay(BadReplaysOutputDirectory.Directory + @"\BadReplays", replay);
                         }
-                        ReplayHandler.LogBadReplays(ReplaysThrowingExceptions, BadReplaysOutputDirectory.Directory + @"\BadReplays");
+                        ReplayHandler.LogBadReplays(ReplaysThrowingExceptions, replaySorterConfiguration.LogDirectory, $"{DateTime.Now} - Error while parsing replay: {0}");
                         
                     }
                 }
@@ -254,7 +260,7 @@ namespace ReplayParser.ReplaySorter
                         // use SortCriteriaParameters
                         sorter.ExecuteSort(CriteriaParameters.SortCriteriaParameters, (bool)KeepOriginalReplayNames.Yes, replaysThrowingExceptions);
                         Console.WriteLine("Sort finished.");
-                        ReplayHandler.LogBadReplays(replaysThrowingExceptions, sorter.OriginalDirectory + @"\FailedSorts");
+                        ReplayHandler.LogBadReplays(replaysThrowingExceptions, replaySorterConfiguration.LogDirectory, $"{DateTime.Now} - Error while sorting replay: {0} using arguments: {sorter.ToString()}");
                     }
                     catch (Exception ex)
                     {

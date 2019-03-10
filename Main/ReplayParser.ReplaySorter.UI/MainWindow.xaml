@@ -35,7 +35,7 @@
                     <MenuItem Header="Always write to new folder" IsCheckable="True"></MenuItem>
                 </MenuItem>
                 <MenuItem x:Name="moveBadReplaysDirectoryMenuItem" Header="Set bad replay directory..." Click="moveBadReplaysDirectoryMenuItem_Click"></MenuItem>
-                <MenuItem Header="Advanced Settings"></MenuItem>
+                <MenuItem Header="Advanced Settings" IsEnabled="False"></MenuItem>
             </MenuItem>
             <MenuItem IsEnabled="false" Header="Help"></MenuItem>
         </Menu>

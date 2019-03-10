@@ -254,6 +254,10 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
             return ComputeAndExecuteRenaming(worker_RenameUndoer, true, string.Empty, true);
         }
 
+        public override string ToString()
+        {
+            return _renamingParameters.ToString();
+        }
         #endregion
 
         #endregion

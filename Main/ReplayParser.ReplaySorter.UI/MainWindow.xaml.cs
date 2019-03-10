@@ -12,6 +12,8 @@ using System.ComponentModel;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using ReplayParser.ReplaySorter.Sorting;
 using ReplayParser.ReplaySorter.ReplayRenamer;
+using ReplayParser.ReplaySorter.Configuration;
+using ReplayParser.ReplaySorter.Diagnostics;
 
 namespace ReplayParser.ReplaySorter.UI
 {
@@ -24,12 +26,16 @@ namespace ReplayParser.ReplaySorter.UI
         {
             InitializeComponent();
             InitializeSortCriteriaComboBoxes();
-            EnableSortingAndRenamingButtons(false);
+            EnableSortingAndRenamingButtons(ReplayAction.Parse, false);
+            _replaySorterConfiguration = new ReplaySorterAppConfiguration();
+            IntializeErrorLogger(_replaySorterConfiguration);
         }
+        // configuration
+        private IReplaySorterConfiguration _replaySorterConfiguration;
 
         // parsing
         private string replayDirectory;
-        private List<File<IReplay>> ListReplays = new List<File<IReplay>>();
+        private List<File<IReplay>> ListReplays;
         private IEnumerable<string> files;
         List<string> ReplaysThrowingExceptions = new List<string>();
         private BackgroundWorker worker_ReplayParser = null;
@@ -60,8 +66,18 @@ namespace ReplayParser.ReplaySorter.UI
         private BackgroundWorker worker_Undoer = null;
         private bool UndoingRename = false;
 
+        private void IntializeErrorLogger(IReplaySorterConfiguration replaySorterConfiguration)
+        {
+            if (ErrorLogger.GetInstance(replaySorterConfiguration) == null)
+            {
+                MessageBox.Show("Issue intializing logger. Logging will be disabled.", "Logger failure", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
+            }
+        }
+
         private void parseReplaysButton_Click(object sender, RoutedEventArgs e)
         {
+            if (worker_ReplayParser != null && worker_ReplayParser.IsBusy)
+                return;
 
             SearchOption searchOption;
             if (includeSubdirectoriesCheckbox.IsChecked == true)
@@ -99,7 +115,7 @@ namespace ReplayParser.ReplaySorter.UI
 
         private void cancelParsingButton_Click(object sender, RoutedEventArgs e)
         {
-            if (worker_ReplayParser != null)
+            if (worker_ReplayParser != null && worker_ReplayParser.IsBusy)
             {
                 worker_ReplayParser.CancelAsync();
             }
@@ -123,6 +139,8 @@ namespace ReplayParser.ReplaySorter.UI
             sw.Start();
             int currentPosition = 0;
             int progressPercentage = 0;
+            var parsedReplays = new List<File<IReplay>>();
+
             foreach (var replay in files)
             {
                 if (worker_ReplayParser.CancellationPending == true)
@@ -136,7 +154,7 @@ namespace ReplayParser.ReplaySorter.UI
                 try
                 {
                     var ParsedReplay = ReplayLoader.LoadReplay(replay);
-                    ListReplays.Add(new File<IReplay>(replay, ParsedReplay));
+                    parsedReplays.Add(new File<IReplay>(replay, ParsedReplay));
                 }
                 catch (Exception)
                 {
@@ -144,9 +162,10 @@ namespace ReplayParser.ReplaySorter.UI
                     ErrorMessage = string.Format("Error with replay {0}", replay.ToString());
                 }
             }
+            ListReplays = parsedReplays;
             sw.Stop();
             ErrorMessage = string.Empty;
-            ReplayHandler.LogBadReplays(ReplaysThrowingExceptions, ((SearchDirectory)e.Argument).Directory);
+            ReplayHandler.LogBadReplays(ReplaysThrowingExceptions, _replaySorterConfiguration.LogDirectory, $"{DateTime.Now} - Error while parsing replay: {0}");
             if (MoveBadReplays == true)
             {
                 MovingBadReplays = true;
@@ -198,7 +217,7 @@ namespace ReplayParser.ReplaySorter.UI
                     statusBarAction.Content = string.Format("Finished parsing!");
                     MessageBox.Show(string.Format("Parsing replays finished! It took {0} to parse {1} replays. {2} replays encountered exceptions during parsing. {3}", (TimeSpan)e.Result, ListReplays.Count(), ReplaysThrowingExceptions.Count(), MoveBadReplays ? "Bad replays have been moved to the specified directory." : ""), "Parsing summary", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);
                     ResetReplayParsingVariables(false, true);
-                    EnableSortingAndRenamingButtons(true);
+                    EnableSortingAndRenamingButtons(ReplayAction.Parse, true);
                 }
             }
         }
@@ -207,27 +226,52 @@ namespace ReplayParser.ReplaySorter.UI
         {
             if (clearListReplays)
             {
-                ListReplays.Clear();
+                ListReplays?.Clear();
             }
             if (resetMoveBadReplays)
             {
                 MoveBadReplays = false;
             }
-            ReplaysThrowingExceptions.Clear();
+            ReplaysThrowingExceptions?.Clear();
             NoReplaysFound = false;
             MovingBadReplays = false;
         }
 
 
-        private void EnableSortingAndRenamingButtons(bool enable)
+        private void EnableSortingAndRenamingButtons(ReplayAction action, bool enable)
         {
-            executeSortButton.IsEnabled = enable;
-            cancelSortButton.IsEnabled = enable;
-            executeRenamingButton.IsEnabled = enable;
-            cancelRenamingButton.IsEnabled = enable;
-            undoRenamingButton.IsEnabled = enable;
-            cancelUndoRenamingButton.IsEnabled = enable;
-            restoreOriginalReplayNamesButton.IsEnabled = enable;
+            switch (action)
+            {
+                case ReplayAction.Parse:
+                    executeSortButton.IsEnabled = enable;
+                    cancelSortButton.IsEnabled = enable;
+                    executeRenamingButton.IsEnabled = enable;
+                    cancelRenamingButton.IsEnabled = enable;
+                    undoRenamingButton.IsEnabled = enable;
+                    cancelUndoRenamingButton.IsEnabled = enable;
+                    restoreOriginalReplayNamesButton.IsEnabled = enable;
+                    return;
+                case ReplayAction.Sort:
+                    parseReplaysButton.IsEnabled = enable;
+                    cancelParsingButton.IsEnabled = enable;
+                    executeRenamingButton.IsEnabled = enable;
+                    cancelRenamingButton.IsEnabled = enable;
+                    undoRenamingButton.IsEnabled = enable;
+                    cancelUndoRenamingButton.IsEnabled = enable;
+                    restoreOriginalReplayNamesButton.IsEnabled = enable;
+                    return;
+                case ReplayAction.Rename:
+                    parseReplaysButton.IsEnabled = enable;
+                    cancelParsingButton.IsEnabled = enable;
+                    executeSortButton.IsEnabled = enable;
+                    cancelSortButton.IsEnabled = enable;
+                    undoRenamingButton.IsEnabled = enable;
+                    cancelUndoRenamingButton.IsEnabled = enable;
+                    restoreOriginalReplayNamesButton.IsEnabled = enable;
+                    return;
+                default:
+                    return;
+            }
 
             // previewSortButton.IsEnabled = true;
             // cancelPreviewSortButton.IsEnabled = true;
@@ -465,6 +509,9 @@ namespace ReplayParser.ReplaySorter.UI
 
         private void executeSortButton_Click(object sender, RoutedEventArgs e)
         {
+            if (worker_ReplaySorter != null && worker_ReplaySorter.IsBusy)
+                return;
+
             // get textboxes value, you could also take them from your dictionary keys, add a tag with a number, and sort on this number so it's not as hardcoded?
             string[] CriteriaStringOrder = new string[5];
             CriteriaStringOrder[0] = sortCriteriaOneComboBox.Text;
@@ -642,6 +689,7 @@ namespace ReplayParser.ReplaySorter.UI
                 ReplayHandler.ResetReplayFilePaths(ListReplays);
                 isRenamed = !KeepOriginalReplayNames;
                 e.Result = sorter.ExecuteSortAsync(KeepOriginalReplayNames, worker_ReplaySorter, ReplaysThrowingExceptions);
+                ReplayHandler.LogBadReplays(ReplaysThrowingExceptions, _replaySorterConfiguration.LogDirectory, $"{DateTime.Now} - Error while sorting replay: {0} with arguments {sorter.ToString()}");
 
                 if (worker_ReplaySorter.CancellationPending == true)
                 {
@@ -707,11 +755,11 @@ namespace ReplayParser.ReplaySorter.UI
             {
                 statusBarAction.Content = "Finished sorting replays";
                 MessageBox.Show(string.Format("Finished sorting replays! It took {0} to sort {1} replays. {2} replays encountered exceptions.", swSort.Elapsed, ListReplays.Count, ReplaysThrowingExceptions.Count()), "Finished Sorting", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);
-                ReplayHandler.LogBadReplays(ReplaysThrowingExceptions, sorter.OriginalDirectory + @"\FailedSorts");
                 ResetReplaySortingVariables();
                 ReplaysThrowingExceptions.Clear();
                 isSorted = true;
             }
+
         }
 
         private void ResetReplaySortingVariables()
@@ -748,7 +796,7 @@ namespace ReplayParser.ReplaySorter.UI
 
         private void cancelSortButton_Click(object sender, RoutedEventArgs e)
         {
-            if (worker_ReplaySorter != null)
+            if (worker_ReplaySorter != null && worker_ReplaySorter.IsBusy)
             {
                 worker_ReplaySorter.CancelAsync();
             }
@@ -849,6 +897,9 @@ namespace ReplayParser.ReplaySorter.UI
 
         private void executeRenamingButton_Click(object sender, RoutedEventArgs e)
         {
+            if (worker_ReplayRenamer != null && worker_ReplayRenamer.IsBusy)
+                return;
+
             bool? renameInPlace = renameInPlaceCheckBox.IsChecked;
             bool? renameLastSort = renameLastSortCheckBox.IsChecked;
             string replayRenamingSyntax = replayRenamingSyntaxTextBox.Text;
@@ -929,6 +980,7 @@ namespace ReplayParser.ReplaySorter.UI
                 response = replayRenamer.RenameToDirectoryAsync(sender as BackgroundWorker);
             }
 
+            ReplayHandler.LogBadReplays(ReplaysThrowingExceptions, _replaySorterConfiguration.LogDirectory, $"{DateTime.Now} - Error while renaming replay: {0} using arguments: {replayRenamer.ToString()}");
             e.Result = response;
         }
 
@@ -984,7 +1036,7 @@ namespace ReplayParser.ReplaySorter.UI
 
         private void cancelRenamingButton_Click(object sender, RoutedEventArgs e)
         {
-            if (worker_ReplayRenamer != null)
+            if (worker_ReplayRenamer != null && worker_ReplayRenamer.IsBusy)
             {
                 worker_ReplayRenamer.CancelAsync();
             }

@@ -63,5 +63,10 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
         public string OriginalDirectory => _originalDirectory;
         public string OutputDirectory => _outputDirectory;
         public CustomReplayFormat CustomReplayFormat => _customReplayFormat;
+
+        public override string ToString()
+        {
+            return $"RenameInPlace: {RenameInPlace} RenameLastSort: {RenameLastSort} OutputDirectory: {OutputDirectory} CustomReplayFormat: {CustomReplayFormat} OriginalDirectory: {OriginalDirectory}";
+        }
     }
 }

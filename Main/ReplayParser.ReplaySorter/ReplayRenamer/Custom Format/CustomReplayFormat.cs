@@ -145,6 +145,11 @@ namespace ReplayParser.ReplaySorter
             //    TeamReplayNameSections.Add(i, new Dictionary<CustomReplayNameSyntax, string[]>());
             //}
             //CustomReplayNameSections.Add(new KeyValuePair<CustomReplayNameSyntax, string>(CustomReplayNameSyntax.T, team.))
-        } 
+        }
+
+        public override string ToString()
+        {
+            return CustomFormat;
+        }
     }
 }

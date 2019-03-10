@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
+using ReplayParser.ReplaySorter.Configuration;
 
 namespace ReplayParser.ReplaySorter.Diagnostics
 {
@@ -25,11 +26,14 @@ namespace ReplayParser.ReplaySorter.Diagnostics
             _logPath = logPath;
         }
 
-        public static ErrorLogger GetInstance(string logPath = null)
+        public static ErrorLogger GetInstance(IReplaySorterConfiguration replaySorterConfiguration = null)
         {
             if (_errorLogger == null)
             {
-                _errorLogger = Create(logPath);
+                if (replaySorterConfiguration == null)
+                    replaySorterConfiguration = new ReplaySorterAppConfiguration();
+
+                _errorLogger = Create(replaySorterConfiguration.LogDirectory);
             }
 
             return _errorLogger;

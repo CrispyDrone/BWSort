@@ -6,6 +6,7 @@ using ReplayParser.Loader;
 using ReplayParser.Interfaces;
 using ReplayParser.ReplaySorter.IO;
 using ReplayParser.ReplaySorter.Diagnostics;
+using System.Text.RegularExpressions;
 
 namespace ReplayParser.ReplaySorter
 {
@@ -118,26 +119,38 @@ namespace ReplayParser.ReplaySorter
             }
         }
 
-        public static void LogBadReplays(List<string> ReplaysThrowingExceptions, string directory)
+        private static Regex StringFormatArgument = new Regex(@"{0}");
+
+        public static void LogBadReplays(List<string> ReplaysThrowingExceptions, string directory, string formatExpression = "{0}", string header = "", string footer = "")
         {
+            if (!StringFormatArgument.IsMatch(formatExpression))
+                return;
+
             //var BadReplays = @"C:\testreplays\BadReplays";
             if (!Directory.Exists(directory))
             {
                 Directory.CreateDirectory(directory);
             }
+
             using (var streamwriter = new StreamWriter(File.OpenWrite(directory + @"\BadReplays.txt")))
             {
+                if (!string.IsNullOrWhiteSpace(header))
+                    streamwriter.WriteLine(header);
+
                 foreach (var aBadReplay in ReplaysThrowingExceptions)
                 {
                     try
                     {
-                        streamwriter.WriteLine(aBadReplay);
+                        streamwriter.WriteLine(string.Format(formatExpression, aBadReplay));
                     }
                     catch (Exception ex)
                     {
                         ErrorLogger.GetInstance()?.LogError($"Error while logging bad replay: {aBadReplay}", ex: ex);
                     }
                 }
+
+                if (!string.IsNullOrWhiteSpace(footer))
+                    streamwriter.WriteLine(footer);
             }
 
             //Console.WriteLine("Bad replays have been moved to: {0}", BadReplays);
