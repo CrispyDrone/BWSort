@@ -27,7 +27,7 @@ namespace ReplayParser.ReplaySorter
                 }
                 catch(Exception ex)
                 {
-                    ErrorLogger.GetInstance()?.LogError($"Error while renaming replay: {replay.OriginalFilePath}", ex : ex);
+                    ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - Error while renaming replay: {replay.OriginalFilePath}", ex : ex);
                 }
             }
 
@@ -62,7 +62,7 @@ namespace ReplayParser.ReplaySorter
                 }
                 catch (Exception ex)
                 {
-                    ErrorLogger.GetInstance()?.LogError($"Error while renaming replay: {replay.OriginalFilePath}", ex : ex);
+                    ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - Error while renaming replay: {replay.OriginalFilePath}", ex : ex);
                 }
             }
 
@@ -145,7 +145,7 @@ namespace ReplayParser.ReplaySorter
                     }
                     catch (Exception ex)
                     {
-                        ErrorLogger.GetInstance()?.LogError($"Error while logging bad replay: {aBadReplay}", ex: ex);
+                        ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - Error while logging bad replay: {aBadReplay}", ex: ex);
                     }
                 }
 

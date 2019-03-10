@@ -70,7 +70,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                 // check each player name for invalid characters, or just catch exception and then fix it? the latter seems much more efficient, but may be bad practice? WRONG throwing and catching exceptions is very expensive
                 catch (Exception ex)
                 {
-                    ErrorLogger.GetInstance()?.LogError($"Could not create folder for {player}", Sorter.OriginalDirectory + @"\LogErrors", ex);
+                    ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - Could not create folder for {player}", ex: ex);
                 }
                 
             }
@@ -110,7 +110,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                     catch (Exception ex)
                     {
                         threwException = true;
-                        ErrorLogger.GetInstance()?.LogError($"Problem with replay: {replay.FilePath}", Sorter.OriginalDirectory + @"\LogErrors", ex);
+                        ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - Problem with replay: {replay.FilePath}", ex: ex);
                     }
                 }
                 else if (MakeFolderForWinner)
@@ -134,7 +134,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                     catch (Exception ex)
                     {
                         threwException = true;
-                        ErrorLogger.GetInstance()?.LogError($"Cannot create folder since replay has no winner.", Sorter.OriginalDirectory + @"\LogErrors", ex);
+                        ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - Cannot create folder since replay has no winner.", ex: ex);
                     }
                 }
                 else if (MakeFolderForLoser)
@@ -180,7 +180,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                     catch (Exception ex)
                     {
                         threwException = true;
-                        ErrorLogger.GetInstance()?.LogError("Replay has no winner", Sorter.OriginalDirectory + @"\LogErrors", ex);
+                        ErrorLogger.GetInstance()?.LogError("Replay has no winner", ex: ex);
                     }
                 }
                 else
@@ -199,7 +199,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                     catch (Exception ex)
                     {
                         threwException = true;
-                        ErrorLogger.GetInstance()?.LogError($"Problem with replay: {replay.FilePath}", Sorter.OriginalDirectory + @"\LogErrors", ex);
+                        ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - Problem with replay: {replay.FilePath}", ex: ex);
                     }
 
                 }
@@ -232,7 +232,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                             }
                             catch (Exception ex)
                             {
-                                ErrorLogger.GetInstance()?.LogError($"ExtractPlayers Winner", Sorter.OriginalDirectory + @"\LogErrors", ex);
+                                ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - ExtractPlayers Winner", ex: ex);
                             }
                         }
                     }
@@ -259,7 +259,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                             catch (Exception ex)
                             {
                                 players.Add(aplayer.Name);
-                                ErrorLogger.GetInstance()?.LogError($"ExtractPlayers Loser", Sorter.OriginalDirectory + @"\LogErrors", ex);
+                                ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - ExtractPlayers Loser", ex: ex);
                             }
                         }
                     }
@@ -333,7 +333,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                 }
                 catch (Exception ex)
                 {
-                    ErrorLogger.GetInstance()?.LogError($"Could not create folder for {player}", Sorter.OriginalDirectory + @"\LogErrors", ex);
+                    ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - Could not create folder for {player}", ex: ex);
                 }
             }
 
@@ -389,7 +389,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                     catch (Exception ex)
                     {
                         threwException = true;
-                        ErrorLogger.GetInstance()?.LogError($"Problem with replay {sourceFilePath}", Sorter.OriginalDirectory + @"\LogErrors", ex);
+                        ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - Problem with replay {sourceFilePath}", ex: ex);
                     }
                 }
                 else if (MakeFolderForWinner)
@@ -412,7 +412,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                     catch (Exception ex)
                     {
                         threwException = true;
-                        ErrorLogger.GetInstance()?.LogError("Cannot create folder since replay has no winner.", Sorter.OriginalDirectory + @"\LogErrors", ex);
+                        ErrorLogger.GetInstance()?.LogError("Cannot create folder since replay has no winner.", ex: ex);
                     }
                 }
                 else if (MakeFolderForLoser)
@@ -457,7 +457,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                     catch (Exception ex)
                     {
                         threwException = true;
-                        ErrorLogger.GetInstance()?.LogError("Replay has no winner.", Sorter.OriginalDirectory + @"\LogErrors", ex);
+                        ErrorLogger.GetInstance()?.LogError("Replay has no winner.", ex: ex);
                     }
                 }
                 else
@@ -477,7 +477,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                     catch (Exception ex)
                     {
                         threwException = true;
-                        ErrorLogger.GetInstance()?.LogError("Problem with replay: {0}", Sorter.OriginalDirectory + @"\LogErrors", ex);
+                        ErrorLogger.GetInstance()?.LogError("Problem with replay: {0}", ex: ex);
                     }
 
                 }
@@ -508,12 +508,12 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
             catch (IOException IOex)
             {
                 threwException = true;
-                ErrorLogger.GetInstance()?.LogError($"SortOnPlayerName IOException", Sorter.OriginalDirectory + @"\\LogErrors", IOex);
+                ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - SortOnPlayerName IOException: {replay.OriginalFilePath}", ex: IOex);
             }
             catch (NotSupportedException NSE)
             {
                 threwException = true;
-                ErrorLogger.GetInstance()?.LogError($"SortOnPlayerName NotSupportedException", Sorter.OriginalDirectory + @"LogErrors", NSE);
+                ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - SortOnPlayerName NotSupportedException: {replay.OriginalFilePath}", ex: NSE);
             }
             return !threwException;
         }

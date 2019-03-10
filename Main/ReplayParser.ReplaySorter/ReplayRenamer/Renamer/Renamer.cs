@@ -69,7 +69,7 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
                 {
                     replaysThrowingExceptions++;
                     //TODO add to serviceresult instead... log later?
-                    ErrorLogger.GetInstance()?.LogError($"Error while renaming replay: {replay.OriginalFilePath}", OriginalDirectory + @"\LogErrors", ex);
+                    ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - Error while renaming replay: {replay.OriginalFilePath}", ex: ex);
                 }
             }
 
@@ -139,7 +139,7 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
                 {
                     replaysThrowingExceptions++;
                     //TODO add to serviceresult instead... log later?
-                    ErrorLogger.GetInstance()?.LogError($"Error while renaming replay: {replay.OriginalFilePath}", OriginalDirectory + @"\LogErrors", ex);
+                    ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - Error while renaming replay: {replay.OriginalFilePath}", ex: ex);
                 }
             }
 

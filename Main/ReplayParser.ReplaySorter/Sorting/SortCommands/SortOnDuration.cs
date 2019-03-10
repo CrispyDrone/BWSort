@@ -123,27 +123,27 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                         catch (IOException IOex)
                         {
                             threwException = true;
-                            ErrorLogger.GetInstance()?.LogError("SortOnDuration IOException.", Sorter.OriginalDirectory + @"\LogErrors", IOex);
+                            ErrorLogger.GetInstance()?.LogError("SortOnDuration IOException.", ex: IOex);
                         }
                         catch (NotSupportedException NSE)
                         {
                             threwException = true;
-                            ErrorLogger.GetInstance()?.LogError("SortOnDuration NotSupportedException.", Sorter.OriginalDirectory + @"\LogErrors", NSE);
+                            ErrorLogger.GetInstance()?.LogError("SortOnDuration NotSupportedException.", ex: NSE);
                         }
                         catch (NullReferenceException nullex)
                         {
                             threwException = true;
-                            ErrorLogger.GetInstance()?.LogError("SortOnDuration NullReferenceException.", Sorter.OriginalDirectory + @"\LogErrors", nullex);
+                            ErrorLogger.GetInstance()?.LogError("SortOnDuration NullReferenceException.", ex: nullex);
                         }
                         catch (ArgumentException AEX)
                         {
                             threwException = true;
-                            ErrorLogger.GetInstance()?.LogError("SortOnDuration ArgumentException.", Sorter.OriginalDirectory + @"\LogErrors", AEX);
+                            ErrorLogger.GetInstance()?.LogError("SortOnDuration ArgumentException.", ex: AEX);
                         }
                         catch (Exception ex)
                         {
                             threwException = true;
-                            ErrorLogger.GetInstance()?.LogError("SortOnDuration Exception.", Sorter.OriginalDirectory + @"\LogErrors", ex);
+                            ErrorLogger.GetInstance()?.LogError("SortOnDuration Exception.", ex: ex);
                         }
                         if (threwException)
                             replaysThrowingExceptions.Add(replay.OriginalFilePath);
@@ -151,7 +151,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                 }
                 catch (Exception ex)
                 {
-                    ErrorLogger.GetInstance()?.LogError("SortOnDuration Exception Outer.", Sorter.OriginalDirectory + @"\LogErrors", ex);
+                    ErrorLogger.GetInstance()?.LogError("SortOnDuration Exception Outer.", ex: ex);
                 }
             }
             // not implemented yet
@@ -277,27 +277,27 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                         catch (IOException IOex)
                         {
                             threwError = true;
-                            ErrorLogger.GetInstance()?.LogError("SortOnDuration IOException.", Sorter.OriginalDirectory + @"\LogErrors", IOex);
+                            ErrorLogger.GetInstance()?.LogError("SortOnDuration IOException.", ex: IOex);
                         }
                         catch (NotSupportedException NSE)
                         {
                             threwError = true;
-                            ErrorLogger.GetInstance()?.LogError("SortOnDuration NotSupportedException.", Sorter.OriginalDirectory + @"\LogErrors", NSE);
+                            ErrorLogger.GetInstance()?.LogError("SortOnDuration NotSupportedException.", ex: NSE);
                         }
                         catch (NullReferenceException nullex)
                         {
                             threwError = true;
-                            ErrorLogger.GetInstance()?.LogError("SortOnDuration NullReferenceException.", Sorter.OriginalDirectory + @"\LogErrors", nullex);
+                            ErrorLogger.GetInstance()?.LogError("SortOnDuration NullReferenceException.", ex: nullex);
                         }
                         catch (ArgumentException AEX)
                         {
                             threwError = true;
-                            ErrorLogger.GetInstance()?.LogError("SortOnDuration ArgumentException.", Sorter.OriginalDirectory + @"\LogErrors", AEX);
+                            ErrorLogger.GetInstance()?.LogError("SortOnDuration ArgumentException.", ex: AEX);
                         }
                         catch (Exception ex)
                         {
                             threwError = true;
-                            ErrorLogger.GetInstance()?.LogError("SortOnDuration Exception.", Sorter.OriginalDirectory + @"\LogErrors", ex);
+                            ErrorLogger.GetInstance()?.LogError("SortOnDuration Exception.", ex: ex);
                         }
                         currentPosition++;
                         if (this.IsNested == false)
@@ -316,7 +316,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                 }
                 catch (Exception ex)
                 {
-                    ErrorLogger.GetInstance()?.LogError("SortOnDuration Exception Outer.", Sorter.OriginalDirectory + @"\LogErrors", ex);
+                    ErrorLogger.GetInstance()?.LogError("SortOnDuration Exception Outer.", ex: ex);
                 }
             }
             // not implemented yet

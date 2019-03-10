@@ -13,17 +13,16 @@ namespace ReplayParser.ReplaySorter.Diagnostics
         private static ErrorLogger _errorLogger;
         private string _logPath;
 
-
-        private static ErrorLogger Create(string logPath)
+        private static ErrorLogger Create(string logDirectory)
         {
-            if (string.IsNullOrWhiteSpace(logPath)) return null;
+            if (string.IsNullOrWhiteSpace(logDirectory)) return null;
 
-            return new ErrorLogger(logPath);
+            return new ErrorLogger(logDirectory);
         }
 
-        private ErrorLogger(string logPath)
+        private ErrorLogger(string logDirectory)
         {
-            _logPath = logPath;
+            _logPath = Path.Combine(logDirectory, "ErrorLogs.txt");
         }
 
         public static ErrorLogger GetInstance(IReplaySorterConfiguration replaySorterConfiguration = null)
@@ -44,16 +43,20 @@ namespace ReplayParser.ReplaySorter.Diagnostics
             if (string.IsNullOrWhiteSpace(filepath)) filepath = _logPath;
             var now = DateTime.Now;
 
-            using (var StreamWriter = new StreamWriter(filepath, true))
+            try
             {
-                StreamWriter.WriteLine("{0} - Custom message: {1}", now, message);
-                if (ex != null)
+                using (var StreamWriter = new StreamWriter(filepath, true))
                 {
-                    StreamWriter.WriteLine("{0} Exception message: {1}", now, ex.Message);
-                    StreamWriter.WriteLine("{0} Stacktrace: {1}", now, ex.StackTrace);
+                    StreamWriter.WriteLine("{0} - Custom message: {1}", now, message);
+                    if (ex != null)
+                    {
+                        StreamWriter.WriteLine("{0} Exception message: {1}", now, ex.Message);
+                        StreamWriter.WriteLine("{0} Stacktrace: {1}", now, ex.StackTrace);
+                    }
+                    StreamWriter.WriteLine(new string('=', 20));
                 }
-                StreamWriter.WriteLine(new string('=', 20));
             }
+            catch { }
         }
     }
 }

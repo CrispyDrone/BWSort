@@ -67,7 +67,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                 }
                 catch (NullReferenceException nullex)
                 {
-                    ErrorLogger.GetInstance()?.LogError($"SortOnMatchUp NullReferenceException: Encoding matchups, file: {replay.FilePath}", Sorter.OriginalDirectory + @"\LogErrors", nullex);
+                    ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - SortOnMatchUp NullReferenceException: Encoding matchups, file: {replay.OriginalFilePath}", ex: nullex);
                     //Console.WriteLine(nullex.Message);
                 }
 
@@ -107,27 +107,27 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                     catch (IOException IOex)
                     {
                         threwException = true;
-                        ErrorLogger.GetInstance()?.LogError($"SortOnMatchUp IOException", Sorter.OriginalDirectory + @"\LogErrors", IOex);
+                        ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - SortOnMatchUp IOException", ex: IOex);
                     }
                     catch (NotSupportedException NSE)
                     {
                         threwException = true;
-                        ErrorLogger.GetInstance()?.LogError($"SortOnMatchUp NotSupportedException", Sorter.OriginalDirectory + @"\LogErrors", NSE);
+                        ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - SortOnMatchUp NotSupportedException", ex: NSE);
                     }
                     catch (NullReferenceException nullex)
                     {
                         threwException = true;
-                        ErrorLogger.GetInstance()?.LogError($"SortOnMatchUp NullReferenceException", Sorter.OriginalDirectory + @"\LogErrors", nullex);
+                        ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - SortOnMatchUp NullReferenceException: {replay.OriginalFilePath}", ex: nullex);
                     }
                     catch (ArgumentException AEX)
                     {
                         threwException = true;
-                        ErrorLogger.GetInstance()?.LogError($"SortOnMatchUp ArgumentException", Sorter.OriginalDirectory + @"\LogErrors", AEX);
+                        ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - SortOnMatchUp ArgumentException", ex: AEX);
                     }
                     catch (Exception ex)
                     {
                         threwException = true;
-                        ErrorLogger.GetInstance()?.LogError($"SortOnMatchUp Exception", Sorter.OriginalDirectory + @"\LogErrors", ex);
+                        ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - SortOnMatchUp Exception", ex: ex);
                     }
                     if (threwException)
                         replaysThrowingExceptions.Add(replay.OriginalFilePath);
@@ -205,7 +205,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                 }
                 catch (NullReferenceException nullex)
                 {
-                    ErrorLogger.GetInstance()?.LogError($"SortOnMatchUp NullReferenceException: Encoding matchups, file: {replay.FilePath}", Sorter.OriginalDirectory + @"\LogErrors", nullex);
+                    ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - SortOnMatchUp NullReferenceException: Encoding matchups, file: {replay.OriginalFilePath}", ex: nullex);
                 }
 
             }
@@ -260,27 +260,27 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                     catch (IOException IOex)
                     {
                         threwException = true;
-                        ErrorLogger.GetInstance()?.LogError($"SortOnMatchUp IOException", Sorter.OriginalDirectory + @"\LogErrors", IOex);
+                        ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - SortOnMatchUp IOException", ex: IOex);
                     }
                     catch (NotSupportedException NSE)
                     {
                         threwException = true;
-                        ErrorLogger.GetInstance()?.LogError($"SortOnMatchUp NotSupportedException", Sorter.OriginalDirectory + @"\LogErrors", NSE);
+                        ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - SortOnMatchUp NotSupportedException", ex: NSE);
                     }
                     catch (NullReferenceException nullex)
                     {
                         threwException = true;
-                        ErrorLogger.GetInstance()?.LogError($"SortOnMatchUp NullReferenceException", Sorter.OriginalDirectory + @"\LogErrors", nullex);
+                        ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - SortOnMatchUp NullReferenceException: {replay.OriginalFilePath}", ex: nullex);
                     }
                     catch (ArgumentException AEX)
                     {
                         threwException = true;
-                        ErrorLogger.GetInstance()?.LogError($"SortOnMatchUp ArgumentException", Sorter.OriginalDirectory + @"\LogErrors", AEX);
+                        ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - SortOnMatchUp ArgumentException", ex: AEX);
                     }
                     catch (Exception ex)
                     {
                         threwException = true;
-                        ErrorLogger.GetInstance()?.LogError($"SortOnMatchUp Exception", Sorter.OriginalDirectory + @"\LogErrors", ex);
+                        ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - SortOnMatchUp Exception", ex: ex);
                     }
                     if (threwException)
                     {
