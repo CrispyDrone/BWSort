@@ -215,7 +215,16 @@ namespace ReplayParser.ReplaySorter.UI
                 else
                 {
                     statusBarAction.Content = string.Format("Finished parsing!");
-                    MessageBox.Show(string.Format("Parsing replays finished! It took {0} to parse {1} replays. {2} replays encountered exceptions during parsing. {3}", (TimeSpan)e.Result, ListReplays.Count(), ReplaysThrowingExceptions.Count(), MoveBadReplays ? "Bad replays have been moved to the specified directory." : ""), "Parsing summary", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);
+                    MessageBox.Show(
+                        string.Format("Parsing replays finished! It took {0} to parse {1} replays. {2} replays encountered exceptions during parsing. {3}", 
+                            (TimeSpan)e.Result,
+                            ListReplays.Count(), 
+                            ReplaysThrowingExceptions.Count(), 
+                            MoveBadReplays ? "Bad replays have been moved to the specified directory." : ""), 
+                        "Parsing summary", 
+                        MessageBoxButton.OK, 
+                        MessageBoxImage.Information, 
+                        MessageBoxResult.OK);
                     ResetReplayParsingVariables(false, true);
                     EnableSortingAndRenamingButtons(ReplayAction.Parse, true);
                 }

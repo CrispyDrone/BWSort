@@ -119,7 +119,7 @@ namespace ReplayParser.ReplaySorter
             }
         }
 
-        private static Regex StringFormatArgument = new Regex(@"{0}");
+        private static Regex StringFormatArgument = new Regex("{\0}");
 
         public static void LogBadReplays(List<string> ReplaysThrowingExceptions, string directory, string formatExpression = "{0}", string header = "", string footer = "")
         {
