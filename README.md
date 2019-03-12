@@ -59,7 +59,13 @@ The current syntax is quite sensitive, so be careful to not include any unnecess
 
 You have to use vertical bars `|` to separate arguments. So for example:
 
-`DU|M|WT[_]` => will give a replay of the format: 15min13sFightingSpirit(CrispyDrone_Jaedong).rep
+
+#### Examples
+For a replay with the following characteristics:
++ 
+
+1. `DU|M|WT[_]`: will give a replay of the format: `15min13sFightingSpirit(CrispyDrone_Jaedong).rep`
+2. `D|MU|M|DU`: will give a replay of the format: `11-03-19ZZvsTTFightingSpirit15min13s.rep`
 
 ## How to install
 Currently there are 3 ways to get the program:
@@ -103,7 +109,7 @@ For my reputation:
   + Rename replays in place
   + Rename the last sort
   + Rename replays to an output directory
-+ Added support to "undo" (i.e. restore) replay names to their originals at time of parsing.
++ Added support to "undo" (i.e. reset) replay names to their originals at time of parsing.
 
 ### v0.8
 + Fixed major issue with nested sorts resulting in replays being sorted into the wrong folder, and receiving the wrong names.

@@ -223,7 +223,7 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
 
         public string OriginalDirectory => _renamingParameters.OriginalDirectory;
         public bool RenameInPlace => _renamingParameters.RenameInPlace;
-        public bool RenameLastSort => _renamingParameters.RenameLastSort;
+        public bool RestoreOriginalReplayNames => _renamingParameters.RestoreOriginalReplayNames;
         public string OutputDirectory => _renamingParameters.OutputDirectory;
         public CustomReplayFormat CustomReplayFormat => _renamingParameters.CustomReplayFormat;
         public IEnumerable<File<IReplay>> Replays => _listReplays.AsEnumerable();

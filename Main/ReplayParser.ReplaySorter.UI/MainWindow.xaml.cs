@@ -89,8 +89,10 @@ namespace ReplayParser.ReplaySorter.UI
                 MessageBox.Show("The specified directory does not exist.", "Invalid directory", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
                 return;
             }
+
             replayDirectory = replayDirectoryTextBox.Text;
-            SearchDirectory searchDirectory = new SearchDirectory(replayDirectoryTextBox.Text, searchOption);
+            SearchDirectory searchDirectory = new SearchDirectory(replayDirectory, searchOption);
+
             statusBarAction.Content = "Parsing replays...";
             if (moveBadReplaysCheckBox.IsChecked == true)
             {
@@ -258,7 +260,7 @@ namespace ReplayParser.ReplaySorter.UI
                     cancelRenamingButton.IsEnabled = enable;
                     undoRenamingButton.IsEnabled = enable;
                     cancelUndoRenamingButton.IsEnabled = enable;
-                    restoreOriginalReplayNamesButton.IsEnabled = enable;
+                    restoreOriginalReplayNamesCheckBox.IsEnabled = enable;
                     return;
                 case ReplayAction.Sort:
                     parseReplaysButton.IsEnabled = enable;
@@ -267,7 +269,7 @@ namespace ReplayParser.ReplaySorter.UI
                     cancelRenamingButton.IsEnabled = enable;
                     undoRenamingButton.IsEnabled = enable;
                     cancelUndoRenamingButton.IsEnabled = enable;
-                    restoreOriginalReplayNamesButton.IsEnabled = enable;
+                    restoreOriginalReplayNamesCheckBox.IsEnabled = enable;
                     return;
                 case ReplayAction.Rename:
                     parseReplaysButton.IsEnabled = enable;
@@ -276,35 +278,20 @@ namespace ReplayParser.ReplaySorter.UI
                     cancelSortButton.IsEnabled = enable;
                     undoRenamingButton.IsEnabled = enable;
                     cancelUndoRenamingButton.IsEnabled = enable;
-                    restoreOriginalReplayNamesButton.IsEnabled = enable;
+                    restoreOriginalReplayNamesCheckBox.IsEnabled = enable;
                     return;
                 default:
                     return;
             }
-
-            // previewSortButton.IsEnabled = true;
-            // cancelPreviewSortButton.IsEnabled = true;
         }
 
         private void replayDirectoryButton_Click(object sender, RoutedEventArgs e)
         {
-            //var folderDialog = new CommonOpenFileDialog();
-            //folderDialog.IsFolderPicker = true;
-            //if (folderDialog.ShowDialog() == CommonFileDialogResult.Ok)
-            //{
-            //    replayDirectoryTextBox.Text = folderDialog.FileName;
-            //}
             SelectMapFolder(replayDirectoryTextBox);
         }
 
         private void badReplayDirectory_Click(object sender, RoutedEventArgs e)
         {
-            //var folderDialog = new CommonOpenFileDialog();
-            //folderDialog.IsFolderPicker = true;
-            //if (folderDialog.ShowDialog() == CommonFileDialogResult.Ok)
-            //{
-            //    moveBadReplaysDirectory.Text = folderDialog.FileName;
-            //}
             SelectMapFolder(moveBadReplaysDirectory);
         }
 
@@ -910,7 +897,7 @@ namespace ReplayParser.ReplaySorter.UI
                 return;
 
             bool? renameInPlace = renameInPlaceCheckBox.IsChecked;
-            bool? renameLastSort = renameLastSortCheckBox.IsChecked;
+            bool? restoreOriginalReplayNames = restoreOriginalReplayNamesCheckBox.IsChecked;
             string replayRenamingSyntax = replayRenamingSyntaxTextBox.Text;
             string replayRenamingOutputDirectory = replayRenamingOutputDirectoryTextBox.Text;
 
@@ -920,6 +907,7 @@ namespace ReplayParser.ReplaySorter.UI
                 MessageBox.Show("Please specify a custom replay format.", "Empty replay format", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
                 return;
             }
+
             try
             {
                 customReplayFormat = new CustomReplayFormat(replayRenamingSyntax);
@@ -930,7 +918,7 @@ namespace ReplayParser.ReplaySorter.UI
                 return;
             }
 
-            var renamingParameters = RenamingParameters.Create(customReplayFormat, replayDirectory, replayRenamingOutputDirectory, renameInPlace, renameLastSort);
+            var renamingParameters = RenamingParameters.Create(customReplayFormat, replayDirectory, replayRenamingOutputDirectory, renameInPlace, restoreOriginalReplayNames);
             if (renamingParameters == null)
             {
                 MessageBox.Show("Please fill in a proper renaming format and an output directory, or tick off one of the checkboxes.", "Invalid parameters", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
@@ -955,7 +943,7 @@ namespace ReplayParser.ReplaySorter.UI
         {
             var replayRenamer = e.Argument as Renamer;
             var renameInPlace = replayRenamer.RenameInPlace;
-            var renameLastSort = replayRenamer.RenameLastSort;
+            var restoreOriginalReplayNames = replayRenamer.RestoreOriginalReplayNames;
             var customReplayFormat = replayRenamer.CustomReplayFormat;
             var replayRenamingOutputDirectory = replayRenamer.OutputDirectory;
             ServiceResult<ServiceResultSummary> response = null;
@@ -972,7 +960,7 @@ namespace ReplayParser.ReplaySorter.UI
                     response = replayRenamer.RenameInPlaceAsync(sender as BackgroundWorker, false);
                 }
             }
-            else if (renameLastSort)
+            else if (restoreOriginalReplayNames)
             {
                 if (isSorted)
                 {
@@ -1135,15 +1123,21 @@ namespace ReplayParser.ReplaySorter.UI
             }
         }
 
-        private void RestoreOriginalReplayNamesButton_Click(object sender, RoutedEventArgs e)
+        private void RestoreOriginalReplayNamesCheckBox_Click(object sender, RoutedEventArgs e)
         {
-            if (MessageBox.Show("Restoring replay names will make it impossible to rename the last sort or undo the last rename. Do you wish to continue?", "Restoring replay names", MessageBoxButton.OK, MessageBoxImage.Warning, MessageBoxResult.Cancel) == MessageBoxResult.OK)
-            {
-                ReplayHandler.ResetReplayFilePaths(ListReplays);
-                isSorted = false;
-                isRenamed = false;
-            }
+            disableSiblingCheckBoxAndRenamingStackPanel(sender as CheckBox, "restoreOriginalReplayNamesCheckBox");
         }
+
+        //TODO actual restore functionality
+        // private void RestoreOriginalReplayNamesCheckBox_Click(object sender, RoutedEventArgs e)
+        // {
+        //     if (MessageBox.Show("Restoring replay names will make it impossible to rename the last sort or undo the last rename. Do you wish to continue?", "Restoring replay names", MessageBoxButton.OK, MessageBoxImage.Warning, MessageBoxResult.Cancel) == MessageBoxResult.OK)
+        //     {
+        //         ReplayHandler.ResetReplayFilePaths(ListReplays);
+        //         isSorted = false;
+        //         isRenamed = false;
+        //     }
+        // }
     }
 }
 
