@@ -83,6 +83,7 @@
     <Compile Include="Diagnostics\ProgressBar.cs" />
     <Compile Include="IO\File.cs" />
     <Compile Include="IO\FileHandler.cs" />
+    <Compile Include="IO\FileHistory.cs" />
     <Compile Include="ReplayRenamer\Renamer\RenamingParameters.cs" />
     <Compile Include="ReplayRenamer\Renamer\Renamer.cs" />
     <Compile Include="Replays.Designer.cs">

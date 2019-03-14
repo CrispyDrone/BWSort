@@ -10,6 +10,7 @@ using System.Linq;
 
 namespace ReplayParser.ReplaySorter.ReplayRenamer
 {
+    //TODO refactor this trash...
     public class Renamer
     {
         #region private
@@ -23,20 +24,14 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
 
         #region methods
 
-        private ServiceResult<ServiceResultSummary> ComputeNames(BackgroundWorker worker_ReplayRenamer, bool ignoreSorted, string outputDirectory, bool restore = false)
+        private ServiceResult<ServiceResultSummary> ComputeNames(BackgroundWorker worker_ReplayRenamer, string outputDirectory, bool restore = false)
         {
             worker_ReplayRenamer.ReportProgress(0, "Computing names...");
-            // report progress... with "Generating names..."
+
             var firstReplay = _listReplays.FirstOrDefault();
             if (firstReplay == null)
             {
                 return new ServiceResult<ServiceResultSummary>(ServiceResultSummary.Default, false, new List<string> { "You have to parse replays before you can sort. Replay list is empty!" });
-            }
-
-            //TODO error prone since it could be that the first replay fails to be moved/copied during sorting...
-            if (!ignoreSorted && (firstReplay.OriginalFilePath != firstReplay.FilePath))
-            {
-                return new ServiceResult<ServiceResultSummary>(ServiceResultSummary.Default, false, new List<string> { "Replays have been sorted already. Please execute restore before attempting to rename in place. This will make it impossible to rename your last sort." });
             }
 
             if (!string.IsNullOrWhiteSpace(outputDirectory) && !Directory.Exists(outputDirectory))
@@ -63,7 +58,7 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
                 worker_ReplayRenamer.ReportProgress(progressPercentage);
                 try
                 {
-                    replay.FutureFilePath = (string.IsNullOrWhiteSpace(outputDirectory) ? Directory.GetParent(replay.FilePath).ToString() : outputDirectory ) + @"\" + (restore ?  FileHandler.GetFileName(replay.OriginalFilePath) : ReplayHandler.GenerateReplayName(replay.Content, CustomReplayFormat) + ".rep");
+                    replay.AddAfterCurrent((string.IsNullOrWhiteSpace(outputDirectory) ? Directory.GetParent(replay.FilePath).ToString() : outputDirectory ) + @"\" + (restore ?  FileHandler.GetFileName(replay.OriginalFilePath) : ReplayHandler.GenerateReplayName(replay.Content, CustomReplayFormat) + ".rep"));
                 }
                 catch (Exception ex)
                 {
@@ -87,7 +82,7 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
                 );
         }
 
-        private ServiceResult<ServiceResultSummary> ExecuteRenaming(BackgroundWorker worker_ReplayRenamer, bool shouldCopy)
+        private ServiceResult<ServiceResultSummary> ExecuteRenaming(BackgroundWorker worker_ReplayRenamer, bool shouldCopy, bool forward = true, int steps = 2)
         {
             worker_ReplayRenamer.ReportProgress(50, "Writing replays...");
             // report progress... with "Copying replays with newly generated names..."
@@ -119,19 +114,19 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
                 }
 
                 currentPosition++;
-                progressPercentage = 50 + Convert.ToInt32(((double)currentPosition / (_listReplays.Count() * 2)) * 100);
+                progressPercentage = 50 + Convert.ToInt32(((double)currentPosition / (_listReplays.Count() * steps)) * 100);
                 worker_ReplayRenamer.ReportProgress(progressPercentage);
                 try
                 {
                     //TODO identical names => failed to create file (add incrementor)
                     if (shouldCopy)
                     {
-                        ReplayHandler.CopyReplay(replay); 
+                        ReplayHandler.CopyReplay(replay, forward); 
                         // File.Copy(replay.OriginalFilePath, replay.FilePath);
                     }
                     else
                     {
-                        ReplayHandler.MoveReplay(replay);
+                        ReplayHandler.MoveReplay(replay, forward);
                         // File.Move(replay.OriginalFilePath, replay.FilePath);
                     }
                 }
@@ -160,9 +155,9 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
 
         }
 
-        private ServiceResult<ServiceResultSummary> ComputeAndExecuteRenaming(BackgroundWorker worker_ReplayRenamer, bool ignoreSorted, string outputDirectory, bool restore = false)
+        private ServiceResult<ServiceResultSummary> ComputeAndExecuteRenaming(BackgroundWorker worker_ReplayRenamer, string outputDirectory, bool restore = false)
         {
-            var computationResponse = ComputeNames(worker_ReplayRenamer, ignoreSorted, OutputDirectory, restore);
+            var computationResponse = ComputeNames(worker_ReplayRenamer, OutputDirectory, restore);
 
             if (!computationResponse.Success)
             {
@@ -177,6 +172,7 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
             }
 
             // combine both responses...
+            //TODO extract to method
             var combinedDuration = computationResponse.Result.Duration + executionResponse.Result.Duration;
             var combinedErrorCount = computationResponse.Result.ErrorCount + executionResponse.Result.ErrorCount;
             var combinedErrors = computationResponse.Errors == null ? 
@@ -234,16 +230,16 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
 
         // how to avoid coupling yourself to backgroundworker...
         // rethink design of not passing parameters, but having them be properties of this renamer class...
-        public ServiceResult<ServiceResultSummary> RenameInPlaceAsync(BackgroundWorker worker_ReplayRenamer, bool ignoreSorted)
+        public ServiceResult<ServiceResultSummary> RenameInPlaceAsync(BackgroundWorker worker_ReplayRenamer)
         {
-            return ComputeAndExecuteRenaming(worker_ReplayRenamer, ignoreSorted, string.Empty);
+            return ComputeAndExecuteRenaming(worker_ReplayRenamer, string.Empty);
         }
 
         // how to avoid coupling yourself to backgroundworker...
         // rethink design of not passing parameters, but having them be properties of this renamer class...
         public ServiceResult<ServiceResultSummary> RenameToDirectoryAsync(BackgroundWorker worker_ReplayRenamer)
         {
-            return ComputeAndExecuteRenaming(worker_ReplayRenamer, true, OutputDirectory);
+            return ComputeAndExecuteRenaming(worker_ReplayRenamer, OutputDirectory);
         }
 
         public ServiceResult<ServiceResultSummary> RestoreOriginalNames(BackgroundWorker worker_RenameUndoer)
@@ -251,7 +247,17 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
             // rename in place => names changed => restore => names restored back to originals
             // sort with name change => names changed => restore => keep sorted, but revert names to originals
             // rename last sort => names changed => restore => restore names to originals
-            return ComputeAndExecuteRenaming(worker_RenameUndoer, true, string.Empty, true);
+            return ComputeAndExecuteRenaming(worker_RenameUndoer, string.Empty, true);
+        }
+
+        public ServiceResult<ServiceResultSummary> UndoRename(BackgroundWorker worker_RenameUndoer)
+        {
+            return ExecuteRenaming(worker_RenameUndoer, false, false, 1);
+        }
+
+        public ServiceResult<ServiceResultSummary> RedoRename(BackgroundWorker worker_RenameUndoer)
+        {
+            return ExecuteRenaming(worker_RenameUndoer, false, true, 1);
         }
 
         public override string ToString()

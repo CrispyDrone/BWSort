@@ -13,6 +13,7 @@ using ReplayParser.ReplaySorter.UserInput;
 using ReplayParser.Interfaces;
 using ReplayParser.ReplaySorter.Diagnostics;
 using ReplayParser.ReplaySorter.Configuration;
+using ReplayParser.ReplaySorter.IO;
 
 namespace ReplayParser.ReplaySorter
 {
@@ -96,7 +97,7 @@ namespace ReplayParser.ReplaySorter
                 try
                 {
                     var ParsedReplay = ReplayLoader.LoadReplay(replay);
-                    ListReplays.Add(new File<IReplay>(replay, ParsedReplay));
+                    ListReplays.Add(File<IReplay>.Create(ParsedReplay, replay));
                     //WriteUncompressedReplay(@"C:\testreplays\UncompressedReplays", replay);
                 }
                 catch (Exception ex)

@@ -12,7 +12,6 @@ namespace ReplayParser.ReplaySorter
 {
     public static class ReplayHandler
     {
-        //TODO make use of FutureFilePath instead of sortDirectory/foldername/replayformat...?
         public static void MoveReplay(File<IReplay> replay, string sortDirectory, string FolderName, bool KeepOriginalReplayNames, CustomReplayFormat CustomReplayFormat)
         {
             var sourceFilePath = replay.FilePath;
@@ -34,20 +33,30 @@ namespace ReplayParser.ReplaySorter
             DestinationFilePath = FileHandler.AdjustName(DestinationFilePath, false);
 
             File.Move(sourceFilePath, DestinationFilePath);
-            replay.FilePath = DestinationFilePath;
+            replay.AddAfterCurrent(DestinationFilePath);
         }
 
-        public static void MoveReplay(File<IReplay> replay)
+        //TODO accept 2 filepaths
+        public static void MoveReplay(File<IReplay> replay, bool forward = true)
         {
-            var destinationFilePath = replay.FutureFilePath;
+            var filePath = replay.FilePath;
+
+            if (forward)
+            {
+                replay.Forward();
+            }
+            else
+            {
+                replay.Rewind();
+            }
+
+            var destinationFilePath = replay.FilePath;
+            //TODO this should belong in the File(history) class when accepting a new file
             destinationFilePath = FileHandler.AdjustName(destinationFilePath, false);
 
-            File.Move(replay.FilePath, destinationFilePath);
-            replay.FilePath = destinationFilePath;
-            // replay.FutureFilePath = string.Empty;
+            File.Move(filePath, destinationFilePath);
         }
 
-        //TODO make use of FutureFilePath instead of sortDirectory/foldername/replayformat...?
         public static void CopyReplay(File<IReplay> replay, string sortDirectory, string FolderName, bool KeepOriginalReplayNames, CustomReplayFormat CustomReplayFormat)
         {
             var sourceFilePath = replay.FilePath;
@@ -69,17 +78,28 @@ namespace ReplayParser.ReplaySorter
             DestinationFilePath = FileHandler.AdjustName(DestinationFilePath, false);
 
             File.Copy(sourceFilePath, DestinationFilePath);
-            replay.FilePath = DestinationFilePath;
+            replay.AddAfterCurrent(DestinationFilePath);
         }
 
-        public static void CopyReplay(File<IReplay> replay)
+        //TODO accept 2 filepaths
+        public static void CopyReplay(File<IReplay> replay, bool forward = true)
         {
-            var destinationFilePath = replay.FutureFilePath;
+            var filePath = replay.FilePath;
+
+            if (forward)
+            {
+                replay.Forward();
+            }
+            else
+            {
+                replay.Rewind();
+            }
+
+            var destinationFilePath = replay.FilePath;
+            //TODO this should belong in the File(history) class when accepting a new file
             destinationFilePath = FileHandler.AdjustName(destinationFilePath, false);
 
-            File.Copy(replay.FilePath, destinationFilePath);
-            replay.FilePath = destinationFilePath;
-            // replay.FutureFilePath = string.Empty;
+            File.Copy(filePath, destinationFilePath);
         }
 
         public static void RemoveBadReplay(string filepath, string abadreplay)
@@ -228,7 +248,7 @@ namespace ReplayParser.ReplaySorter
 
             foreach (var replay in listReplays)
             {
-                replay.FilePath = replay.OriginalFilePath;
+                replay.ResetToOriginal();
             }
         }
     }

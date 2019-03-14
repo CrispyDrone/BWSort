@@ -163,8 +163,11 @@
                         <Label x:Name="replayRenamingSyntaxLabel" Content="Renaming expression" HorizontalAlignment="Center" Margin="10 0"></Label>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" DockPanel.Dock="Bottom" HorizontalAlignment="Center">
-                        <Button x:Name="undoRenamingButton" Content="Undo rename " Click="undoRenamingButton_Click" Margin ="10" Padding="10 0 10 0"></Button>
-                        <Button x:Name="cancelUndoRenamingButton" Content="Cancel" Click="cancelUndoRenamingButton_Click" Margin ="10" Padding="10 0 10 0"></Button>
+                        <StackPanel Orientation="Vertical">
+                            <Button x:Name="undoRenamingButton" Content="Undo rename " Click="undoRenamingButton_Click" Margin ="10" Padding="10 0 10 0"></Button>
+                            <Button x:Name="redoRenamingButton" Content="Redo rename " Click="redoRenamingButton_Click" Margin ="10" Padding="10 0 10 0"></Button>
+                        </StackPanel>
+                        <Button x:Name="cancelUndoRenamingButton" Content="Cancel" Click="cancelUndoRenamingButton_Click" Margin ="10" Padding="10 0 10 0" VerticalAlignment="Center"></Button>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" DockPanel.Dock="Bottom" HorizontalAlignment="Center">
                         <Button x:Name="executeRenamingButton" Content="Rename" Click="executeRenamingButton_Click" Margin ="10" Padding="10 0 10 0"></Button>
