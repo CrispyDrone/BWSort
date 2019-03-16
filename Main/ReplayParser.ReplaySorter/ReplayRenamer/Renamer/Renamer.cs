@@ -121,7 +121,10 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
                     //TODO identical names => failed to create file (add incrementor)
                     if (shouldCopy)
                     {
-                        ReplayHandler.CopyReplay(replay, forward); 
+                        ReplayHandler.CopyReplay(replay, forward);
+                        // don't want this to show up in history
+                        replay.Rewind();
+                        replay.RemoveAfterCurrent();
                         // File.Copy(replay.OriginalFilePath, replay.FilePath);
                     }
                     else
@@ -217,7 +220,6 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
 
         #region properties
 
-        public string OriginalDirectory => _renamingParameters.OriginalDirectory;
         public bool RenameInPlace => _renamingParameters.RenameInPlace;
         public bool RestoreOriginalReplayNames => _renamingParameters.RestoreOriginalReplayNames;
         public string OutputDirectory => _renamingParameters.OutputDirectory;

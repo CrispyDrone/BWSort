@@ -12,47 +12,61 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
         private bool _restoreOriginalReplayNames;
         private string _outputDirectory;
         private CustomReplayFormat _customReplayFormat;
-        private string _originalDirectory;
 
-        public static RenamingParameters Create(CustomReplayFormat customReplayFormat, string originalDirectory, string outputDirectory, bool? renameInPlace, bool? restoreOriginalReplayNames)
+        // rename in place:
+        // customreplayformat != null 
+        // output directory = empty
+        // rename in place = true
+        // restoreoriginalreplaynames = false
+
+        // rename to output:
+        // customreplayformat != null
+        // outputdirectory != null/empty
+        // renameinplace = false
+        // restore = false
+
+        // restore:
+        // customreplayformat = null
+        // outputdirectory = null
+        // renameinplace = false
+        // restore = true
+
+        public static RenamingParameters Create(CustomReplayFormat customReplayFormat, string outputDirectory, bool? renameInPlace, bool? restoreOriginalReplayNames)
         {
-            if (customReplayFormat == null) return null;
-
             var renameInPlaceValue = renameInPlace.HasValue && renameInPlace.Value;
             var restoreOriginalReplayNamesValue = restoreOriginalReplayNames.HasValue && restoreOriginalReplayNames.Value;
 
-            if (!(renameInPlaceValue || restoreOriginalReplayNamesValue))
+            if (customReplayFormat != null)
             {
-                if (string.IsNullOrWhiteSpace(outputDirectory))
+                if (renameInPlaceValue)
                 {
+                    if (string.IsNullOrWhiteSpace(outputDirectory))
+                        return new RenamingParameters(customReplayFormat, string.Empty, true, false);
+
                     return null;
                 }
-                return new RenamingParameters(customReplayFormat, originalDirectory, outputDirectory, false, false);
+
+                if (string.IsNullOrWhiteSpace(outputDirectory))
+                    return null;
+
+                return new RenamingParameters(customReplayFormat, outputDirectory, false, false);
             }
+            else
+            {
+                if (restoreOriginalReplayNamesValue)
+                    return new RenamingParameters(null, null, false, true);
 
-            // null + null => bad
-            // false + null => bad
-            // null + false => bad
-            // false + false => bad
-            // true + true => bad
-            // null + true => good
-            // true + null => good
-            // true + false => good
-            // false + true => good
-
-            if (!(renameInPlaceValue ^ restoreOriginalReplayNamesValue)) return null;
-
-            return new RenamingParameters(customReplayFormat, string.Empty, outputDirectory, renameInPlaceValue, restoreOriginalReplayNamesValue);
+                return null;
+            }
         }
 
         public static RenamingParameters Default => new RenamingParameters();
 
         private RenamingParameters() { }
 
-        private RenamingParameters(CustomReplayFormat customReplayFormat, string originalDirectory, string outputDirectory, bool renameInPlace, bool restoreOriginalReplayNames)
+        private RenamingParameters(CustomReplayFormat customReplayFormat, string outputDirectory, bool renameInPlace, bool restoreOriginalReplayNames)
         {
             _customReplayFormat = customReplayFormat;
-            _originalDirectory = originalDirectory;
             _outputDirectory = outputDirectory;
             _renameInPlace = renameInPlace;
             _restoreOriginalReplayNames = restoreOriginalReplayNames;
@@ -60,13 +74,12 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
 
         public bool RenameInPlace => _renameInPlace;
         public bool RestoreOriginalReplayNames => _restoreOriginalReplayNames;
-        public string OriginalDirectory => _originalDirectory;
         public string OutputDirectory => _outputDirectory;
         public CustomReplayFormat CustomReplayFormat => _customReplayFormat;
 
         public override string ToString()
         {
-            return $"RenameInPlace: {RenameInPlace} RestoreOriginalReplayNames: {RestoreOriginalReplayNames} OutputDirectory: {OutputDirectory} CustomReplayFormat: {CustomReplayFormat} OriginalDirectory: {OriginalDirectory}";
+            return $"RenameInPlace: {RenameInPlace} RestoreOriginalReplayNames: {RestoreOriginalReplayNames} OutputDirectory: {OutputDirectory} CustomReplayFormat: {CustomReplayFormat}";
         }
     }
 }

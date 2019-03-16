@@ -15,6 +15,7 @@ namespace ReplayParser.ReplaySorter.IO
 
         private LinkedList<string> _fileNames = new LinkedList<string>();
         private LinkedListNode<string> _currentFileNameNode;
+        private LinkedListNode<string> _savedFileNameNode;
 
         #endregion
 
@@ -66,6 +67,15 @@ namespace ReplayParser.ReplaySorter.IO
             _fileNames.AddAfter(_currentFileNameNode, fileName);
         }
 
+        public void RemoveAfterCurrent()
+        {
+            var nodeToDelete = _currentFileNameNode.Next;
+            if (nodeToDelete != null)
+            {
+                _fileNames.Remove(nodeToDelete);
+            }
+        }
+
         public bool Rewind()
         {
             if (_currentFileNameNode.Previous == null)
@@ -97,6 +107,24 @@ namespace ReplayParser.ReplaySorter.IO
         public void ResetToLast()
         {
             _currentFileNameNode = _fileNames.Last;
+        }
+
+        public void SaveState()
+        {
+            if (_currentFileNameNode != null)
+                _savedFileNameNode = _currentFileNameNode;
+        }
+
+        public void RestoreSavedState()
+        {
+            if (_savedFileNameNode != null)
+                _currentFileNameNode = _savedFileNameNode;
+        }
+
+        public void CorrectCurrent(string fileName)
+        {
+            if (_currentFileNameNode != null)
+                _currentFileNameNode.Value = fileName;
         }
 
         #endregion

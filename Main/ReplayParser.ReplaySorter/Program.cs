@@ -277,7 +277,6 @@ namespace ReplayParser.ReplaySorter
                 else
                     return;
 
-                ReplayHandler.ResetReplayFilePaths(ListReplays);
             }
             Console.WriteLine("Stop Program can not be null");
             return;

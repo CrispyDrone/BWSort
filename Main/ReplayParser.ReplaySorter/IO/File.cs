@@ -42,8 +42,8 @@ namespace ReplayParser.ReplaySorter.IO
         public string OriginalFilePath => _fileHistory.OriginalFilePath;
         public string FilePath => _fileHistory.CurrentFileName();
         public T Content => _content;
-        public bool IsRenamed => _fileHistory.IsAtOriginal;
-        public bool CanBeRenamed => !_fileHistory.IsAtLast;
+        public bool IsAtOriginal => _fileHistory.IsAtOriginal;
+        public bool IsAtLast => _fileHistory.IsAtLast;
 
         #endregion
 
@@ -53,6 +53,11 @@ namespace ReplayParser.ReplaySorter.IO
         {
             // verify filepath
             _fileHistory.AddAfterCurrent(fileName);
+        }
+
+        public void RemoveAfterCurrent()
+        {
+            _fileHistory.RemoveAfterCurrent();
         }
 
         public bool Rewind()
@@ -73,6 +78,21 @@ namespace ReplayParser.ReplaySorter.IO
         public void ResetToLast()
         {
             _fileHistory.ResetToLast();
+        }
+
+        public void SaveState()
+        {
+            _fileHistory.SaveState();
+        }
+
+        public void RestoreToSavedState()
+        {
+            _fileHistory.RestoreSavedState();
+        }
+
+        public void CorrectCurrent(string fileName)
+        {
+            _fileHistory.CorrectCurrent(fileName);
         }
 
         #endregion

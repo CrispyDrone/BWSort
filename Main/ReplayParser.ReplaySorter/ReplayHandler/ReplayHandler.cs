@@ -43,16 +43,20 @@ namespace ReplayParser.ReplaySorter
 
             if (forward)
             {
-                replay.Forward();
+                if (!replay.Forward())
+                    return;
             }
             else
             {
-                replay.Rewind();
+                if (!replay.Rewind())
+                    return;
             }
 
             var destinationFilePath = replay.FilePath;
-            //TODO this should belong in the File(history) class when accepting a new file
+            //TODO this should belong in the File(history) class when accepting a new file, not possible because you can't verify whether there are doubles
+            // instead sorting/renaming should be virtual with virtual directories that are aware of other replays in the directory...
             destinationFilePath = FileHandler.AdjustName(destinationFilePath, false);
+            replay.CorrectCurrent(destinationFilePath);
 
             File.Move(filePath, destinationFilePath);
         }
@@ -88,16 +92,19 @@ namespace ReplayParser.ReplaySorter
 
             if (forward)
             {
-                replay.Forward();
+                if (!replay.Forward())
+                    return;
             }
             else
             {
-                replay.Rewind();
+                if (!replay.Rewind())
+                    return;
             }
 
             var destinationFilePath = replay.FilePath;
             //TODO this should belong in the File(history) class when accepting a new file
             destinationFilePath = FileHandler.AdjustName(destinationFilePath, false);
+            replay.CorrectCurrent(destinationFilePath);
 
             File.Copy(filePath, destinationFilePath);
         }
@@ -241,14 +248,25 @@ namespace ReplayParser.ReplaySorter
             return name;
         }
 
-        public static void ResetReplayFilePaths(List<File<IReplay>> listReplays)
+        public static void SaveReplayFilePaths(List<File<IReplay>> listReplays)
         {
             if (listReplays == null)
                 return;
 
             foreach (var replay in listReplays)
             {
-                replay.ResetToOriginal();
+                replay.SaveState();
+            }
+        }
+
+        public static void ResetReplayFilePathsToBeforeSort(List<File<IReplay>> listReplays)
+        {
+            if (listReplays == null)
+                return;
+
+            foreach (var replay in listReplays)
+            {
+                replay.RestoreToSavedState();
             }
         }
     }

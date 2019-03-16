@@ -685,8 +685,6 @@ namespace ReplayParser.ReplaySorter.UI
             if (SorterConditions.GoodToGo == true)
             {
                 SortingReplays = true;
-                // Will this take long??
-                ReplayHandler.ResetReplayFilePaths(ListReplays);
                 e.Result = sorter.ExecuteSortAsync(KeepOriginalReplayNames, worker_ReplaySorter, ReplaysThrowingExceptions);
                 ReplayHandler.LogBadReplays(ReplaysThrowingExceptions, _replaySorterConfiguration.LogDirectory, $"{DateTime.Now} - Error while sorting replay: {0} with arguments {sorter.ToString()}");
 
@@ -755,7 +753,6 @@ namespace ReplayParser.ReplaySorter.UI
                 ResetReplaySortingVariables();
                 ReplaysThrowingExceptions.Clear();
             }
-
         }
 
         private void ResetReplaySortingVariables()
@@ -896,24 +893,44 @@ namespace ReplayParser.ReplaySorter.UI
             string replayRenamingSyntax = replayRenamingSyntaxTextBox.Text;
             string replayRenamingOutputDirectory = replayRenamingOutputDirectoryTextBox.Text;
 
+            var renameInPlaceValue = renameInPlace.HasValue && renameInPlace.Value;
+            var restoreOriginalReplayNamesValue = restoreOriginalReplayNames.HasValue && restoreOriginalReplayNames.Value;
             CustomReplayFormat customReplayFormat = null;
-            if (string.IsNullOrEmpty(replayRenamingSyntax))
+
+            if (!restoreOriginalReplayNamesValue)
             {
-                MessageBox.Show("Please specify a custom replay format.", "Empty replay format", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
-                return;
+                if (string.IsNullOrEmpty(replayRenamingSyntax))
+                {
+                    MessageBox.Show("Please specify a custom replay format.", "Empty replay format", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
+                    return;
+                }
+
+                try
+                {
+                    customReplayFormat = new CustomReplayFormat(replayRenamingSyntax);
+                }
+                catch (ArgumentException)
+                {
+                    MessageBox.Show("Invalid custom replay format. Check help section for correct syntax", "Invalid syntax", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
+                    return;
+                }
+            }
+            else
+            {
+                if (ListReplays.All(r => r.FilePath == r.OriginalFilePath))
+                {
+                    MessageBox.Show("Replays still have their original file names. Restore is not necessary.", "Unnecessary restore", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);
+                    return;
+                }
             }
 
-            try
+            if (renameInPlaceValue || restoreOriginalReplayNamesValue)
             {
-                customReplayFormat = new CustomReplayFormat(replayRenamingSyntax);
-            }
-            catch (ArgumentException)
-            {
-                MessageBox.Show("Invalid custom replay format. Check help section for correct syntax", "Invalid syntax", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
-                return;
+                replayRenamingOutputDirectory = string.Empty;
             }
 
-            var renamingParameters = RenamingParameters.Create(customReplayFormat, replayDirectory, replayRenamingOutputDirectory, renameInPlace, restoreOriginalReplayNames);
+            var renamingParameters = RenamingParameters.Create(customReplayFormat, replayRenamingOutputDirectory, renameInPlaceValue, restoreOriginalReplayNamesValue);
+
             if (renamingParameters == null)
             {
                 MessageBox.Show("Please fill in a proper renaming format and an output directory, or tick off one of the checkboxes.", "Invalid parameters", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
@@ -939,8 +956,6 @@ namespace ReplayParser.ReplaySorter.UI
             var replayRenamer = e.Argument as Renamer;
             var renameInPlace = replayRenamer.RenameInPlace;
             var restoreOriginalReplayNames = replayRenamer.RestoreOriginalReplayNames;
-            var customReplayFormat = replayRenamer.CustomReplayFormat;
-            var replayRenamingOutputDirectory = replayRenamer.OutputDirectory;
             ServiceResult<ServiceResultSummary> response = null;
             RenamingReplays = true;
 
@@ -952,7 +967,6 @@ namespace ReplayParser.ReplaySorter.UI
             //TODO need to return renamed replays
             else if (restoreOriginalReplayNames)
             {
-                ReplayHandler.ResetReplayFilePaths(ListReplays);
                 response = replayRenamer.RestoreOriginalNames(sender as BackgroundWorker);
             }
             //TODO need to return renamed replays
@@ -1024,11 +1038,12 @@ namespace ReplayParser.ReplaySorter.UI
 
         private void undoRenamingButton_Click(object sender, RoutedEventArgs e)
         {
-            var isRenamed = ListReplays?.Any(r => r.IsRenamed) ?? false;
+            //TODO only the last batch of SUCCESSFULLY renamed replays instead of all replays
+            var isRenamed = ListReplays?.Any(r => !r.IsAtOriginal) ?? false;
 
             if (!isRenamed)
             {
-                MessageBox.Show("Please execute a rename before attempting to undo one.", "Invalid undo action", MessageBoxButton.OK, MessageBoxImage.Warning, MessageBoxResult.OK);
+                MessageBox.Show("Please execute a rename in place before attempting to undo one.", "Invalid undo action", MessageBoxButton.OK, MessageBoxImage.Warning, MessageBoxResult.OK);
                 return;
             }
 
@@ -1044,11 +1059,12 @@ namespace ReplayParser.ReplaySorter.UI
 
         private void redoRenamingButton_Click(object sender, RoutedEventArgs e)
         {
-            var canRedo = ListReplays?.Any(r => r.CanBeRenamed) ?? false;
+            //TODO only the last batch of SUCCESSFULLY renamed replays instead of all replays
+            var canRedo = ListReplays?.Any(r => !r.IsAtLast) ?? false;
 
             if (!canRedo)
             {
-                MessageBox.Show("Please execute an undo before attempting to redo one.", "Invalid redo action", MessageBoxButton.OK, MessageBoxImage.Warning, MessageBoxResult.OK);
+                MessageBox.Show("Please execute an undo rename in place before attempting to redo one.", "Invalid redo action", MessageBoxButton.OK, MessageBoxImage.Warning, MessageBoxResult.OK);
                 return;
             }
 
@@ -1143,6 +1159,7 @@ namespace ReplayParser.ReplaySorter.UI
         private void RestoreOriginalReplayNamesCheckBox_Click(object sender, RoutedEventArgs e)
         {
             disableSiblingCheckBoxAndRenamingStackPanel(sender as CheckBox, "renameInPlaceCheckBox");
+            replayRenamingSyntaxTextBox.IsEnabled = !replayRenamingSyntaxTextBox.IsEnabled;
         }
     }
 }
