@@ -15,6 +15,7 @@ using ReplayParser.ReplaySorter.ReplayRenamer;
 using ReplayParser.ReplaySorter.Configuration;
 using ReplayParser.ReplaySorter.Diagnostics;
 using ReplayParser.ReplaySorter.IO;
+using System.Net.Http;
 
 namespace ReplayParser.ReplaySorter.UI
 {
@@ -31,6 +32,27 @@ namespace ReplayParser.ReplaySorter.UI
             _replaySorterConfiguration = new ReplaySorterAppConfiguration();
             IntializeErrorLogger(_replaySorterConfiguration);
         }
+
+        private async void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            using (HttpClient client = new HttpClient())
+            {
+                try
+                {
+                    client.DefaultRequestHeaders.UserAgent.Add(new System.Net.Http.Headers.ProductInfoHeaderValue("BWSort", _replaySorterConfiguration.Version));
+                    string responseBody = await client.GetStringAsync(_replaySorterConfiguration.GithubAPIRepoUrl + @"/releases/latest");
+                    var versionTag = _replaySorterConfiguration.VersionRegex.Match(responseBody).Groups[1].Value;
+                    if (versionTag != _replaySorterConfiguration.Version)
+                        MessageBox.Show($"A new version is available at {_replaySorterConfiguration.RepositoryUrl}");
+                }
+                catch (HttpRequestException ex)
+                {
+                    statusBarErrors.Content = "Failed to check for updates.";
+                    ErrorLogger.GetInstance()?.LogError("Failed to check for updates.", ex: ex);
+                }
+            }
+        }
+
         // configuration
         private IReplaySorterConfiguration _replaySorterConfiguration;
 

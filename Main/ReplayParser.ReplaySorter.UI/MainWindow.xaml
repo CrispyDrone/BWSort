@@ -6,7 +6,8 @@
         xmlns:local="clr-namespace:ReplayParser.ReplaySorter.UI"
         mc:Ignorable="d"
         Title="BWSort" Height="500" Width="750"
-        Closing="Window_Closing">
+        Closing="Window_Closing"
+        Loaded="Window_Loaded">
     <DockPanel>
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="Menu">
