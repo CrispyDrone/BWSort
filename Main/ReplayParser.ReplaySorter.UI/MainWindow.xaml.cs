@@ -16,6 +16,7 @@ using ReplayParser.ReplaySorter.Configuration;
 using ReplayParser.ReplaySorter.Diagnostics;
 using ReplayParser.ReplaySorter.IO;
 using System.Net.Http;
+using System.Windows.Data;
 
 namespace ReplayParser.ReplaySorter.UI
 {
@@ -253,6 +254,10 @@ namespace ReplayParser.ReplaySorter.UI
                     EnableSortingAndRenamingButtons(ReplayAction.Parse, true);
                 }
             }
+            listViewReplays.ItemsSource = ListReplays;
+            // var view = (CollectionView)CollectionViewSource.GetDefaultView(listViewReplays.ItemsSource);
+            // var groupDescription = new PropertyGroupDescription("ForceIdentifier");
+            // view.GroupDescriptions.Add(groupDescription);
         }
 
         private void ResetReplayParsingVariables(bool clearListReplays, bool resetMoveBadReplays)

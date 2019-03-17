@@ -180,14 +180,50 @@
                     </Grid>
                 </DockPanel>
             </TabItem>
-            <TabItem IsEnabled="false" Header="Search">
-                <StackPanel>
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="Type search criteria here..."></TextBlock>
-                        <CheckBox Content="Select All"></CheckBox>
-                    </StackPanel>
-                    <ListBox></ListBox>
-                </StackPanel>
+            <TabItem Header="Search">
+                <DockPanel>
+                    <DockPanel DockPanel.Dock="Top">
+                        <CheckBox Content="Select as input" DockPanel.Dock="Right" Margin="10"></CheckBox>
+                        <TextBlock Text="Type search criteria here..." Margin="10"></TextBlock>
+                    </DockPanel>
+                    <ListView Name="listViewReplays">
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn Header="Players">
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <ItemsControl ItemsSource="{Binding Content.Players}">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <StackPanel/>
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Label Content="{Binding Name, Mode=OneWay}" />
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
+                                <GridViewColumn Header="Map" DisplayMemberBinding="{Binding Content.ReplayMap.MapName}"></GridViewColumn>
+                                <GridViewColumn Header="Duration" DisplayMemberBinding="{Binding Content.FrameCount}"></GridViewColumn>
+                                <GridViewColumn Header="Date" DisplayMemberBinding="{Binding Content.Timestamp}"></GridViewColumn>
+                                <GridViewColumn Header="Filepath" DisplayMemberBinding="{Binding FilePath}"></GridViewColumn>
+                            </GridView>
+                        </ListView.View>
+                        <ListView.GroupStyle>
+                            <GroupStyle>
+                                <GroupStyle.HeaderTemplate>
+                                    <DataTemplate>
+                                        <TextBlock FontWeight="Bold" Text="{Binding Name}"></TextBlock>
+                                    </DataTemplate>
+                                </GroupStyle.HeaderTemplate>
+                            </GroupStyle>
+                        </ListView.GroupStyle>
+                    </ListView>
+                </DockPanel>
             </TabItem>
             <TabItem IsEnabled="false" Header="Pool">
                 <DockPanel>
