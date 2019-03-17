@@ -34,6 +34,7 @@ namespace ReplayParser.ReplaySorter
 
             File.Move(sourceFilePath, DestinationFilePath);
             replay.AddAfterCurrent(DestinationFilePath);
+            replay.Forward();
         }
 
         //TODO accept 2 filepaths
@@ -50,13 +51,17 @@ namespace ReplayParser.ReplaySorter
             {
                 if (!replay.Rewind())
                     return;
+
             }
 
             var destinationFilePath = replay.FilePath;
+            if (destinationFilePath != filePath)
+            {
+                destinationFilePath = FileHandler.AdjustName(destinationFilePath, false);
+                replay.CorrectCurrent(destinationFilePath);
+            }
             //TODO this should belong in the File(history) class when accepting a new file, not possible because you can't verify whether there are doubles
             // instead sorting/renaming should be virtual with virtual directories that are aware of other replays in the directory...
-            destinationFilePath = FileHandler.AdjustName(destinationFilePath, false);
-            replay.CorrectCurrent(destinationFilePath);
 
             File.Move(filePath, destinationFilePath);
         }
@@ -83,6 +88,7 @@ namespace ReplayParser.ReplaySorter
 
             File.Copy(sourceFilePath, DestinationFilePath);
             replay.AddAfterCurrent(DestinationFilePath);
+            replay.Forward();
         }
 
         //TODO accept 2 filepaths
@@ -267,6 +273,7 @@ namespace ReplayParser.ReplaySorter
             foreach (var replay in listReplays)
             {
                 replay.RestoreToSavedState();
+                replay.RemoveAfterCurrent();
             }
         }
     }

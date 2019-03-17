@@ -498,6 +498,9 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                 if (shouldCopy)
                 {
                     ReplayHandler.CopyReplay(replay, sortDirectory, FolderName, KeepOriginalReplayNames, Sorter.CustomReplayFormat);
+                    var additionalReplayCreated = File<IReplay>.Create(replay.Content, replay.FilePath);
+                    replay.Rewind();
+                    directoryFileReplay[sortDirectory + @"\" + FolderName].Add(additionalReplayCreated);
                 }
                 else
                 {

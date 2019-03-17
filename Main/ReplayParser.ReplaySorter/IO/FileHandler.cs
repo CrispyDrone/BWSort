@@ -29,7 +29,7 @@ namespace ReplayParser.ReplaySorter.IO
             if (dirName.Length >= filePath.Length)
                 return null;
 
-            return filePath.Substring(GetParentDirectory(filePath).Length);
+            return filePath.Substring(GetParentDirectory(filePath).Length).TrimStart(new char[] { '\\' });
         }
 
         public static string GetFileNameWithoutExtension(string fullPath)

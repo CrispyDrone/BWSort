@@ -28,6 +28,7 @@ namespace ReplayParser.ReplaySorter
         public Sorter(string originalDirectory, List<File<IReplay>> listreplays)
         {
             this.ListReplays = listreplays;
+            this.OriginalListReplays = new List<File<IReplay>>(listreplays);
             this.CurrentDirectory = originalDirectory;
             this.OriginalDirectory = originalDirectory;
         }
@@ -51,6 +52,8 @@ namespace ReplayParser.ReplaySorter
 
         public string OriginalDirectory { get; }
 
+        public List<File<IReplay>> OriginalListReplays { get; }
+
         #endregion
 
         #region public methods
@@ -58,7 +61,7 @@ namespace ReplayParser.ReplaySorter
         //TODO sorting needs to start with the original names, and then progressively work with the filename....??
         public void ExecuteSort(SortCriteriaParameters sortcriteriaparameters, bool keeporiginalreplaynames, List<string> replaysThrowingExceptions)
         {
-            ReplayHandler.SaveReplayFilePaths(ListReplays);
+            ReplayHandler.SaveReplayFilePaths(OriginalListReplays);
             // why do i need this silly string array with the original order...
             IDictionary<string, List<File<IReplay>>> SortOnXResult = null;
             for (int i = 0; i < CriteriaStringOrder.Length; i++)
@@ -76,7 +79,7 @@ namespace ReplayParser.ReplaySorter
                     SortOnXResult = NestedSort(SortOnX, SortOnXResult, replaysThrowingExceptions);
                 }
             }
-            ReplayHandler.ResetReplayFilePathsToBeforeSort(ListReplays);
+            ReplayHandler.ResetReplayFilePathsToBeforeSort(OriginalListReplays);
         }
 
         public IDictionary<string, List<File<IReplay>>> NestedSort(ISortCommand SortOnX, IDictionary<string, List<File<IReplay>>> SortOnXResult, List<string> replaysThrowingExceptions)
@@ -99,7 +102,7 @@ namespace ReplayParser.ReplaySorter
 
         public DirectoryFileTree<IReplay> ExecuteSortAsync(bool keeporiginalreplaynames, BackgroundWorker worker_ReplaySorter, List<string> replaysThrowingExceptions)
         {
-            ReplayHandler.SaveReplayFilePaths(ListReplays);
+            ReplayHandler.SaveReplayFilePaths(OriginalListReplays);
             // Sort Result ! 
             DirectoryFileTree<IReplay> TotalSortResult = new DirectoryFileTree<IReplay>(new DirectoryInfo(OriginalDirectory));
 
@@ -155,7 +158,7 @@ namespace ReplayParser.ReplaySorter
                 }
 
             }
-            ReplayHandler.ResetReplayFilePathsToBeforeSort(ListReplays);
+            ReplayHandler.ResetReplayFilePathsToBeforeSort(OriginalListReplays);
             return TotalSortResult;
         }
 

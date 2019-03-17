@@ -5,7 +5,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{833D41A5-2BE7-431D-97A8-6AF51DC9C35C}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>ReplayParser.ReplaySorter</RootNamespace>
     <AssemblyName>ReplayParser.ReplaySorter</AssemblyName>
@@ -61,8 +61,9 @@
   <PropertyGroup>
     <GenerateManifests>true</GenerateManifests>
   </PropertyGroup>
+  <PropertyGroup />
   <PropertyGroup>
-    <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
+    <StartupObject />
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="PresentationFramework" />

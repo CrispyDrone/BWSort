@@ -59,20 +59,21 @@ namespace ReplayParser.ReplaySorter.IO
         /// <param name="fileName"></param>
         public void AddAfterCurrent(string fileName)
         {
-            if (_currentFileNameNode.Next != null)
-            {
-                _fileNames.Remove(_currentFileNameNode.Next);
-            }
-
+            RemoveAfterCurrent();
             _fileNames.AddAfter(_currentFileNameNode, fileName);
         }
 
         public void RemoveAfterCurrent()
         {
-            var nodeToDelete = _currentFileNameNode.Next;
-            if (nodeToDelete != null)
+            var currentNode = _currentFileNameNode;
+
+            //TODO maybe i should make my own linkedlist implementation so i can just cut a linkedlist at a specified node... since this will be horribly quite inefficient with long histories..
+            while (currentNode.Next != null)
             {
-                _fileNames.Remove(nodeToDelete);
+                if (_savedFileNameNode == currentNode.Next)
+                    _savedFileNameNode = null;
+
+                _fileNames.Remove(currentNode.Next);
             }
         }
 
@@ -111,20 +112,30 @@ namespace ReplayParser.ReplaySorter.IO
 
         public void SaveState()
         {
-            if (_currentFileNameNode != null)
-                _savedFileNameNode = _currentFileNameNode;
+            if (_currentFileNameNode == null)
+                throw new NullReferenceException("Current file path is null!");
+
+            _savedFileNameNode = _currentFileNameNode;
         }
 
         public void RestoreSavedState()
         {
-            if (_savedFileNameNode != null)
-                _currentFileNameNode = _savedFileNameNode;
+            if (_savedFileNameNode == null)
+                throw new InvalidOperationException("Attempting to restore state, but it has been discarded!");
+
+            _currentFileNameNode = _savedFileNameNode;
         }
 
         public void CorrectCurrent(string fileName)
         {
-            if (_currentFileNameNode != null)
-                _currentFileNameNode.Value = fileName;
+            if (_currentFileNameNode == null)
+                throw new NullReferenceException("Current file path is null!");
+
+            if (_currentFileNameNode == _fileNames.First)
+                return;
+                // throw new InvalidOperationException("Attempting to modify original path!");
+
+            _currentFileNameNode.Value = fileName;
         }
 
         #endregion
