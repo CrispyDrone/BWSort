@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ReplayParser.ReplaySorter.UI"
+        xmlns:scm="clr-namespace:System.ComponentModel;assembly=WindowsBase"
         mc:Ignorable="d"
         Title="BWSort" Height="500" Width="750"
         Closing="Window_Closing"
@@ -184,25 +185,52 @@
                 <DockPanel>
                     <DockPanel DockPanel.Dock="Top">
                         <CheckBox Content="Select as input" DockPanel.Dock="Right" Margin="10"></CheckBox>
-                        <TextBlock Text="Type search criteria here..." Margin="10"></TextBlock>
+                        <TextBox Text="Type search criteria here..." Margin="10"></TextBox>
                     </DockPanel>
                     <ListView Name="listViewReplays">
+                        <ListView.ItemContainerStyle>
+                            <Style TargetType="{x:Type ListViewItem}">
+                                <Setter Property="BorderBrush" Value="LightGray" />
+                                <Setter Property="BorderThickness" Value="0,0,0,1" />
+                            </Style>
+                        </ListView.ItemContainerStyle>
                         <ListView.View>
                             <GridView>
                                 <GridViewColumn Header="Players">
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
-                                            <ItemsControl ItemsSource="{Binding Content.Players}">
-                                                <ItemsControl.ItemsPanel>
-                                                    <ItemsPanelTemplate>
-                                                        <StackPanel/>
-                                                    </ItemsPanelTemplate>
-                                                </ItemsControl.ItemsPanel>
-                                                <ItemsControl.ItemTemplate>
-                                                    <DataTemplate>
-                                                        <Label Content="{Binding Name, Mode=OneWay}" />
-                                                    </DataTemplate>
-                                                </ItemsControl.ItemTemplate>
+                                            <ItemsControl>
+                                                <ItemsControl.Resources>
+                                                    <CollectionViewSource x:Key="cvs" Source="{Binding Content.Players}">
+                                                        <CollectionViewSource.GroupDescriptions>
+                                                            <PropertyGroupDescription PropertyName="ForceIdentifier" />
+                                                        </CollectionViewSource.GroupDescriptions>
+                                                        <CollectionViewSource.SortDescriptions>
+                                                            <scm:SortDescription PropertyName="ForceIdentifier" />
+                                                        </CollectionViewSource.SortDescriptions>
+                                                    </CollectionViewSource>
+                                                </ItemsControl.Resources>
+                                                <ItemsControl ItemsSource="{Binding Source={StaticResource cvs}}">
+                                                    <ItemsControl.ItemsPanel>
+                                                        <ItemsPanelTemplate>
+                                                            <StackPanel Orientation="Horizontal"/>
+                                                        </ItemsPanelTemplate>
+                                                    </ItemsControl.ItemsPanel>
+                                                    <ItemsControl.GroupStyle>
+                                                        <GroupStyle>
+                                                            <GroupStyle.HeaderTemplate>
+                                                                <DataTemplate>
+                                                                    <TextBlock FontWeight="Bold" Text="{Binding Name, StringFormat={}Team {0}}"></TextBlock>
+                                                                </DataTemplate>
+                                                            </GroupStyle.HeaderTemplate>
+                                                        </GroupStyle>
+                                                    </ItemsControl.GroupStyle>
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <Label Content="{Binding Name, Mode=OneWay}" />
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
                                             </ItemsControl>
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
@@ -213,15 +241,6 @@
                                 <GridViewColumn Header="Filepath" DisplayMemberBinding="{Binding FilePath}"></GridViewColumn>
                             </GridView>
                         </ListView.View>
-                        <ListView.GroupStyle>
-                            <GroupStyle>
-                                <GroupStyle.HeaderTemplate>
-                                    <DataTemplate>
-                                        <TextBlock FontWeight="Bold" Text="{Binding Name}"></TextBlock>
-                                    </DataTemplate>
-                                </GroupStyle.HeaderTemplate>
-                            </GroupStyle>
-                        </ListView.GroupStyle>
                     </ListView>
                 </DockPanel>
             </TabItem>

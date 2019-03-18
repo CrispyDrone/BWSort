@@ -255,9 +255,6 @@ namespace ReplayParser.ReplaySorter.UI
                 }
             }
             listViewReplays.ItemsSource = ListReplays;
-            // var view = (CollectionView)CollectionViewSource.GetDefaultView(listViewReplays.ItemsSource);
-            // var groupDescription = new PropertyGroupDescription("ForceIdentifier");
-            // view.GroupDescriptions.Add(groupDescription);
         }
 
         private void ResetReplayParsingVariables(bool clearListReplays, bool resetMoveBadReplays)
