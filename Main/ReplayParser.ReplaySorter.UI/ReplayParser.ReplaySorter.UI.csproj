@@ -104,6 +104,9 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Converters\FramesToTimeSpanInSecondsConverter.cs" />
+    <Compile Include="Converters\MapToFileNameConverter.cs" />
+    <Compile Include="Converters\PlayerToVisibilityConverter.cs" />
     <Compile Include="ReplayAction.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -173,6 +176,12 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Icon.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="images\maps\Fighting_Spirit.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="images\crown.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

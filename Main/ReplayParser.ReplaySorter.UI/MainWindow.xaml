@@ -4,11 +4,17 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ReplayParser.ReplaySorter.UI"
+        xmlns:cvt="clr-namespace:ReplayParser.ReplaySorter.UI.Converters"
         xmlns:scm="clr-namespace:System.ComponentModel;assembly=WindowsBase"
         mc:Ignorable="d"
         Title="BWSort" Height="500" Width="750"
         Closing="Window_Closing"
         Loaded="Window_Loaded">
+    <Window.Resources>
+        <cvt:FramesToTimeSpanInSecondsConverter x:Key="FTSConverter" />
+        <cvt:PlayerToVisibilityConverter x:Key="PTWBConverter" />
+        <cvt:MapToFileNameConverter x:Key="MTFConverter" />
+    </Window.Resources>
     <DockPanel>
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="Menu">
@@ -227,7 +233,17 @@
                                                     </ItemsControl.GroupStyle>
                                                     <ItemsControl.ItemTemplate>
                                                         <DataTemplate>
-                                                            <Label Content="{Binding Name, Mode=OneWay}" />
+                                                            <StackPanel Orientation="Horizontal">
+                                                                <Image Source="/images/crown.png" Height="10px" Width="10px">
+                                                                    <Image.Visibility>
+                                                                        <MultiBinding Converter="{StaticResource PTWBConverter}">
+                                                                            <Binding BindsDirectlyToSource="True"/>
+                                                                            <Binding Path="DataContext" RelativeSource="{RelativeSource AncestorType={x:Type ItemsControl}, AncestorLevel=2}"/>
+                                                                        </MultiBinding>
+                                                                    </Image.Visibility>
+                                                                </Image>
+                                                                <Label Content="{Binding Name, Mode=OneWay}" />
+                                                            </StackPanel>
                                                         </DataTemplate>
                                                     </ItemsControl.ItemTemplate>
                                                 </ItemsControl>
@@ -235,8 +251,22 @@
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
-                                <GridViewColumn Header="Map" DisplayMemberBinding="{Binding Content.ReplayMap.MapName}"></GridViewColumn>
-                                <GridViewColumn Header="Duration" DisplayMemberBinding="{Binding Content.FrameCount}"></GridViewColumn>
+                                <!--<GridViewColumn Header="Map" DisplayMemberBinding="{Binding Content.ReplayMap.MapName}">-->
+                                <GridViewColumn Header="Map">
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel>
+                                                <Image 
+                                                    Source="{Binding Path=Content.ReplayMap.MapName, Converter={StaticResource MTFConverter}}"
+                                                    Height="30px"
+                                                    Width="30px"
+                                                 />
+                                                <Label Content="{Binding Path=Content.ReplayMap.MapName}"></Label>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
+                                <GridViewColumn Header="Duration" DisplayMemberBinding="{Binding Content.FrameCount, Converter={StaticResource FTSConverter}, StringFormat={}{0:hh\\:mm\\:ss}}"></GridViewColumn>
                                 <GridViewColumn Header="Date" DisplayMemberBinding="{Binding Content.Timestamp}"></GridViewColumn>
                                 <GridViewColumn Header="Filepath" DisplayMemberBinding="{Binding FilePath}"></GridViewColumn>
                             </GridView>
