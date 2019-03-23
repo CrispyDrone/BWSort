@@ -87,7 +87,13 @@ namespace ReplayParser.ReplaySorter.UI
         private bool UndoingRename = false;
 
         // renaming and undoing
-        Stack<List<File<IReplay>>> _renamedReplayStack = new Stack<List<File<IReplay>>>();
+        //TODO
+        LinkedList<List<File<IReplay>>> _renamedReplaysList = new LinkedList<List<File<IReplay>>>();
+        LinkedListNode<List<File<IReplay>>> _renamedReplayListHead;
+
+        // filtering
+        //TOOD
+        private List<File<IReplay>> _filteredListReplays;
 
         private void IntializeErrorLogger(IReplaySorterConfiguration replaySorterConfiguration)
         {
@@ -679,7 +685,20 @@ namespace ReplayParser.ReplaySorter.UI
             SortCriteriaParameters = new SortCriteriaParameters(makefolderforwinner, makefolderforloser, validgametypes, durations);
             sorter.SortCriteriaParameters = SortCriteriaParameters;
 
-            sorter.ListReplays = ListReplays;
+            var filterReplays = filterReplaysCheckBox.IsChecked.HasValue && filterReplaysCheckBox.IsChecked.Value;
+
+            if (filterReplays)
+            {
+                if (_filteredListReplays == null)
+                    MessageBox.Show("Can not execute sort since filter did not return any replays!", "Failed to start sort: invalid filter", MessageBoxButton.OK, MessageBoxImage.Warning, MessageBoxResult.OK);
+
+                sorter.ListReplays = _filteredListReplays;
+            }
+            else
+            {
+                sorter.ListReplays = ListReplays;
+            }
+
             if (CriteriaStringOrder.Length > 1)
             {
                 sorter.SortCriteria = (Criteria)Enum.Parse(typeof(Criteria), string.Join(",", CriteriaStringOrder));
@@ -961,7 +980,20 @@ namespace ReplayParser.ReplaySorter.UI
                 return;
             }
 
-            var replayRenamer = new Renamer(renamingParameters, ListReplays);
+            var filterReplays = filterReplaysCheckBox.IsChecked.HasValue && filterReplaysCheckBox.IsChecked.Value;
+            Renamer replayRenamer = null;
+
+            if (filterReplays)
+            {
+                if (_filteredListReplays == null)
+                    MessageBox.Show("Can not execute rename since filter did not return any replays!", "Failed to start rename: invalid filter", MessageBoxButton.OK, MessageBoxImage.Warning, MessageBoxResult.OK);
+
+                replayRenamer = new Renamer(renamingParameters, _filteredListReplays);
+            }
+            else
+            {
+                replayRenamer = new Renamer(renamingParameters, ListReplays);
+            }
 
             statusBarAction.Content = "Renaming replays...";
 
@@ -980,20 +1012,17 @@ namespace ReplayParser.ReplaySorter.UI
             var replayRenamer = e.Argument as Renamer;
             var renameInPlace = replayRenamer.RenameInPlace;
             var restoreOriginalReplayNames = replayRenamer.RestoreOriginalReplayNames;
-            ServiceResult<ServiceResultSummary> response = null;
+            ServiceResult<ServiceResultSummary<List<File<IReplay>>>> response = null;
             RenamingReplays = true;
 
-            //TODO need to return renamed replays
             if (renameInPlace)
             {
                 response = replayRenamer.RenameInPlaceAsync(sender as BackgroundWorker);
             }
-            //TODO need to return renamed replays
             else if (restoreOriginalReplayNames)
             {
                 response = replayRenamer.RestoreOriginalNames(sender as BackgroundWorker);
             }
-            //TODO need to return renamed replays
             else
             {
                 // renaming into another directory
@@ -1027,10 +1056,24 @@ namespace ReplayParser.ReplaySorter.UI
 
         private void worker_RenamingReplaysCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            //TODO push renamed replay list onto stack
             RenamingReplays = false;
-            var response = e.Result as ServiceResult<ServiceResultSummary>;
+            var response = e.Result as ServiceResult<ServiceResultSummary<List<File<IReplay>>>>;
             progressBarSortingReplays.Value = 0;
+
+            if (_renamedReplayListHead == null)
+            {
+                _renamedReplaysList.AddFirst(response.Result.Result);
+                _renamedReplayListHead = _renamedReplaysList.First;
+            }
+            else
+            {
+                while (_renamedReplayListHead.Next != null)
+                {
+                    _renamedReplaysList.Remove(_renamedReplayListHead.Next);
+                }
+                _renamedReplaysList.AddAfter(_renamedReplayListHead, response.Result.Result);
+                _renamedReplayListHead = _renamedReplayListHead.Next;
+            }
 
             if (e.Cancelled == true)
             {
@@ -1062,8 +1105,7 @@ namespace ReplayParser.ReplaySorter.UI
 
         private void undoRenamingButton_Click(object sender, RoutedEventArgs e)
         {
-            //TODO only the last batch of SUCCESSFULLY renamed replays instead of all replays
-            var isRenamed = ListReplays?.Any(r => !r.IsAtOriginal) ?? false;
+            var isRenamed = _renamedReplayListHead != _renamedReplaysList?.First;
 
             if (!isRenamed)
             {
@@ -1083,8 +1125,7 @@ namespace ReplayParser.ReplaySorter.UI
 
         private void redoRenamingButton_Click(object sender, RoutedEventArgs e)
         {
-            //TODO only the last batch of SUCCESSFULLY renamed replays instead of all replays
-            var canRedo = ListReplays?.Any(r => !r.IsAtLast) ?? false;
+            var canRedo = _renamedReplayListHead != _renamedReplaysList.Last;
 
             if (!canRedo)
             {
@@ -1108,14 +1149,18 @@ namespace ReplayParser.ReplaySorter.UI
             {
                 // undo
                 UndoingRename = true;
-                var replayRenamer = new Renamer(RenamingParameters.Default, ListReplays);
-                e.Result = replayRenamer.UndoRename(sender as BackgroundWorker);
 
+                _renamedReplayListHead = _renamedReplayListHead.Previous;
+
+                var replayRenamer = new Renamer(RenamingParameters.Default, _renamedReplayListHead.Value);
+                e.Result = replayRenamer.UndoRename(sender as BackgroundWorker);
             }
             else
             {
                 // redo
-                var replayRenamer = new Renamer(RenamingParameters.Default, ListReplays);
+                _renamedReplayListHead = _renamedReplayListHead.Next;
+
+                var replayRenamer = new Renamer(RenamingParameters.Default, _renamedReplayListHead.Value);
                 e.Result = replayRenamer.RedoRename(sender as BackgroundWorker);
             }
         }

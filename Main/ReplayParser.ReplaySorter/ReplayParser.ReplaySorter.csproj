@@ -82,6 +82,7 @@
     <Compile Include="Configuration\ReplaySorterAppConfiguration.cs" />
     <Compile Include="Diagnostics\ErrorLogger.cs" />
     <Compile Include="Diagnostics\ProgressBar.cs" />
+    <Compile Include="Extensions\ListExtensions.cs" />
     <Compile Include="IO\File.cs" />
     <Compile Include="IO\FileHandler.cs" />
     <Compile Include="IO\FileHistory.cs" />

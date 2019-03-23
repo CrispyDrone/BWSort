@@ -85,6 +85,11 @@ namespace ReplayParser.ReplaySorter.IO
             _fileHistory.SaveState();
         }
 
+        public void DiscardSavedState()
+        {
+            _fileHistory.DiscardSavedState();
+        }
+
         public void RestoreToSavedState()
         {
             _fileHistory.RestoreSavedState();

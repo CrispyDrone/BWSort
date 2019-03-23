@@ -118,6 +118,11 @@ namespace ReplayParser.ReplaySorter.IO
             _savedFileNameNode = _currentFileNameNode;
         }
 
+        public void DiscardSavedState()
+        {
+            _savedFileNameNode = null;
+        }
+
         public void RestoreSavedState()
         {
             if (_savedFileNameNode == null)

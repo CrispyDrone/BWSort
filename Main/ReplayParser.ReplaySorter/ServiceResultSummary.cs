@@ -10,7 +10,14 @@ namespace ReplayParser.ReplaySorter
         private string _message;
         private T _result;
 
-        public ServiceResultSummary(T result, string message, TimeSpan duration, int operationCount, int errorCount)
+        public ServiceResultSummary
+            (
+                T result,
+                string message,
+                TimeSpan duration,
+                int operationCount,
+                int errorCount
+            )
         {
             _result = result;
             _message = message;
@@ -24,27 +31,29 @@ namespace ReplayParser.ReplaySorter
         public TimeSpan Duration => _duration;
         public int OperationCount => _operationCount;
         public int ErrorCount => _operationErrorCount;
+
+        public static ServiceResultSummary<T> Default => new ServiceResultSummary<T>(Activator.CreateInstance<T>(), string.Empty, TimeSpan.Zero, 0, 0);
     }
 
     public class ServiceResultSummary : ServiceResultSummary<string>
     {
         public ServiceResultSummary
             (
-                string result, 
-                string message, 
-                TimeSpan duration, 
-                int operationCount, 
+                string result,
+                string message,
+                TimeSpan duration,
+                int operationCount,
                 int errorCount
             ) : base
             (
-                result, 
-                message, 
-                duration, 
-                operationCount, 
+                result,
+                message,
+                duration,
+                operationCount,
                 errorCount
              )
         { }
 
-        public static ServiceResultSummary Default => new ServiceResultSummary(string.Empty, string.Empty, TimeSpan.Zero, 0, 0);
+        // public static ServiceResultSummary Default => new ServiceResultSummary(string.Empty, string.Empty, TimeSpan.Zero, 0, 0);
     }
 }
