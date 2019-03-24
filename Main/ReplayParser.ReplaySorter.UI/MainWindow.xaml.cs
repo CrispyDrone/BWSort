@@ -1230,6 +1230,19 @@ namespace ReplayParser.ReplaySorter.UI
             disableSiblingCheckBoxAndRenamingStackPanel(sender as CheckBox, "renameInPlaceCheckBox");
             replayRenamingSyntaxTextBox.IsEnabled = !replayRenamingSyntaxTextBox.IsEnabled;
         }
+
+        #region filtering
+
+        private void FilterReplaysTextBox_KeyUp(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (e.Key == System.Windows.Input.Key.Enter)
+            {
+                // parse the filter expression
+                // start filter
+            }
+        }
+
+        #endregion
     }
 }
 
