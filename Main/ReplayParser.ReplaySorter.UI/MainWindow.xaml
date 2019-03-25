@@ -191,7 +191,7 @@
                 <DockPanel>
                     <DockPanel DockPanel.Dock="Top">
                         <CheckBox Name="filterReplaysCheckBox" Content="Select as input" DockPanel.Dock="Right" Margin="10"></CheckBox>
-                        <TextBox Name="filterReplaysTextBox" Text="Type search criteria here..." Margin="10"></TextBox>
+                        <TextBox Name="filterReplaysTextBox" Text="Type search criteria here..." Margin="10" KeyUp="FilterReplaysTextBox_KeyUp"></TextBox>
                     </DockPanel>
                     <ListView Name="listViewReplays">
                         <ListView.ItemContainerStyle>
