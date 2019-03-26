@@ -29,7 +29,7 @@ namespace ReplayParser.ReplaySorter.Filtering
         public List<File<IReplay>> Apply(List<File<IReplay>> list, string filterExpression)
         {
             Dictionary<int, string> filterExpressions = ExtractFilters(filterExpression);
-            Predicate<File<IReplay>>[] queries = ParseFilters(filterExpressions);
+            Func<File<IReplay>, bool>[] queries = ParseFilters(filterExpressions);
             return ApplyTo(list, queries);
         }
 
@@ -45,9 +45,9 @@ namespace ReplayParser.ReplaySorter.Filtering
             // }
         }
 
-        private Predicate<File<IReplay>>[] ParseFilters(Dictionary<int, string> filterExpressions)
+        private Func<File<IReplay>, bool>[] ParseFilters(Dictionary<int, string> filterExpressions)
         {
-            Predicate<File<IReplay>>[] predicates = new Predicate<File<IReplay>>[filterExpressions.Count];
+            Func<File<IReplay>, bool>[] funcs = new Func<File<IReplay>, bool>[filterExpressions.Count];
             int counter = 0;
 
             foreach (var filterExpression in filterExpressions)
@@ -55,27 +55,28 @@ namespace ReplayParser.ReplaySorter.Filtering
                 switch (filterExpression.Key)
                 {
                     case MAPCODE:
-                        predicates[counter] = ParseMapFilter(filterExpression.Value);
+                        funcs[counter] = ParseMapFilter(filterExpression.Value);
                         break;
                     case DURATIONCODE:
-                        predicates[counter] = ParseDurationFilter(filterExpression.Value);
+                        funcs[counter] = ParseDurationFilter(filterExpression.Value);
                         break;
                     case MATCHUPCODE:
-                        predicates[counter] = ParseMatchupFilter(filterExpression.Value);
+                        funcs[counter] = ParseMatchupFilter(filterExpression.Value);
                         break;
                     case PLAYERCODE:
-                        predicates[counter] = ParsePlayerFilter(filterExpression.Value);
+                        funcs[counter] = ParsePlayerFilter(filterExpression.Value);
                         break;
                     case DATECODE:
-                        predicates[counter] = ParseDateFilter(filterExpression.Value);
+                        funcs[counter] = ParseDateFilter(filterExpression.Value);
                         break;
                     default:
                         throw new Exception();
                 }
                 counter++;
             }
+            return funcs;
         }
-        private List<File<IReplay>> ApplyTo(List<File<IReplay>> list, Predicate<File<IReplay>>[] queries)
+        private List<File<IReplay>> ApplyTo(List<File<IReplay>> list, Func<File<IReplay>, bool>[] queries)
         {
             IQueryable<File<IReplay>> filteredList = new List<File<IReplay>>(list).AsQueryable();
 
@@ -86,39 +87,119 @@ namespace ReplayParser.ReplaySorter.Filtering
             return filteredList.ToList();
         }
 
-        private Predicate<File<IReplay>> ParseDateFilter(string value)
+        private Func<File<IReplay>, bool> ParseDateFilter(string value)
         {
             throw new NotImplementedException();
         }
 
-        private Predicate<File<IReplay>> ParsePlayerFilter(string value)
+        private Func<File<IReplay>, bool> ParsePlayerFilter(string value)
         {
             throw new NotImplementedException();
         }
 
-        private Predicate<File<IReplay>> ParseMatchupFilter(string value)
+        private Func<File<IReplay>, bool> ParseMatchupFilter(string value)
         {
             throw new NotImplementedException();
         }
 
-        private Predicate<File<IReplay>> ParseDurationFilter(string value)
-        {
-            throw new NotImplementedException();
-        }
+        // number - timeunit [ - number - timeunit ]1-2
+        // classical 05:10, 00:20:17
+        private static readonly string _lessThanGreaterThanOperatorsPattern = "^(<|<=|>|>=)?";
+        private static readonly string _digitalHoursMinutesPattern = "(\\d{2}):(\\d{2})$";
+        private static readonly string _digitalHoursMinutesSecondsPattern = "(\\d{2}):(\\d{2}):(\\d{2})$";
+        private static readonly string _writtenHoursMinutesSecondsPattern =  "(\\d+(h(?:rs)?|hours)?(\\d+m(?:in(?:utes)?)?)?(\\d+s(?:ec(?:onds)?)?)?%";
+        private static readonly string _timeRangePattern = "^between\\s*(.*?)-(.*)$";
+        private static readonly Regex _digitalHourMinutesRegex = new Regex(_digitalHoursMinutesPattern);
+        private static readonly Regex _digitalHourMinutesSeconds = new Regex(_digitalHoursMinutesSecondsPattern);
+        private static readonly Regex _writtenHourMinutesSeconds = new Regex(_writtenHoursMinutesSecondsPattern);
 
-        // Why am i using a predicate? Can't I just use a Func instead?
-        private Predicate<File<IReplay>> ParseMapFilter(string mapExpression)
+        private Func<File<IReplay>, bool> ParseDurationFilter(string durationExpression)
         {
-            Predicate<File<IReplay>> predicate = null;
             Expression<Func<File<IReplay>, bool>> filterExpression = null;
+            var dates = durationExpression.Split(new char[] { '|' });
 
+            foreach (var date in dates)
+            {
+                TimeSpan[] durations = ParseDuration(date);
+                var replay = Expression.Parameter(typeof(File<IReplay>), "r");
+                Expression body = null;
+                
+                if (durations.Count() > 1)
+                {
+                    // between, inclusive...
+                    body = Expression.AndAlso(
+                        Expression.IsTrue(
+                                Expression.GreaterThanOrEqual(
+                                    Expression.PropertyOrField(replay, "Content.Duration"), Expression.Constant(durations[0])
+                            )
+                        ),
+                        Expression.IsTrue(
+                            Expression.LessThanOrEqual(
+                                Expression.PropertyOrField(replay, "Content.Duration"), Expression.Constant(durations[1])
+                                )
+                        )
+                    );
+                }
+                else
+                {
+                    int comparison = ParseComparison(date);
+                    // <= : -2, < : -1, = : 0, > : 1, >= 2
+                    var replayDuration = Expression.PropertyOrField(replay, "Content.Duration");
+                    var replayFilter = Expression.Constant(durations[0]);
+                    //TODO extract to function
+                    switch (comparison)
+                    {
+                        case -2:
+                            body = Expression.LessThanOrEqual(replayDuration, replayFilter); 
+                            break;
+                        case -1:
+                            body = Expression.LessThan(replayDuration, replayFilter);
+                            break;
+                        case 0:
+                            body = Expression.Equal(replayDuration, replayFilter);
+                            break;
+                        case 1:
+                            body = Expression.GreaterThan(replayDuration, replayFilter);
+                            break;
+                        case 2:
+                            body = Expression.GreaterThanOrEqual(replayDuration, replayFilter);
+                            break;
+                        default:
+                            throw new Exception();
+                    }
+                }
+
+                //TODO extract to function
+                if (filterExpression == null)
+                {
+                    filterExpression = Expression.Lambda<Func<File<IReplay>, bool>>(body, replay);
+                }
+                else
+                {
+                    filterExpression = Expression.Lambda<Func<File<IReplay>, bool>>(Expression.Or(filterExpression, Expression.Lambda<Func<File<IReplay>, bool>>(body, replay)));
+                }
+            }
+            return filterExpression.Compile();
+        }
+
+        private int ParseComparison(string date)
+        {
+            throw new NotImplementedException();
+        }
+
+        private TimeSpan[] ParseDuration(string date)
+        {
+            throw new NotImplementedException();
+        }
+
+        private Func<File<IReplay>, bool> ParseMapFilter(string mapExpression)
+        {
+            Expression<Func<File<IReplay>, bool>> filterExpression = null;
             var maps = mapExpression.Split(new char[] { '|' });
+
             foreach (var map in maps)
             {
-                char firstChar = map[0];
-                char lastChar = map[map.Length - 1];
-                string middlePartMapName = map.Substring(1, map.Length - 2);
-                string escapedMapName = firstChar + Regex.Escape(middlePartMapName) + lastChar;
+                string escapedMapName = EscapeExceptValidWildcards(map);
                 var mapRegex = new Regex(escapedMapName);
 
                 // where(r => MapRegex.IsMatch(r.ReplayMap.MapName))
@@ -130,7 +211,8 @@ namespace ReplayParser.ReplaySorter.Filtering
                         Expression.PropertyOrField(replay, "Content.ReplayMap.MapName")
                     )
                 );
-                if (predicate == null)
+
+                if (filterExpression == null)
                 {
                     filterExpression = Expression.Lambda<Func<File<IReplay>, bool>>(body, replay);
                 }
@@ -140,7 +222,15 @@ namespace ReplayParser.ReplaySorter.Filtering
                 }
             }
 
-            return new Predicate<File<IReplay>>(filterExpression.Compile());
+            return filterExpression.Compile();
+        }
+
+        private string EscapeExceptValidWildcards(string searchString)
+        {
+            char firstChar = searchString[0];
+            char lastChar = searchString[searchString.Length - 1];
+            string middlePartSearchString = searchString.Substring(1, searchString.Length - 2);
+            return firstChar + Regex.Escape(middlePartSearchString) + lastChar;
         }
     }
 }
