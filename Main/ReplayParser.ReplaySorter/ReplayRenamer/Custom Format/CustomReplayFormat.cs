@@ -112,14 +112,14 @@ namespace ReplayParser.ReplaySorter
 
             //}
             IReplayNameSection[] IReplayNameSections = new IReplayNameSection[(Enum.GetValues(typeof(CustomReplayNameSyntax))).Length];
-            IReplayNameSections[0] = new Team(replay);
+            IReplayNameSections[0] = new Teams(replay);
             IReplayNameSections[1] = new WinningTeam(replay);
             IReplayNameSections[2] = new LosingTeam(replay);
             IReplayNameSections[3] = new Map(replay);
             IReplayNameSections[4] = new Date(replay);
             IReplayNameSections[5] = new WinningRace(replay);
             IReplayNameSections[6] = new LosingRace(replay);
-            IReplayNameSections[7] = new MatchUp(replay, (Team)IReplayNameSections[0]);
+            IReplayNameSections[7] = new MatchUp(replay, (Teams)IReplayNameSections[0]);
             IReplayNameSections[8] = new Duration(replay);
 
             Dictionary<CustomReplayNameSyntax, string> ReplayNameSections = new Dictionary<CustomReplayNameSyntax, string>();

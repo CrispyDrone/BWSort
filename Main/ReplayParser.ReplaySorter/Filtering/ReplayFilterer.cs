@@ -1,5 +1,6 @@
 ﻿using ReplayParser.Interfaces;
 using ReplayParser.ReplaySorter.IO;
+using ReplayParser.ReplaySorter.ReplayRenamer;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,11 +19,20 @@ namespace ReplayParser.ReplaySorter.Filtering
         private const int PLAYERCODE = 4;
         private const int DATECODE = 5;
 
-        private readonly Regex MAPFILTERLABEL = new Regex("m:");
-        private readonly Regex DURATIONFILTERLABEL = new Regex("du:");
-        private readonly Regex MATCHUPFILTERLABEL = new Regex("mu:");
-        private readonly Regex PLAYERFILTERLABEL = new Regex("p:");
-        private readonly Regex DATEFILTERLABEL = new Regex("d:");
+        private static readonly Regex MAPFILTERLABEL = new Regex("m:");
+        private static readonly Regex DURATIONFILTERLABEL = new Regex("du:");
+        private static readonly Regex MATCHUPFILTERLABEL = new Regex("mu:");
+        private static readonly Regex PLAYERFILTERLABEL = new Regex("p:");
+        private static readonly Regex DATEFILTERLABEL = new Regex("d:");
+
+        private readonly Dictionary<Regex, int> _labelToCodeMap = new Dictionary<Regex, int>()
+        {
+            { MAPFILTERLABEL, MAPCODE },
+            { DURATIONFILTERLABEL, DURATIONCODE },
+            { MATCHUPFILTERLABEL, MATCHUPCODE },
+            { PLAYERFILTERLABEL, PLAYERCODE },
+            { DATEFILTERLABEL, DATECODE }
+        };
 
         private readonly Regex FILTERLABEL = new Regex("^([md]u?|[pd]):");
 
@@ -35,14 +45,82 @@ namespace ReplayParser.ReplaySorter.Filtering
 
         private Dictionary<int, string> ExtractFilters(string filterExpression)
         {
-            throw new NotImplementedException();
-            // var matches = FILTERLABEL.Matches(filterExpression);
-            // if (matches.Count == 0)
-            //     return list;
+            var matches = FILTERLABEL.Matches(filterExpression);
 
-            // foreach (Match match in matches)
-            // {
-            // }
+            if (matches.Count == 0)
+                return null;
+
+            Dictionary<int, string> filters = new Dictionary<int, string>();
+
+            foreach (Match match in matches)
+            {
+                if (!ValidateMatch(match, filterExpression))
+                    return null;
+
+                int? code = MapMatch(match);
+                if (!code.HasValue)
+                    return null;
+
+                if (filters.ContainsKey(code.Value))
+                    return null;
+
+                filters[code.Value] = GetFilter(match, filterExpression);
+            }
+            return filters;
+        }
+
+        private string GetFilter(Match match, string filterExpression)
+        {
+            // Remove the filterlabel + extract until next match if there is any otherwise till end of string
+            var nextMatch = match.NextMatch();
+
+            int nextMatchIndex = -1;
+
+            if (nextMatch.Success)
+                nextMatchIndex = nextMatch.Index;
+
+            int start = match.Index + match.Value.Length;
+
+            return nextMatchIndex == - -1 ? filterExpression.Substring(start) : filterExpression.Substring(start, nextMatchIndex - start);
+        }
+
+        private bool ValidateMatch(Match match, string filterExpression)
+        {
+            return AtBeginning(match, filterExpression) || FollowingComma(match, filterExpression);
+        }
+
+        private bool AtBeginning(Match match, string filterExpression)
+        {
+            if (match.Index == 0)
+                return true;
+
+            string beforeMatch = filterExpression.Substring(0, match.Index);
+            return string.IsNullOrWhiteSpace(beforeMatch);
+        }
+
+        private bool FollowingComma(Match match, string filterExpression)
+        {
+            if (match.Index == 0)
+                return false;
+
+            var beforeMatch = filterExpression.Substring(0, match.Index);
+            var lastComma = beforeMatch.LastIndexOf(',');
+            if (lastComma <= 0)
+                return false;
+
+            var betweenCommaAndMatch = beforeMatch.Substring(lastComma + 1, beforeMatch.Length - lastComma);
+            return string.IsNullOrWhiteSpace(betweenCommaAndMatch);
+        }
+
+        private int? MapMatch(Match match)
+        {
+            foreach (var filter in _labelToCodeMap.Keys)
+            {
+                if (filter.IsMatch(match.Value))
+                    return _labelToCodeMap[filter];
+            }
+
+            return null;
         }
 
         private Func<File<IReplay>, bool>[] ParseFilters(Dictionary<int, string> filterExpressions)
@@ -97,9 +175,161 @@ namespace ReplayParser.ReplaySorter.Filtering
             throw new NotImplementedException();
         }
 
-        private Func<File<IReplay>, bool> ParseMatchupFilter(string value)
+        private Func<File<IReplay>, bool> ParseMatchupFilter(string matchupExpressionString)
         {
-            throw new NotImplementedException();
+            if (string.IsNullOrWhiteSpace(matchupExpressionString))
+                return null;
+
+            var matchupExpressions = matchupExpressionString.Split(new char[] { '|' });
+
+            if (matchupExpressions.Count() == 0)
+                return null;
+
+            Expression<Func<File<IReplay>, bool>> filterExpression = null;
+            var replay = Expression.Parameter(typeof(File<IReplay>), "r");
+
+            foreach (var matchupExpression in matchupExpressions)
+            {
+                var replayTeams = Expression.New(typeof(Teams).GetConstructor(new Type[] { typeof(IReplay)}));
+                var replayMatchup = Expression.New(typeof(MatchUp).GetConstructor(new Type[] { typeof(IReplay), typeof(Teams) }));
+                var replayMatchupAsString = Expression.Call(replayMatchup, typeof(MatchUp).GetMethod("GetSection"));
+                // where(r => CompareMatchups(new matchup(new team(replay), replay).GetSection(), matchupstring))
+                Expression body = Expression.IsTrue(
+                        Expression.Call(
+                            typeof(ReplayFilterer).GetMethod(nameof(CompareMatchups)), 
+                            replayMatchupAsString, 
+                            Expression.Constant(matchupExpression, typeof(string))
+                        )
+                    );
+
+                filterExpression = CreateOrAddOrExpression(filterExpression, body, replay);
+            }
+
+            return filterExpression.Compile();
+        }
+
+        private static bool CompareMatchups(string matchupA, string matchupExpression)
+        {
+            // z,p,t,r
+            Dictionary<int, int[]> raceCountsA = GetRaceCountsPerTeam(matchupA, false);
+            // z,p,t,r,'.'
+            Dictionary<int[], int> raceCountsB = GetTeamPerRaceCountsAndPlaceHolder(matchupExpression);
+
+            if (raceCountsA.Keys.Count != raceCountsB.Values.Count)
+                return false;
+
+            bool[] teamsMatched = new bool[raceCountsB.Values.Count];
+
+            foreach (var team in raceCountsA.Keys)
+            {
+                if (!raceCountsB.ContainsKey(raceCountsA[team]))
+                {
+                    return false;
+                }
+                else
+                {
+                    if (teamsMatched[raceCountsB[raceCountsA[team]]])
+                    {
+                        return false;
+                    }
+                    else
+                    {
+                        teamsMatched[raceCountsB[raceCountsA[team]]] = true;
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        private static readonly string _versusPattern = "vs?";
+        private static readonly Regex _versus = new Regex(_versusPattern);
+
+        private static Dictionary<int[], int> GetTeamPerRaceCountsAndPlaceHolder(string matchupExpression)
+        {
+            return GetRaceCountsPerTeam(matchupExpression, true).ToDictionary(kvp => kvp.Value, kvp => kvp.Key, new RaceEqWithWildCardComparer());
+        }
+
+        private static Dictionary<int, int[]> GetRaceCountsPerTeam(string matchupA, bool countPlaceHolders = false)
+        {
+            var matchupStrings = GetMatchups(matchupA);
+
+            if (matchupStrings == null)
+                return null;
+
+            Dictionary<int, int[]> raceCountsPerTeam = new Dictionary<int, int[]>();
+            int teamNumber = 0;
+
+            foreach (var team in matchupStrings)
+            {
+                raceCountsPerTeam[teamNumber] = GetRaceCounts(team, countPlaceHolders);
+                teamNumber++;
+            }
+
+            return raceCountsPerTeam;
+        }
+
+        //TODO use stringbuilder??
+        private static string[] GetMatchups(string matchupA)
+        {
+            var matches = _versus.Matches(matchupA);
+
+            if (matches.Count == 0)
+                return null;
+
+            int counter = 0;
+            string[] matchups = new string[matches.Count + 1];
+
+            foreach (Match match in matches)
+            {
+                matchups[counter] = matchupA.Substring(0, match.Index);
+                matchupA.Remove(0, match.Index + match.Value.Length);
+                counter++;
+            }
+
+            if (string.IsNullOrWhiteSpace(matchupA))
+                return null;
+
+            matchups[counter] = matchupA;
+
+            return matchups;
+        }
+
+        private static int[] GetRaceCounts(string matchupA, bool countPlaceHolders = false)
+        {
+            int[] raceCounts = countPlaceHolders ? new int[5] : new int[4];
+
+            for (int i = 0; i < matchupA.Length; i++)
+            {
+                switch(matchupA[i])
+                {
+                    case 'z':
+                    case 'Z':
+                        raceCounts[0]++;
+                        break;
+                    case 'p':
+                    case 'P':
+                        raceCounts[1]++;
+                        break;
+                    case 't':
+                    case 'T':
+                        raceCounts[2]++;
+                        break;
+                    case 'r':
+                    case 'R':
+                        raceCounts[3]++;
+                        break;
+                    case '.':
+                        if (countPlaceHolders)
+                        {
+                            raceCounts[4]++;
+                        }
+                        break;
+                    default:
+                        return null;
+                }
+            }
+            return raceCounts;
         }
 
         // number - timeunit [ - number - timeunit ]1-2
@@ -107,7 +337,7 @@ namespace ReplayParser.ReplaySorter.Filtering
         private static readonly string _lessThanGreaterThanOperatorsPattern = "^(<|<=|>|>=)?";
         private static readonly string _digitalHoursMinutesPattern = "^(\\d{2}):(\\d{2})$";
         private static readonly string _digitalHoursMinutesSecondsPattern = "^(\\d{2}):(\\d{2}):(\\d{2})$";
-        private static readonly string _writtenHoursMinutesSecondsPattern =  "^(\\d+(h(?:rs)?|hours)?(\\d+m(?:in(?:utes)?)?)?(\\d+s(?:ec(?:onds)?)?)?%";
+        private static readonly string _writtenHoursMinutesSecondsPattern = "^(\\d+(h(?:rs)?|hours)?(\\d+m(?:in(?:utes)?)?)?(\\d+s(?:ec(?:onds)?)?)?%";
         private static readonly string _timeRangePattern = "^between\\s*(.*?)-(.*)$";
         private static readonly Regex _lessThanGreaterThanOperatorsRegex = new Regex(_lessThanGreaterThanOperatorsPattern);
         private static readonly Regex _digitalHoursMinutesRegex = new Regex(_digitalHoursMinutesPattern);
@@ -117,11 +347,13 @@ namespace ReplayParser.ReplaySorter.Filtering
 
         private Func<File<IReplay>, bool> ParseDurationFilter(string durationExpressionString)
         {
-            Expression<Func<File<IReplay>, bool>> filterExpression = null;
             var durationExpressions = durationExpressionString.Split(new char[] { '|' });
 
-            if (durationExpressions == null || durationExpressions.Count() == 0)
+            if (durationExpressions.Count() == 0)
                 return null;
+
+            Expression<Func<File<IReplay>, bool>> filterExpression = null;
+            var replay = Expression.Parameter(typeof(File<IReplay>), "r");
 
             foreach (var durationExpression in durationExpressions)
             {
@@ -130,10 +362,9 @@ namespace ReplayParser.ReplaySorter.Filtering
                 if (durationsAsFrameCounts == null || durationsAsFrameCounts.Count() == 0 || durationsAsFrameCounts.Any(f => f == null))
                     continue;
 
-                var replay = Expression.Parameter(typeof(File<IReplay>), "r");
                 var replayDuration = Expression.PropertyOrField(replay, "Content.FrameCount");
                 Expression body = null;
-                
+
                 if (durationsAsFrameCounts.Count() > 1)
                 {
                     // between, inclusive...
@@ -162,7 +393,7 @@ namespace ReplayParser.ReplaySorter.Filtering
                     switch (comparison)
                     {
                         case -2:
-                            body = Expression.LessThanOrEqual(replayDuration, replayFilter); 
+                            body = Expression.LessThanOrEqual(replayDuration, replayFilter);
                             break;
                         case -1:
                             body = Expression.LessThan(replayDuration, replayFilter);
@@ -181,26 +412,9 @@ namespace ReplayParser.ReplaySorter.Filtering
                     }
                 }
 
-                //TODO extract to function
-                // if (filterExpression == null)
-                // {
-                //     filterExpression = Expression.Lambda<Func<File<IReplay>, bool>>(body, replay);
-                // }
-                // else
-                // {
-                //     filterExpression = Expression.Lambda<Func<File<IReplay>, bool>>(Expression.Or(filterExpression, Expression.Lambda<Func<File<IReplay>, bool>>(body, replay)));
-                // }
                 filterExpression = CreateOrAddOrExpression(filterExpression, body, replay);
             }
             return filterExpression.Compile();
-        }
-
-        private Expression<Func<T1, T2>> CreateOrAddOrExpression<T1, T2>(Expression<Func<T1, T2>> expression, Expression body, params ParameterExpression[] parameters)
-        {
-            if (expression == null)
-                return Expression.Lambda<Func<T1, T2>>(body, parameters);
-
-            return Expression.Lambda<Func<T1, T2>>(Expression.Or(expression, Expression.Lambda<Func<T1, T2>>(body, parameters)));
         }
 
         //TODO extract to constants class or something
@@ -238,7 +452,7 @@ namespace ReplayParser.ReplaySorter.Filtering
             //TODO extract common logic
             timeValue = RemoveComparisonOperator(timeValue);
             int frames = 0;
-            if(_writtenHoursMinutesSecondsRegex.IsMatch(timeValue))
+            if (_writtenHoursMinutesSecondsRegex.IsMatch(timeValue))
             {
                 //TODO make helper method "EnsureSingleMatch" or something
                 var match = _writtenHoursMinutesSecondsRegex.Match(timeValue);
@@ -251,7 +465,7 @@ namespace ReplayParser.ReplaySorter.Filtering
                     throw new Exception();
 
                 //TODO make helper function to calculate frames from time value
-                 frames = (int)((hours * 3600 + minutes * 60 + seconds) * FastestFPS);
+                frames = (int)((hours * 3600 + minutes * 60 + seconds) * FastestFPS);
             }
             else if (_digitalHoursMinutesSecondsRegex.IsMatch(timeValue))
             {
@@ -265,7 +479,7 @@ namespace ReplayParser.ReplaySorter.Filtering
                     throw new Exception();
 
                 //TODO make helper function to calculate frames from time value
-                 frames = (int)((hours * 3600 + minutes * 60 + seconds) * FastestFPS);
+                frames = (int)((hours * 3600 + minutes * 60 + seconds) * FastestFPS);
             }
             else if (_digitalHoursMinutesRegex.IsMatch(timeValue))
             {
@@ -278,7 +492,7 @@ namespace ReplayParser.ReplaySorter.Filtering
                     throw new Exception();
 
                 //TODO make helper function to calculate frames from time value
-                 frames = (int)((hours * 3600 + minutes * 60) * FastestFPS);
+                frames = (int)((hours * 3600 + minutes * 60) * FastestFPS);
             }
             else
             {
@@ -336,6 +550,7 @@ namespace ReplayParser.ReplaySorter.Filtering
         {
             Expression<Func<File<IReplay>, bool>> filterExpression = null;
             var maps = mapExpression.Split(new char[] { '|' });
+            var replay = Expression.Parameter(typeof(File<IReplay>), "r");
 
             foreach (var map in maps)
             {
@@ -343,7 +558,6 @@ namespace ReplayParser.ReplaySorter.Filtering
                 var mapRegex = new Regex(escapedMapName);
 
                 // where(r => MapRegex.IsMatch(r.ReplayMap.MapName))
-                var replay = Expression.Parameter(typeof(File<IReplay>), "r");
                 var body = Expression.IsTrue(
                     Expression.Call(
                         Expression.Constant(mapRegex),
@@ -352,25 +566,66 @@ namespace ReplayParser.ReplaySorter.Filtering
                     )
                 );
 
-                if (filterExpression == null)
-                {
-                    filterExpression = Expression.Lambda<Func<File<IReplay>, bool>>(body, replay);
-                }
-                else
-                {
-                    filterExpression = Expression.Lambda<Func<File<IReplay>, bool>>(Expression.Or(filterExpression, Expression.Lambda<Func<File<IReplay>, bool>>(body, replay)));
-                }
+                filterExpression = CreateOrAddOrExpression(filterExpression, body, replay);
             }
 
             return filterExpression.Compile();
         }
+
+        private Expression<Func<T1, T2>> CreateOrAddOrExpression<T1, T2>(Expression<Func<T1, T2>> expression, Expression body, params ParameterExpression[] parameters)
+        {
+            if (expression == null)
+                return Expression.Lambda<Func<T1, T2>>(body, parameters);
+
+            return Expression.Lambda<Func<T1, T2>>(Expression.Or(expression, Expression.Lambda<Func<T1, T2>>(body, parameters)));
+        }
+
 
         private string EscapeExceptValidWildcards(string searchString)
         {
             char firstChar = searchString[0];
             char lastChar = searchString[searchString.Length - 1];
             string middlePartSearchString = searchString.Substring(1, searchString.Length - 2);
-            return firstChar + Regex.Escape(middlePartSearchString) + lastChar;
+            return firstChar == '*' ?
+                (
+                    lastChar == '*' ?
+                        firstChar + Regex.Escape(middlePartSearchString) + lastChar :
+                        firstChar + Regex.Escape(middlePartSearchString + lastChar)
+                ) :
+                (
+                    lastChar == '*' ?
+                        Regex.Escape(firstChar + middlePartSearchString) + lastChar :
+                        Regex.Escape(firstChar + middlePartSearchString + lastChar)
+                );
+        }
+
+        private class RaceEqWithWildCardComparer : IEqualityComparer<int[]>
+        {
+            public bool Equals(int[] raceCountsWithoutWildCards, int[] raceCountsWithWildCards)
+            {
+                if (raceCountsWithoutWildCards == null || raceCountsWithWildCards == null)
+                    return false;
+
+                if (raceCountsWithoutWildCards.Length < 4 || raceCountsWithoutWildCards.Length > 5 || raceCountsWithWildCards.Length < 4 || raceCountsWithWildCards.Length > 5 || raceCountsWithoutWildCards.Length == raceCountsWithWildCards.Length)
+                    return false;
+
+                if (raceCountsWithoutWildCards.Length == 5 && raceCountsWithWildCards.Length == 4)
+                    return Equals(raceCountsWithWildCards, raceCountsWithoutWildCards);
+
+                int numberOfWildCards = raceCountsWithWildCards[4];
+                for (int i = 0; i < raceCountsWithoutWildCards.Length; i++)
+                {
+                    if (raceCountsWithoutWildCards[i] != raceCountsWithWildCards[i] && --numberOfWildCards < 0)
+                        return false;
+                }
+
+                return true;
+            }
+
+            public int GetHashCode(int[] obj)
+            {
+                return obj.Sum(x => x).GetHashCode();
+            }
         }
     }
 }

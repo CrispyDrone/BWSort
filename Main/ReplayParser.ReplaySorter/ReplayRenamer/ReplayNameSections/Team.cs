@@ -6,16 +6,16 @@ using ReplayParser.Interfaces;
 
 namespace ReplayParser.ReplaySorter.ReplayRenamer
 {
-    public class Team : IReplayNameSection
+    public class Teams : IReplayNameSection
     {
-        public Team(IReplay areplay)
+        public Teams(IReplay areplay)
         {
             Replay = areplay;
             GenerateSection();
         }
 
         public IReplay Replay { get; set; }
-        public List<string[]> Teams { get; set; }
+        public List<string[]> PlayerNamesByTeam { get; set; }
 
         // Option 1
         public IEnumerable<IGrouping<int, IPlayer>> GroupedPlayers { get; set; }
@@ -67,11 +67,11 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
                     aTeam[index] = player.Name;
                     index++;
                 }
-                if (Teams == null)
+                if (PlayerNamesByTeam == null)
                 {
-                    Teams = new List<string[]>();
+                    PlayerNamesByTeam = new List<string[]>();
                 }
-                Teams.Add(aTeam);
+                PlayerNamesByTeam.Add(aTeam);
             }
 
             // Option 2, WinningTeam, LosingTeam method
@@ -118,7 +118,7 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
         public string GetSection(string separator)
         {
             StringBuilder teams = new StringBuilder();
-            foreach (var team in Teams)
+            foreach (var team in PlayerNamesByTeam)
             {
                 StringBuilder aTeam = new StringBuilder();
                 aTeam.Append('(');

@@ -17,12 +17,24 @@ namespace ReplayParser.ReplaySorter.Sorting
             {
                 return false;
             }
+
             RaceCombinationEqualityComparer RaceCombinationEq = new RaceCombinationEqualityComparer();
+            Dictionary<IDictionary<RaceType, int>, int> yRaceCombinationToTeam = y.ToDictionary(t => t.Value, t => t.Key);
+            bool[] teamMatched = new bool[y.Count];
+
             foreach (var team in x)
             {
                 if (!y.Values.Contains(team.Value, RaceCombinationEq))
                 {
                     return false;
+                }
+                else
+                {
+                    var yTeam = yRaceCombinationToTeam[team.Value];
+                    if (teamMatched[yTeam])
+                        return false;
+                    else
+                        teamMatched[yTeam] = true;
                 }
             }
             return true;

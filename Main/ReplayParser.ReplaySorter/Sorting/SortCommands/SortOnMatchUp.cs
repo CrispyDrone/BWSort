@@ -43,7 +43,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                 {
                     if (SortCriteriaParameters.ValidGameTypes[replay.Content.GameType] == true)
                     {
-                        Team Team = new Team(replay.Content);
+                        Teams Team = new Teams(replay.Content);
                         MatchUp MatchUp = new MatchUp(replay.Content, Team);
                         // int => team
                         IDictionary<int, IDictionary<RaceType, int>> EncodedMatchUp = new Dictionary<int, IDictionary<RaceType, int>>();
@@ -182,7 +182,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                 {
                     if (SortCriteriaParameters.ValidGameTypes[replay.Content.GameType] == true)
                     {
-                        Team Team = new Team(replay.Content);
+                        Teams Team = new Teams(replay.Content);
                         MatchUp MatchUp = new MatchUp(replay.Content, Team);
                         // int => team
                         IDictionary<int, IDictionary<RaceType, int>> EncodedMatchUp = new Dictionary<int, IDictionary<RaceType, int>>();
