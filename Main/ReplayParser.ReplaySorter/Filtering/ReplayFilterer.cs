@@ -173,9 +173,172 @@ namespace ReplayParser.ReplaySorter.Filtering
             return filteredList.ToList();
         }
 
-        private Func<File<IReplay>, bool> ParseDateFilter(string value)
+        private const string _dateSeparator = "[-\\.\\/]";
+        private static readonly string _digitalYearAndMonthAndDayPattern = $"(\\d{{2,4}})(?:{_dateSeparator}(\\d{{1,2}}))?(?:{_dateSeparator}(\\d{{1,2}}))?";
+        private static readonly Regex _digitalYearAndMonthAndDayRegex = new Regex(_digitalYearAndMonthAndDayPattern);
+
+        private Func<File<IReplay>, bool> ParseDateFilter(string dateExpressionString)
         {
-            throw new NotImplementedException();
+            if (string.IsNullOrWhiteSpace(dateExpressionString))
+                return null;
+
+            var dateExpressions = dateExpressionString.Split('|');
+
+            if (dateExpressions.Count() == 0)
+                return null;
+
+            Expression<Func<File<IReplay>, bool>> filterExpression = null;
+            var replay = Expression.Parameter(typeof(File<IReplay>), "r");
+
+            foreach (var dateExpression in dateExpressions)
+            {
+                // where(r => r.Content.TimeStamp ><= parsedDate)
+                DateTime?[] parsedDates = ParseDate(dateExpression);
+
+                if (parsedDates == null || parsedDates.Count() == 0 || parsedDates.Any(d => d == null))
+                    return null;
+
+                Expression replayDate = Expression.Call(
+                    typeof(ReplayFilterer).GetMethod(nameof(ResetTimePart), 
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static), 
+                    Expression.PropertyOrField(Expression.PropertyOrField(replay, "Content"), "TimeStamp"));
+
+                Expression body = null;
+
+                if (parsedDates.Count() > 1)
+                {
+                    // between, inclusive
+                    body = Expression.AndAlso(
+                        Expression.IsTrue(
+                            Expression.GreaterThanOrEqual(
+                                replayDate, Expression.Constant(parsedDates[0])
+                            )
+                        ),
+                        Expression.IsTrue(
+                            Expression.LessThanOrEqual(
+                                replayDate, Expression.Constant(parsedDates[1])
+                                )
+                        )
+                    );
+                }
+                else
+                {
+                    int? comparison = ParseComparison(dateExpression);
+                    if (comparison == null)
+                        return null;
+
+                    // <= : -2, < : -1, = : 0, > : 1, >= 2
+                    var replayFilter = Expression.Constant(parsedDates[0]);
+                    //TODO extract to function
+
+                    switch (comparison)
+                    {
+                        case -2:
+                            body = Expression.LessThanOrEqual(replayDate, replayFilter);
+                            break;
+                        case -1:
+                            body = Expression.LessThan(replayDate, replayFilter);
+                            break;
+                        case 0:
+                            body = Expression.Equal(replayDate, replayFilter);
+                            break;
+                        case 1:
+                            body = Expression.GreaterThan(replayDate, replayFilter);
+                            break;
+                        case 2:
+                            body = Expression.GreaterThanOrEqual(replayDate, replayFilter);
+                            break;
+                        default:
+                            throw new Exception();
+
+                    }
+                }
+
+                filterExpression = CreateOrAddOrExpression(filterExpression, body, replay);
+            }
+
+            return filterExpression?.Compile();
+        }
+
+        private static DateTime ResetTimePart(DateTime dateTime)
+        {
+            long ticks = dateTime.TimeOfDay.Ticks;
+            return dateTime.AddTicks(-ticks);
+        }
+
+        private DateTime?[] ParseDate(string dateExpression)
+        {
+            if (string.IsNullOrWhiteSpace(dateExpression))
+                return null;
+
+            if (_timeRangeRegex.IsMatch(dateExpression))
+            {
+                var matches = _timeRangeRegex.Matches(dateExpression);
+                if (matches.Count == 0 || matches.Count > 1)
+                    return null;
+
+                DateTime?[] dates = new DateTime?[2];
+
+                for (int i = 0; i < 2; i++)
+                {
+                    var dateValue = matches[0].Groups[i + 1];
+                    dates[i] = ParseDatevalue(dateValue.Value);
+                }
+
+                return dates;
+            }
+            else
+            {
+                return new DateTime?[1] { ParseDatevalue(dateExpression) };
+            }
+        }
+
+        private DateTime? ParseDatevalue(string dateValue)
+        {
+            if (string.IsNullOrWhiteSpace(dateValue))
+                return null;
+
+            dateValue = RemoveComparisonOperator(dateValue);
+
+            Match match = null;
+
+            if (_digitalYearAndMonthAndDayRegex.IsMatch(dateValue))
+            {
+                match = _digitalYearAndMonthAndDayRegex.Match(dateValue);
+            }
+            else
+            {
+                return null;
+            }
+
+            // years, months, days
+            int[] dateParts = new int[3];
+            for (int i = match.Groups.Count - 1, j = 2; i > 0; i--, j--)
+            {
+                int.TryParse(match.Groups[i].Value, out dateParts[j]);
+            }
+
+            if (!EnsureValidDate(dateParts))
+                return null;
+
+            return new DateTime(dateParts[0], dateParts[1], dateParts[2]);
+        }
+
+        private bool EnsureValidDate(int[] dateParts)
+        {
+            if (dateParts[0] < 1998)
+                return false;
+
+            if (dateParts[1] < 0 || dateParts[2] < 0)
+                return false;
+
+            if (dateParts[1] == 0)
+                dateParts[1] = 1;
+
+            if (dateParts[2] == 0)
+                dateParts[2] = 1;
+
+            return true;
         }
 
         private Func<File<IReplay>, bool> ParsePlayerFilter(string value)
@@ -201,7 +364,6 @@ namespace ReplayParser.ReplaySorter.Filtering
 
             foreach (var matchupExpression in matchupExpressions)
             {
-                // var replayTeams = Expression.New(typeof(Teams).GetConstructor(new Type[] { typeof(IReplay) }));
                 var replayTeams = Expression.New(typeof(Teams).GetConstructor(new Type[] { typeof(IReplay) }), replayProper);
                 var replayMatchup = Expression.New(typeof(MatchUp).GetConstructor(new Type[] { typeof(IReplay), typeof(Teams) }), replayProper, replayTeams);
                 var replayMatchupAsString = Expression.Call(replayMatchup, typeof(MatchUp).GetMethod("GetSection"), Expression.Constant(string.Empty, typeof(string)));
@@ -349,7 +511,7 @@ namespace ReplayParser.ReplaySorter.Filtering
 
         // number - timeunit [ - number - timeunit ]1-2
         // classical 05:10, 00:20:17
-        private static readonly string _lessThanGreaterThanOperatorsPattern = "^(<|<=|>|>=)?";
+        private static readonly string _lessThanGreaterThanOperatorsPattern = "^(<(?!=)|<=|>(?!=)|>=)?";
         private static readonly string _digitalMinutesSecondsPattern = "^(\\d{2}):(\\d{2})$";
         private static readonly string _digitalHoursMinutesSecondsPattern = "^(\\d{2}):(\\d{2}):(\\d{2})$";
         private static readonly string _writtenHoursMinutesSecondsPattern = "^(?:(\\d+)(?:h(?:rs|hours)?))?(?:(\\d+)(?:m(?:in(?:utes)?)?))?(?:(\\d+)(?:s(?:ec(?:onds)?)?))?";
@@ -375,7 +537,7 @@ namespace ReplayParser.ReplaySorter.Filtering
                 int?[] durationsAsFrameCounts = ParseDuration(durationExpression);
 
                 if (durationsAsFrameCounts == null || durationsAsFrameCounts.Count() == 0 || durationsAsFrameCounts.Any(f => f == null))
-                    continue;
+                    return null;
 
                 Expression replayDuration = Expression.PropertyOrField(Expression.PropertyOrField(replay, "Content"), "FrameCount");
 
@@ -401,7 +563,7 @@ namespace ReplayParser.ReplaySorter.Filtering
                 {
                     int? comparison = ParseComparison(durationExpression);
                     if (comparison == null)
-                        continue;
+                        return null;
 
                     // <= : -2, < : -1, = : 0, > : 1, >= 2
                     var replayFilter = Expression.Constant(durationsAsFrameCounts[0]);
@@ -436,7 +598,7 @@ namespace ReplayParser.ReplaySorter.Filtering
         //TODO extract to constants class or something
         private const double FastestFPS = (double)1000 / 42;
 
-        private int?[] ParseDuration(string durationExpressionString)
+        private int?[]  ParseDuration(string durationExpressionString)
         {
             if (string.IsNullOrWhiteSpace(durationExpressionString)) return null;
 
@@ -558,7 +720,6 @@ namespace ReplayParser.ReplaySorter.Filtering
             {
                 if (string.IsNullOrWhiteSpace(map)) continue;
 
-                // string escapedMapName = EscapeExceptValidWildcards(map);
                 var mapRegex = new Regex(map, RegexOptions.IgnoreCase);
 
                 // where(r => MapRegex.IsMatch(r.ReplayMap.MapName))
@@ -591,27 +752,6 @@ namespace ReplayParser.ReplaySorter.Filtering
 
             return Expression.Lambda<Func<T1, T2>>(Expression.Or(expression, Expression.Lambda<Func<T1, T2>>(body, parameters)));
         }
-
-
-        // private string EscapeExceptValidWildcards(string searchString)
-        // {
-        //     if (string.IsNullOrWhiteSpace(searchString)) return null;
-
-        //     char firstChar = searchString[0];
-        //     char lastChar = searchString[searchString.Length - 1];
-        //     string middlePartSearchString = searchString.Substring(1, searchString.Length - 2);
-        //     return firstChar == '*' ?
-        //         (
-        //             lastChar == '*' ?
-        //                 '.' + firstChar + Regex.Escape(middlePartSearchString) + '.' + lastChar :
-        //                 '.' + firstChar + Regex.Escape(middlePartSearchString + lastChar)
-        //         ) :
-        //         (
-        //             lastChar == '*' ?
-        //                 Regex.Escape(firstChar + middlePartSearchString) + '.' + lastChar :
-        //                 Regex.Escape(firstChar + middlePartSearchString + lastChar)
-        //         );
-        // }
 
         private class RaceEqWithWildCardComparer : IEqualityComparer<int[]>
         {
