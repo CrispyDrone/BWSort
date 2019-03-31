@@ -1301,7 +1301,7 @@ namespace ReplayParser.ReplaySorter.UI
 
         private void worker_FilteringReplaysCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            if (!e.Cancelled)
+            if (!e.Cancelled && e.Error == null)
             {
                 listViewReplays.ItemsSource = _filteredListReplays;
                 _lastExecutedFilter = e.Result as string;

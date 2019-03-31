@@ -349,12 +349,12 @@ namespace ReplayParser.ReplaySorter.Filtering
         // number - timeunit [ - number - timeunit ]1-2
         // classical 05:10, 00:20:17
         private static readonly string _lessThanGreaterThanOperatorsPattern = "^(<|<=|>|>=)?";
-        private static readonly string _digitalHoursMinutesPattern = "^(\\d{2}):(\\d{2})$";
+        private static readonly string _digitalMinutesSecondsPattern = "^(\\d{2}):(\\d{2})$";
         private static readonly string _digitalHoursMinutesSecondsPattern = "^(\\d{2}):(\\d{2}):(\\d{2})$";
-        private static readonly string _writtenHoursMinutesSecondsPattern = "^(\\d+(h(?:rs)?|hours))?(\\d+m(?:in(?:utes)?)?)?(\\d+s(?:ec(?:onds)?)?)?%";
+        private static readonly string _writtenHoursMinutesSecondsPattern = "^(?:(\\d+)(?:h(?:rs|hours)?))?(?:(\\d+)(?:m(?:in(?:utes)?)?))?(?:(\\d+)(?:s(?:ec(?:onds)?)?))?";
         private static readonly string _timeRangePattern = "^between\\s*(.*?)-(.*)$";
         private static readonly Regex _lessThanGreaterThanOperatorsRegex = new Regex(_lessThanGreaterThanOperatorsPattern);
-        private static readonly Regex _digitalHoursMinutesRegex = new Regex(_digitalHoursMinutesPattern);
+        private static readonly Regex _digitalMinutesSecondsRegex = new Regex(_digitalMinutesSecondsPattern);
         private static readonly Regex _digitalHoursMinutesSecondsRegex = new Regex(_digitalHoursMinutesSecondsPattern);
         private static readonly Regex _writtenHoursMinutesSecondsRegex = new Regex(_writtenHoursMinutesSecondsPattern);
         private static readonly Regex _timeRangeRegex = new Regex(_timeRangePattern);
@@ -376,7 +376,8 @@ namespace ReplayParser.ReplaySorter.Filtering
                 if (durationsAsFrameCounts == null || durationsAsFrameCounts.Count() == 0 || durationsAsFrameCounts.Any(f => f == null))
                     continue;
 
-                var replayDuration = Expression.PropertyOrField(replay, "Content.FrameCount");
+                Expression replayDuration = Expression.PropertyOrField(Expression.PropertyOrField(replay, "Content"), "FrameCount");
+
                 Expression body = null;
 
                 if (durationsAsFrameCounts.Count() > 1)
@@ -445,12 +446,11 @@ namespace ReplayParser.ReplaySorter.Filtering
                     return null;
 
                 int?[] durationExpressionsAsFrameCount = new int?[2];
-                int i = 0;
 
-                foreach (Capture timeValue in matches[0].Captures)
+                for (int i = 0; i < 2; i++)
                 {
+                    var timeValue = matches[0].Groups[i + 1];
                     durationExpressionsAsFrameCount[i] = ParseTimevalue(timeValue.Value);
-                    i++;
                 }
 
                 return durationExpressionsAsFrameCount;
@@ -463,57 +463,41 @@ namespace ReplayParser.ReplaySorter.Filtering
 
         private int? ParseTimevalue(string timeValue)
         {
+            if (string.IsNullOrWhiteSpace(timeValue))
+                return null;
+
             //TODO extract common logic
             timeValue = RemoveComparisonOperator(timeValue);
-            int frames = 0;
-            if (_writtenHoursMinutesSecondsRegex.IsMatch(timeValue))
+            Match match = null;
+
+            if (_digitalHoursMinutesSecondsRegex.IsMatch(timeValue))
+            {
+                match = _digitalHoursMinutesSecondsRegex.Match(timeValue);
+            }
+            else if (_digitalMinutesSecondsRegex.IsMatch(timeValue))
+            {
+                match = _digitalMinutesSecondsRegex.Match(timeValue);
+            }
+            else if (_writtenHoursMinutesSecondsRegex.IsMatch(timeValue))
             {
                 //TODO make helper method "EnsureSingleMatch" or something
-                var match = _writtenHoursMinutesSecondsRegex.Match(timeValue);
-                int hours, minutes, seconds = 0;
-                if (!int.TryParse(match.Captures[0].Value, out hours))
-                    throw new Exception();
-                if (!int.TryParse(match.Captures[1].Value, out minutes))
-                    throw new Exception();
-                if (!int.TryParse(match.Captures[2].Value, out seconds))
-                    throw new Exception();
-
-                //TODO make helper function to calculate frames from time value
-                frames = (int)((hours * 3600 + minutes * 60 + seconds) * FastestFPS);
-            }
-            else if (_digitalHoursMinutesSecondsRegex.IsMatch(timeValue))
-            {
-                var match = _digitalHoursMinutesSecondsRegex.Match(timeValue);
-                int hours, minutes, seconds = 0;
-                if (!int.TryParse(match.Captures[0].Value, out hours))
-                    throw new Exception();
-                if (!int.TryParse(match.Captures[1].Value, out minutes))
-                    throw new Exception();
-                if (!int.TryParse(match.Captures[2].Value, out seconds))
-                    throw new Exception();
-
-                //TODO make helper function to calculate frames from time value
-                frames = (int)((hours * 3600 + minutes * 60 + seconds) * FastestFPS);
-            }
-            else if (_digitalHoursMinutesRegex.IsMatch(timeValue))
-            {
-                var match = _digitalHoursMinutesRegex.Match(timeValue);
-
-                int hours, minutes = 0;
-                if (!int.TryParse(match.Captures[0].Value, out hours))
-                    throw new Exception();
-                if (!int.TryParse(match.Captures[1].Value, out minutes))
-                    throw new Exception();
-
-                //TODO make helper function to calculate frames from time value
-                frames = (int)((hours * 3600 + minutes * 60) * FastestFPS);
+                match = _writtenHoursMinutesSecondsRegex.Match(timeValue);
             }
             else
             {
                 // reevaluate whether you should be throwing exceptions... this is not an exceptional state. See if you can return nulls instead
                 return null;
             }
-            return frames;
+
+            // hours, minutes, seconds
+            int[] timeParts = new int[3];
+            for (int i = match.Groups.Count - 1, j = 2; i > 0; i--, j--)
+            {
+                int.TryParse(match.Groups[i].Value, out timeParts[j]);
+            }
+
+            //TODO make helper function to calculate frames from time value
+            return (int)((timeParts[0] * 3600 + timeParts[1] * 60 + timeParts[2]) * FastestFPS);
         }
 
         //TODO extract common logic
@@ -562,12 +546,17 @@ namespace ReplayParser.ReplaySorter.Filtering
 
         private Func<File<IReplay>, bool> ParseMapFilter(string mapExpression)
         {
+            if (string.IsNullOrWhiteSpace(mapExpression))
+                return null;
+
             Expression<Func<File<IReplay>, bool>> filterExpression = null;
             var maps = mapExpression.Split(new char[] { '|' });
             var replay = Expression.Parameter(typeof(File<IReplay>), "r");
 
             foreach (var map in maps)
             {
+                if (string.IsNullOrWhiteSpace(map)) continue;
+
                 string escapedMapName = EscapeExceptValidWildcards(map);
                 var mapRegex = new Regex(escapedMapName);
 
@@ -605,6 +594,8 @@ namespace ReplayParser.ReplaySorter.Filtering
 
         private string EscapeExceptValidWildcards(string searchString)
         {
+            if (string.IsNullOrWhiteSpace(searchString)) return null;
+
             char firstChar = searchString[0];
             char lastChar = searchString[searchString.Length - 1];
             string middlePartSearchString = searchString.Substring(1, searchString.Length - 2);
