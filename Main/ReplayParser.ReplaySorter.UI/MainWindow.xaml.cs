@@ -17,6 +17,7 @@ using ReplayParser.ReplaySorter.Diagnostics;
 using ReplayParser.ReplaySorter.IO;
 using System.Net.Http;
 using System.Windows.Data;
+using ReplayParser.ReplaySorter.Filtering;
 
 namespace ReplayParser.ReplaySorter.UI
 {
@@ -134,12 +135,15 @@ namespace ReplayParser.ReplaySorter.UI
                 }
             }
 
-            worker_ReplayParser = new BackgroundWorker();
-            worker_ReplayParser.WorkerReportsProgress = true;
-            worker_ReplayParser.WorkerSupportsCancellation = true;
-            worker_ReplayParser.DoWork += worker_ParseReplays;
-            worker_ReplayParser.ProgressChanged += worker_ProgressChangedParsingReplays;
-            worker_ReplayParser.RunWorkerCompleted += worker_ParsingReplaysCompleted;
+            if (worker_ReplayParser == null)
+            {
+                worker_ReplayParser = new BackgroundWorker();
+                worker_ReplayParser.WorkerReportsProgress = true;
+                worker_ReplayParser.WorkerSupportsCancellation = true;
+                worker_ReplayParser.DoWork += worker_ParseReplays;
+                worker_ReplayParser.ProgressChanged += worker_ProgressChangedParsingReplays;
+                worker_ReplayParser.RunWorkerCompleted += worker_ParsingReplaysCompleted;
+            }
             // sigh... should I make some sort of new class that contains all the properties I want to access during the DoWork ??
             worker_ReplayParser.RunWorkerAsync(searchDirectory);
         }
@@ -711,12 +715,15 @@ namespace ReplayParser.ReplaySorter.UI
             if (customReplayFormat != null)
                 sorter.CustomReplayFormat = customReplayFormat;
 
-            worker_ReplaySorter = new BackgroundWorker();
-            worker_ReplaySorter.WorkerReportsProgress = true;
-            worker_ReplaySorter.WorkerSupportsCancellation = true;
-            worker_ReplaySorter.DoWork += worker_SortReplays;
-            worker_ReplaySorter.ProgressChanged += worker_ProgressChangedSortingReplays;
-            worker_ReplaySorter.RunWorkerCompleted += worker_SortingReplaysCompleted;
+            if (worker_ReplaySorter == null)
+            {
+                worker_ReplaySorter = new BackgroundWorker();
+                worker_ReplaySorter.WorkerReportsProgress = true;
+                worker_ReplaySorter.WorkerSupportsCancellation = true;
+                worker_ReplaySorter.DoWork += worker_SortReplays;
+                worker_ReplaySorter.ProgressChanged += worker_ProgressChangedSortingReplays;
+                worker_ReplaySorter.RunWorkerCompleted += worker_SortingReplaysCompleted;
+            }
             swSort.Start();
             worker_ReplaySorter.RunWorkerAsync();
         }
@@ -997,14 +1004,16 @@ namespace ReplayParser.ReplaySorter.UI
 
             statusBarAction.Content = "Renaming replays...";
 
-            worker_ReplayRenamer = new BackgroundWorker();
-            worker_ReplayRenamer.WorkerReportsProgress = true;
-            worker_ReplayRenamer.WorkerSupportsCancellation = true;
-            worker_ReplayRenamer.DoWork += worker_RenameReplays;
-            worker_ReplayRenamer.ProgressChanged += worker_ProgressChangedRenamingReplays;
-            worker_ReplayRenamer.RunWorkerCompleted += worker_RenamingReplaysCompleted;
+            if (worker_ReplayRenamer == null)
+            {
+                worker_ReplayRenamer = new BackgroundWorker();
+                worker_ReplayRenamer.WorkerReportsProgress = true;
+                worker_ReplayRenamer.WorkerSupportsCancellation = true;
+                worker_ReplayRenamer.DoWork += worker_RenameReplays;
+                worker_ReplayRenamer.ProgressChanged += worker_ProgressChangedRenamingReplays;
+                worker_ReplayRenamer.RunWorkerCompleted += worker_RenamingReplaysCompleted;
+            }
             worker_ReplayRenamer.RunWorkerAsync(replayRenamer);
-
         }
 
         private void worker_RenameReplays(object sender, DoWorkEventArgs e)
@@ -1113,14 +1122,16 @@ namespace ReplayParser.ReplaySorter.UI
                 return;
             }
 
-            worker_Undoer = worker_Undoer ?? new BackgroundWorker();
-            worker_Undoer.WorkerReportsProgress = true;
-            worker_Undoer.WorkerSupportsCancellation = true;
-            worker_Undoer.DoWork += worker_UndoRename;
-            worker_Undoer.ProgressChanged += worker_ProgressChangedUndoRename;
-            worker_Undoer.RunWorkerCompleted += worker_UndoRenamingCompleted;
+            if (worker_Undoer == null)
+            {
+                worker_Undoer = new BackgroundWorker();
+                worker_Undoer.WorkerReportsProgress = true;
+                worker_Undoer.WorkerSupportsCancellation = true;
+                worker_Undoer.DoWork += worker_UndoRename;
+                worker_Undoer.ProgressChanged += worker_ProgressChangedUndoRename;
+                worker_Undoer.RunWorkerCompleted += worker_UndoRenamingCompleted;
+            }
             worker_Undoer.RunWorkerAsync(true);
-
         }
 
         private void redoRenamingButton_Click(object sender, RoutedEventArgs e)
@@ -1133,15 +1144,17 @@ namespace ReplayParser.ReplaySorter.UI
                 return;
             }
 
-            worker_Undoer = worker_Undoer ?? new BackgroundWorker();
-            worker_Undoer.WorkerReportsProgress = true;
-            worker_Undoer.WorkerSupportsCancellation = true;
-            worker_Undoer.DoWork += worker_UndoRename;
-            worker_Undoer.ProgressChanged += worker_ProgressChangedUndoRename;
-            worker_Undoer.RunWorkerCompleted += worker_UndoRenamingCompleted;
+            if (worker_Undoer == null)
+            {
+                worker_Undoer = new BackgroundWorker();
+                worker_Undoer.WorkerReportsProgress = true;
+                worker_Undoer.WorkerSupportsCancellation = true;
+                worker_Undoer.DoWork += worker_UndoRename;
+                worker_Undoer.ProgressChanged += worker_ProgressChangedUndoRename;
+                worker_Undoer.RunWorkerCompleted += worker_UndoRenamingCompleted;
+            }
             worker_Undoer.RunWorkerAsync(false);
         }
-
 
         private void worker_UndoRename(object sender, DoWorkEventArgs e)
         {
@@ -1234,12 +1247,64 @@ namespace ReplayParser.ReplaySorter.UI
         #region filtering
 
 
+        private BackgroundWorker worker_replayFilterer;
+        private ReplayFilterer _replayFilterer = new ReplayFilterer();
+        private string _lastExecutedFilter;
+
         private void FilterReplaysTextBox_KeyUp(object sender, System.Windows.Input.KeyEventArgs e)
         {
+            // TODO show message is busy ?
             if (e.Key == System.Windows.Input.Key.Enter)
             {
-                // parse the filter expression
-                // start filter
+                if (string.IsNullOrWhiteSpace(filterReplaysTextBox.Text))
+                {
+                    if (listViewReplays.ItemsSource != ListReplays)
+                        listViewReplays.ItemsSource = ListReplays;
+
+                    return;
+                }
+
+                if (filterReplaysTextBox.Text == _lastExecutedFilter)
+                {
+                    listViewReplays.ItemsSource = _filteredListReplays;
+                    return;
+                }
+
+                if (worker_replayFilterer == null)
+                {
+                    worker_replayFilterer = new BackgroundWorker();
+                    // worker_replayFilterer.WorkerReportsProgress = true;
+                    // worker_replayFilterer.WorkerSupportsCancellation = true;
+                    worker_replayFilterer.DoWork += worker_FilterReplays;
+                    // worker_replayFilterer.ProgressChanged += worker_ProgressChangedFilteringReplays;
+                    worker_replayFilterer.RunWorkerCompleted += worker_FilteringReplaysCompleted;
+                }
+                worker_replayFilterer.RunWorkerAsync(filterReplaysTextBox.Text);
+            }
+        }
+
+        private void worker_FilterReplays(object sender, DoWorkEventArgs e)
+        {
+            var filterExpression = e.Argument as string;
+            if (string.IsNullOrWhiteSpace(filterExpression))
+                return;
+
+            _filteredListReplays = _replayFilterer.Apply(ListReplays, filterExpression);
+            e.Result = filterExpression;
+        }
+
+        //TODO small progress bar or waiting cursor?
+        private void worker_ProgressChangedFilteringReplays(object sender, ProgressChangedEventArgs e)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void worker_FilteringReplaysCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            if (!e.Cancelled)
+            {
+                listViewReplays.ItemsSource = _filteredListReplays;
+                _lastExecutedFilter = e.Result as string;
             }
         }
 

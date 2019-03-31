@@ -34,12 +34,18 @@ namespace ReplayParser.ReplaySorter.Filtering
             { DATEFILTERLABEL, DATECODE }
         };
 
-        private readonly Regex FILTERLABEL = new Regex("^([md]u?|[pd]):");
+        private readonly Regex FILTERLABEL = new Regex("([md]u?|[pd]):");
 
         public List<File<IReplay>> Apply(List<File<IReplay>> list, string filterExpression)
         {
             Dictionary<int, string> filterExpressions = ExtractFilters(filterExpression);
+            if (filterExpressions == null)
+                return list;
+
             Func<File<IReplay>, bool>[] queries = ParseFilters(filterExpressions);
+            if (queries == null || queries.Count() == 0)
+                return list;
+
             return ApplyTo(list, queries);
         }
 
@@ -81,7 +87,7 @@ namespace ReplayParser.ReplaySorter.Filtering
 
             int start = match.Index + match.Value.Length;
 
-            return nextMatchIndex == - -1 ? filterExpression.Substring(start) : filterExpression.Substring(start, nextMatchIndex - start);
+            return nextMatchIndex == -1 ? filterExpression.Substring(start) : filterExpression.Substring(start, nextMatchIndex - start);
         }
 
         private bool ValidateMatch(Match match, string filterExpression)
@@ -108,7 +114,7 @@ namespace ReplayParser.ReplaySorter.Filtering
             if (lastComma <= 0)
                 return false;
 
-            var betweenCommaAndMatch = beforeMatch.Substring(lastComma + 1, beforeMatch.Length - lastComma);
+            var betweenCommaAndMatch = filterExpression.Substring(lastComma + 1, beforeMatch.Length - lastComma - 1);
             return string.IsNullOrWhiteSpace(betweenCommaAndMatch);
         }
 
@@ -148,7 +154,7 @@ namespace ReplayParser.ReplaySorter.Filtering
                         funcs[counter] = ParseDateFilter(filterExpression.Value);
                         break;
                     default:
-                        throw new Exception();
+                        return null;
                 }
                 counter++;
             }
@@ -160,7 +166,8 @@ namespace ReplayParser.ReplaySorter.Filtering
 
             for (int i = 0; i < queries.Length; i++)
             {
-                filteredList = filteredList.Where(r => queries[i](r));
+                int index = i;
+                filteredList = filteredList.Where(r => queries[index](r));
             }
             return filteredList.ToList();
         }
@@ -180,6 +187,8 @@ namespace ReplayParser.ReplaySorter.Filtering
             if (string.IsNullOrWhiteSpace(matchupExpressionString))
                 return null;
 
+            matchupExpressionString = matchupExpressionString.TrimEnd(',');
+
             var matchupExpressions = matchupExpressionString.Split(new char[] { '|' });
 
             if (matchupExpressions.Count() == 0)
@@ -187,16 +196,18 @@ namespace ReplayParser.ReplaySorter.Filtering
 
             Expression<Func<File<IReplay>, bool>> filterExpression = null;
             var replay = Expression.Parameter(typeof(File<IReplay>), "r");
+            var replayProper = Expression.PropertyOrField(replay, "Content");
 
             foreach (var matchupExpression in matchupExpressions)
             {
-                var replayTeams = Expression.New(typeof(Teams).GetConstructor(new Type[] { typeof(IReplay)}));
-                var replayMatchup = Expression.New(typeof(MatchUp).GetConstructor(new Type[] { typeof(IReplay), typeof(Teams) }));
-                var replayMatchupAsString = Expression.Call(replayMatchup, typeof(MatchUp).GetMethod("GetSection"));
+                // var replayTeams = Expression.New(typeof(Teams).GetConstructor(new Type[] { typeof(IReplay) }));
+                var replayTeams = Expression.New(typeof(Teams).GetConstructor(new Type[] { typeof(IReplay) }), replayProper);
+                var replayMatchup = Expression.New(typeof(MatchUp).GetConstructor(new Type[] { typeof(IReplay), typeof(Teams) }), replayProper, replayTeams);
+                var replayMatchupAsString = Expression.Call(replayMatchup, typeof(MatchUp).GetMethod("GetSection"), Expression.Constant(string.Empty, typeof(string)));
                 // where(r => CompareMatchups(new matchup(new team(replay), replay).GetSection(), matchupstring))
                 Expression body = Expression.IsTrue(
                         Expression.Call(
-                            typeof(ReplayFilterer).GetMethod(nameof(CompareMatchups)), 
+                            typeof(ReplayFilterer).GetMethod(nameof(ReplayFilterer.CompareMatchups), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static), 
                             replayMatchupAsString, 
                             Expression.Constant(matchupExpression, typeof(string))
                         )
@@ -214,6 +225,9 @@ namespace ReplayParser.ReplaySorter.Filtering
             Dictionary<int, int[]> raceCountsA = GetRaceCountsPerTeam(matchupA, false);
             // z,p,t,r,'.'
             Dictionary<int[], int> raceCountsB = GetTeamPerRaceCountsAndPlaceHolder(matchupExpression);
+
+            if (raceCountsA == null || raceCountsB == null)
+                return false;
 
             if (raceCountsA.Keys.Count != raceCountsB.Values.Count)
                 return false;
@@ -247,7 +261,7 @@ namespace ReplayParser.ReplaySorter.Filtering
 
         private static Dictionary<int[], int> GetTeamPerRaceCountsAndPlaceHolder(string matchupExpression)
         {
-            return GetRaceCountsPerTeam(matchupExpression, true).ToDictionary(kvp => kvp.Value, kvp => kvp.Key, new RaceEqWithWildCardComparer());
+            return GetRaceCountsPerTeam(matchupExpression, true)?.ToDictionary(kvp => kvp.Value, kvp => kvp.Key, new RaceEqWithWildCardComparer());
         }
 
         private static Dictionary<int, int[]> GetRaceCountsPerTeam(string matchupA, bool countPlaceHolders = false)
@@ -326,7 +340,7 @@ namespace ReplayParser.ReplaySorter.Filtering
                         }
                         break;
                     default:
-                        return null;
+                        return countPlaceHolders ? new int[5] : new int[4];
                 }
             }
             return raceCounts;
@@ -337,7 +351,7 @@ namespace ReplayParser.ReplaySorter.Filtering
         private static readonly string _lessThanGreaterThanOperatorsPattern = "^(<|<=|>|>=)?";
         private static readonly string _digitalHoursMinutesPattern = "^(\\d{2}):(\\d{2})$";
         private static readonly string _digitalHoursMinutesSecondsPattern = "^(\\d{2}):(\\d{2}):(\\d{2})$";
-        private static readonly string _writtenHoursMinutesSecondsPattern = "^(\\d+(h(?:rs)?|hours)?(\\d+m(?:in(?:utes)?)?)?(\\d+s(?:ec(?:onds)?)?)?%";
+        private static readonly string _writtenHoursMinutesSecondsPattern = "^(\\d+(h(?:rs)?|hours))?(\\d+m(?:in(?:utes)?)?)?(\\d+s(?:ec(?:onds)?)?)?%";
         private static readonly string _timeRangePattern = "^between\\s*(.*?)-(.*)$";
         private static readonly Regex _lessThanGreaterThanOperatorsRegex = new Regex(_lessThanGreaterThanOperatorsPattern);
         private static readonly Regex _digitalHoursMinutesRegex = new Regex(_digitalHoursMinutesPattern);
@@ -558,11 +572,19 @@ namespace ReplayParser.ReplaySorter.Filtering
                 var mapRegex = new Regex(escapedMapName);
 
                 // where(r => MapRegex.IsMatch(r.ReplayMap.MapName))
+                string mapNameProperty = "ReplayMap.MapName";
+                Expression mapNameExpression = Expression.PropertyOrField(replay, "Content");
+
+                foreach (var property in mapNameProperty.Split('.'))
+                {
+                    mapNameExpression = Expression.PropertyOrField(mapNameExpression, property);
+                }
+
                 var body = Expression.IsTrue(
                     Expression.Call(
                         Expression.Constant(mapRegex),
-                        typeof(Regex).GetMethod("IsMatch"),
-                        Expression.PropertyOrField(replay, "Content.ReplayMap.MapName")
+                        typeof(Regex).GetMethod("IsMatch", new Type[] { typeof(string)}),
+                        mapNameExpression
                     )
                 );
 
@@ -589,12 +611,12 @@ namespace ReplayParser.ReplaySorter.Filtering
             return firstChar == '*' ?
                 (
                     lastChar == '*' ?
-                        firstChar + Regex.Escape(middlePartSearchString) + lastChar :
-                        firstChar + Regex.Escape(middlePartSearchString + lastChar)
+                        '.' + firstChar + Regex.Escape(middlePartSearchString) + '.' + lastChar :
+                        '.' + firstChar + Regex.Escape(middlePartSearchString + lastChar)
                 ) :
                 (
                     lastChar == '*' ?
-                        Regex.Escape(firstChar + middlePartSearchString) + lastChar :
+                        Regex.Escape(firstChar + middlePartSearchString) + '.' + lastChar :
                         Regex.Escape(firstChar + middlePartSearchString + lastChar)
                 );
         }
