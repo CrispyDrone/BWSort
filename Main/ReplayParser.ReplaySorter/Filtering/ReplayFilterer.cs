@@ -167,6 +167,7 @@ namespace ReplayParser.ReplaySorter.Filtering
             for (int i = 0; i < queries.Length; i++)
             {
                 int index = i;
+                if (queries[index] == null) return null;
                 filteredList = filteredList.Where(r => queries[index](r));
             }
             return filteredList.ToList();
@@ -429,7 +430,7 @@ namespace ReplayParser.ReplaySorter.Filtering
 
                 filterExpression = CreateOrAddOrExpression(filterExpression, body, replay);
             }
-            return filterExpression.Compile();
+            return filterExpression?.Compile();
         }
 
         //TODO extract to constants class or something
@@ -557,8 +558,8 @@ namespace ReplayParser.ReplaySorter.Filtering
             {
                 if (string.IsNullOrWhiteSpace(map)) continue;
 
-                string escapedMapName = EscapeExceptValidWildcards(map);
-                var mapRegex = new Regex(escapedMapName);
+                // string escapedMapName = EscapeExceptValidWildcards(map);
+                var mapRegex = new Regex(map, RegexOptions.IgnoreCase);
 
                 // where(r => MapRegex.IsMatch(r.ReplayMap.MapName))
                 string mapNameProperty = "ReplayMap.MapName";
@@ -592,25 +593,25 @@ namespace ReplayParser.ReplaySorter.Filtering
         }
 
 
-        private string EscapeExceptValidWildcards(string searchString)
-        {
-            if (string.IsNullOrWhiteSpace(searchString)) return null;
+        // private string EscapeExceptValidWildcards(string searchString)
+        // {
+        //     if (string.IsNullOrWhiteSpace(searchString)) return null;
 
-            char firstChar = searchString[0];
-            char lastChar = searchString[searchString.Length - 1];
-            string middlePartSearchString = searchString.Substring(1, searchString.Length - 2);
-            return firstChar == '*' ?
-                (
-                    lastChar == '*' ?
-                        '.' + firstChar + Regex.Escape(middlePartSearchString) + '.' + lastChar :
-                        '.' + firstChar + Regex.Escape(middlePartSearchString + lastChar)
-                ) :
-                (
-                    lastChar == '*' ?
-                        Regex.Escape(firstChar + middlePartSearchString) + '.' + lastChar :
-                        Regex.Escape(firstChar + middlePartSearchString + lastChar)
-                );
-        }
+        //     char firstChar = searchString[0];
+        //     char lastChar = searchString[searchString.Length - 1];
+        //     string middlePartSearchString = searchString.Substring(1, searchString.Length - 2);
+        //     return firstChar == '*' ?
+        //         (
+        //             lastChar == '*' ?
+        //                 '.' + firstChar + Regex.Escape(middlePartSearchString) + '.' + lastChar :
+        //                 '.' + firstChar + Regex.Escape(middlePartSearchString + lastChar)
+        //         ) :
+        //         (
+        //             lastChar == '*' ?
+        //                 Regex.Escape(firstChar + middlePartSearchString) + '.' + lastChar :
+        //                 Regex.Escape(firstChar + middlePartSearchString + lastChar)
+        //         );
+        // }
 
         private class RaceEqWithWildCardComparer : IEqualityComparer<int[]>
         {

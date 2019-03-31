@@ -106,6 +106,7 @@
     </ApplicationDefinition>
     <Compile Include="Converters\FramesToTimeSpanInSecondsConverter.cs" />
     <Compile Include="Converters\MapToFileNameConverter.cs" />
+    <Compile Include="Converters\PlayerRaceToImagePathConverter.cs" />
     <Compile Include="Converters\PlayerToVisibilityConverter.cs" />
     <Compile Include="ReplayAction.cs" />
     <Page Include="MainWindow.xaml">
@@ -182,6 +183,12 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="images\crown.png" />
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <Resource Include="images\races\protoss.png" />
+    <Resource Include="images\races\terran.png" />
+    <Resource Include="images\races\zerg.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
