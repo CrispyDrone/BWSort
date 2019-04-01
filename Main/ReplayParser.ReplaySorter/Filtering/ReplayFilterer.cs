@@ -175,7 +175,15 @@ namespace ReplayParser.ReplaySorter.Filtering
 
         private const string _dateSeparator = "[-\\.\\/]";
         private static readonly string _digitalYearAndMonthAndDayPattern = $"(\\d{{2,4}})(?:{_dateSeparator}(\\d{{1,2}}))?(?:{_dateSeparator}(\\d{{1,2}}))?";
+        private static readonly string _writtenDateWithoutQuantifierPattern = "^(this year|last year|this month|last month|this week|last week|today|yesterday)$";
+        private static readonly string _writtenAgoDateWithQuantifierPattern = "(?:(\\d+) years ago|(\\d+) months ago|(\\d+) weeks ago|(\\d+) days ago)";
+        private static readonly string _writtenAgoWithoutAgoDateWithQuantifierPattern = "(?:(\\d+) years|(\\d+) months|(\\d+) weeks|(\\d+) days)";
+        private static readonly string _writtenLastDateWithQuantifierPattern = "(?:last (\\d+) years|last (\\d+) months|last (\\d+) weeks|last (\\d+) days)";
+        private static readonly string _writtenCombinableDatePattern = $"(?(^{_writtenAgoWithoutAgoDateWithQuantifierPattern})(^{_writtenAgoWithoutAgoDateWithQuantifierPattern})(?: and ({_writtenAgoWithoutAgoDateWithQuantifierPattern}))* ({_writtenAgoDateWithQuantifierPattern})$|^({_writtenAgoDateWithQuantifierPattern}$))";
         private static readonly Regex _digitalYearAndMonthAndDayRegex = new Regex(_digitalYearAndMonthAndDayPattern);
+        private static readonly Regex _writtenLastDateWithQuantifierRegex = new Regex(_writtenLastDateWithQuantifierPattern);
+        private static readonly Regex _writtenDateWithoutQuantifierRegex = new Regex(_writtenDateWithoutQuantifierPattern);
+        private static readonly Regex _writtenCombinableDateRegex = new Regex(_writtenCombinableDatePattern);
 
         private Func<File<IReplay>, bool> ParseDateFilter(string dateExpressionString)
         {
@@ -287,6 +295,41 @@ namespace ReplayParser.ReplaySorter.Filtering
 
                 return dates;
             }
+            else if (_writtenDateWithoutQuantifierRegex.IsMatch(dateExpression))
+            {
+                // this year | last year | ... are also time ranges
+                switch (dateExpression)
+                {
+                    case "this year":
+                        return new DateTime?[2] { new DateTime(DateTime.Now.Year, 1, 1), DateTime.Now };
+                    case "last year":
+                        return new DateTime?[2] { new DateTime(DateTime.Now.Year - 1, 1, 1), new DateTime(DateTime.Now.Year, 1, 1)};
+                    case "this month":
+                        return new DateTime?[2] { new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1), DateTime.Now };
+                    case "last month":
+                        return DateTime.Now.Month == 1 ? 
+                            new DateTime?[2] { new DateTime(DateTime.Now.Year - 1, 12, 1), new DateTime(DateTime.Now.Year, 1, 1)} : 
+                            new DateTime?[2] { new DateTime(DateTime.Now.Year, DateTime.Now.Month - 1, 1), new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1)};
+                    case "this week":
+                        return new DateTime?[2] { new DateTime(DateTime.Now.Year, DateTime.Now.Month, GetStartOfWeek()), DateTime.Now };
+                    case "last week":
+                        return (GetStartOfWeek() < 0 || (DateTime.Now.DayOfYear < 8 && new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1).DayOfWeek == DayOfWeek.Monday)) ?
+                            new DateTime?[2] { new DateTime(DateTime.Now.Year - 1, 12, GetStartOfWeek() < 0 ? 31 + GetStartOfWeek() - 7 : 31 - 6), new DateTime(DateTime.Now.Year, DateTime.Now.Month, GetStartOfWeek() < 0 ? 31 + GetStartOfWeek() : 31 - 6)} : 
+                            new DateTime?[2] { new DateTime(DateTime.Now.Year, DateTime.Now.Month, GetStartOfWeek() - 7), new DateTime(DateTime.Now.Year, DateTime.Now.Month, GetStartOfWeek())};
+                    case "today":
+                        return new DateTime?[2] { new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day), DateTime.Now };
+                    case "yesterday":
+                        return new DateTime?[2] { new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day - 1), new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day)};
+                    default:
+                        return null;
+                }
+            }
+            else if (_writtenLastDateWithQuantifierRegex.IsMatch(dateExpression))
+            {
+                // x years ago | x months ago | ... are also time ranges
+                // interpretation is very simple. Similar to today, yesterday, 2 days ago, 3 days ago; it's this week, last week, 2 weeks ago,... So these units just refer to those time spans.
+                throw new NotImplementedException();
+            }
             else
             {
                 return new DateTime?[1] { ParseDatevalue(dateExpression) };
@@ -306,6 +349,10 @@ namespace ReplayParser.ReplaySorter.Filtering
             {
                 match = _digitalYearAndMonthAndDayRegex.Match(dateValue);
             }
+            else if (_writtenCombinableDateRegex.IsMatch(dateValue))
+            {
+
+            }
             else
             {
                 return null;
@@ -322,6 +369,12 @@ namespace ReplayParser.ReplaySorter.Filtering
                 return null;
 
             return new DateTime(dateParts[0], dateParts[1], dateParts[2]);
+        }
+
+        private int GetStartOfWeek()
+        {
+            var dayOfWeek = DateTime.Now.DayOfWeek;
+            return DateTime.Now.Day -((((int)dayOfWeek) + 6) % 7);
         }
 
         private bool EnsureValidDate(int[] dateParts)
