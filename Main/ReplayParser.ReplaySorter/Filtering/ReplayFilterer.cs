@@ -178,10 +178,10 @@ namespace ReplayParser.ReplaySorter.Filtering
         private static readonly string _writtenDateWithoutQuantifierPattern = "^(this year|last year|this month|last month|this week|last week|today|yesterday)$";
         private static readonly string _writtenAgoDateWithQuantifierPattern = "(?:(\\d+) years ago|(\\d+) months ago|(\\d+) weeks ago|(\\d+) days ago)";
         private static readonly string _writtenAgoWithoutAgoDateWithQuantifierPattern = "(?:(\\d+) years|(\\d+) months|(\\d+) weeks|(\\d+) days)";
-        private static readonly string _writtenLastDateWithQuantifierPattern = "(?:last (\\d+) years|last (\\d+) months|last (\\d+) weeks|last (\\d+) days)";
+        private static readonly string _writtenPreviousDateWithQuantifierPattern = "(?:previous (\\d+) years|previous (\\d+) months|previous (\\d+) weeks|previous (\\d+) days)";
         private static readonly string _writtenCombinableDatePattern = $"(?(^{_writtenAgoWithoutAgoDateWithQuantifierPattern})(^{_writtenAgoWithoutAgoDateWithQuantifierPattern})(?: and ({_writtenAgoWithoutAgoDateWithQuantifierPattern}))* ({_writtenAgoDateWithQuantifierPattern})$|^({_writtenAgoDateWithQuantifierPattern}$))";
         private static readonly Regex _digitalYearAndMonthAndDayRegex = new Regex(_digitalYearAndMonthAndDayPattern);
-        private static readonly Regex _writtenLastDateWithQuantifierRegex = new Regex(_writtenLastDateWithQuantifierPattern);
+        private static readonly Regex _writtenPreviousDateWithQuantifierRegex = new Regex(_writtenPreviousDateWithQuantifierPattern);
         private static readonly Regex _writtenDateWithoutQuantifierRegex = new Regex(_writtenDateWithoutQuantifierPattern);
         private static readonly Regex _writtenCombinableDateRegex = new Regex(_writtenCombinableDatePattern);
 
@@ -324,11 +324,69 @@ namespace ReplayParser.ReplaySorter.Filtering
                         return null;
                 }
             }
-            else if (_writtenLastDateWithQuantifierRegex.IsMatch(dateExpression))
+            else if (_writtenPreviousDateWithQuantifierRegex.IsMatch(dateExpression))
             {
-                // x years ago | x months ago | ... are also time ranges
-                // interpretation is very simple. Similar to today, yesterday, 2 days ago, 3 days ago; it's this week, last week, 2 weeks ago,... So these units just refer to those time spans.
-                throw new NotImplementedException();
+                //  the "previous 2 weeks" refers to the past 2 weeks counting back from the start of this week
+                var match = _writtenPreviousDateWithQuantifierRegex.Match(dateExpression);
+                if (match.Groups.Count != 2)
+                    return null;
+
+                int timeNumber;
+                if (!int.TryParse(match.Groups[1].Value, out timeNumber))
+                    return null;
+
+                var timeUnit = dateExpression.Substring(match.Groups[1].Index + match.Groups[1].Length).Trim(' ');
+                int[][] dates = new int[2][];
+                // year, month, day
+                dates[0] = new int[3];
+                dates[1] = new int[3];
+                
+                switch (timeUnit)
+                {
+                    case "years":
+                        dates[0][0] = DateTime.Now.Year - timeNumber;
+                        dates[0][1] = 1;
+                        dates[0][2] = 1;
+                        dates[1][0] = DateTime.Now.Year - 1;
+                        dates[1][1] = 12;
+                        dates[1][2] = 31;
+                        // dates =  new DateTime?[2] { new DateTime(DateTime.Now.Year - timeNumber, 1, 1), new DateTime(DateTime.Now.Year, 1, 1)};
+                        break;
+                    case "months":
+                        dates[0][0] = timeNumber >= DateTime.Now.Month ? DateTime.Now.Year - Math.Max(1, (timeNumber / 12)) : DateTime.Now.Year;
+                        dates[0][1] = DateTime.Now.Month - timeNumber <= 0 ? 12 - ((timeNumber % 12) - DateTime.Now.Month) : DateTime.Now.Month - timeNumber;
+                        dates[0][2] = 1;
+                        dates[1][0] = DateTime.Now.Month == 1 ? DateTime.Now.Year - 1 : DateTime.Now.Year;
+                        dates[1][1] = DateTime.Now.Month == 1 ? 12 : DateTime.Now.Month - 1;
+                        dates[1][2] = 31;
+                        break;
+                    case "weeks":
+                        //TODO timenumber can cause it to span multiple years, so you need to take this into account...
+                        // dates[0][0] =  
+                        // dates[0][1] = 
+                        // dates[0][2] = 
+                        // dates[1][0] = 
+                        // dates[1][1] = 
+                        // dates[1][2] = 
+                        break;
+                    case "days":
+                        //TODO timenumber can cause it to span multiple years, so you need to take this into account...
+                        // dates[0][0] =  
+                        // dates[0][1] = 
+                        // dates[0][2] = 
+                        // dates[1][0] = 
+                        // dates[1][1] = 
+                        // dates[1][2] = 
+                        break;
+                    default:
+                        return null;
+                }
+
+                for (int i = 0; i < 2; i++)
+                {
+                    if (!EnsureValidDate(dates[i]))
+                        return null;
+                }
             }
             else
             {
@@ -351,6 +409,7 @@ namespace ReplayParser.ReplaySorter.Filtering
             }
             else if (_writtenCombinableDateRegex.IsMatch(dateValue))
             {
+                // interpretation is very simple. Similar to today, yesterday, 2 days ago, 3 days ago; it's this week, last week, 2 weeks ago,... So these units just refer to those time spans.
 
             }
             else
