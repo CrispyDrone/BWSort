@@ -39,12 +39,13 @@
                     <MenuItem x:Name="setReplayDirectoryMenuItem" Header="Select directory" Click="setReplayDirectoryMenuItem_Click"></MenuItem>
                     <MenuItem x:Name="replayIncludeSubDirectoriesMenuItem" Header="Include subdirectories" IsCheckable="True" IsChecked="{Binding ElementName=includeSubdirectoriesCheckbox, Path=IsChecked, Mode=TwoWay}"></MenuItem>
                 </MenuItem>
-                <MenuItem Header="Output directory...">
+                <MenuItem Header="Sorting output directory...">
                     <MenuItem x:Name="setSortOutputDirectoryMenuItem" Header="Select directory" Click="setSortOutputDirectoryMenuItem_Click"></MenuItem>
                     <MenuItem Header="Always write to new folder" IsCheckable="True"></MenuItem>
                 </MenuItem>
                 <MenuItem x:Name="moveBadReplaysDirectoryMenuItem" Header="Set bad replay directory..." Click="moveBadReplaysDirectoryMenuItem_Click"></MenuItem>
-                <MenuItem Header="Advanced Settings" IsEnabled="False"></MenuItem>
+                <MenuItem x:Name="setLoggingDirectoryMenuItem" Header="Set log directory" Click="SetLoggingDirectoryMenuItem_Click"></MenuItem>
+                <MenuItem Header="Advanced Settings"></MenuItem>
             </MenuItem>
             <MenuItem IsEnabled="false" Header="Help"></MenuItem>
         </Menu>

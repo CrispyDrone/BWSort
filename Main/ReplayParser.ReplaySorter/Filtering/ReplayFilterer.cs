@@ -23,11 +23,11 @@ namespace ReplayParser.ReplaySorter.Filtering
         private const int PLAYERCODE = 4;
         private const int DATECODE = 5;
 
-        private static readonly Regex MAPFILTERLABEL = new Regex("m:");
-        private static readonly Regex DURATIONFILTERLABEL = new Regex("du:");
-        private static readonly Regex MATCHUPFILTERLABEL = new Regex("mu:");
-        private static readonly Regex PLAYERFILTERLABEL = new Regex("p:");
-        private static readonly Regex DATEFILTERLABEL = new Regex("d:");
+        private static readonly Regex MAPFILTERLABEL = new Regex("m:", RegexOptions.IgnoreCase);
+        private static readonly Regex DURATIONFILTERLABEL = new Regex("du:", RegexOptions.IgnoreCase);
+        private static readonly Regex MATCHUPFILTERLABEL = new Regex("mu:", RegexOptions.IgnoreCase);
+        private static readonly Regex PLAYERFILTERLABEL = new Regex("p:", RegexOptions.IgnoreCase);
+        private static readonly Regex DATEFILTERLABEL = new Regex("d:", RegexOptions.IgnoreCase);
 
         private readonly Dictionary<Regex, int> _labelToCodeMap = new Dictionary<Regex, int>()
         {
@@ -186,10 +186,10 @@ namespace ReplayParser.ReplaySorter.Filtering
         private static readonly string _writtenPreviousDateWithQuantifierPattern = "(?:previous\\s+(?:(\\d+)\\s+(years|months|weeks|days)))";
         private static readonly string _writtenCombinableDatePattern = $"(?(^{_writtenAgoWithoutAgoDateWithQuantifierPattern}(?!\\s+ago))(?:(?<FirstWithoutAgo>^{_writtenAgoWithoutAgoDateWithQuantifierPattern})(?: and (?<VariableWithoutAgo>{_writtenAgoWithoutAgoDateWithQuantifierPattern}))* and {_writtenAgoDateWithQuantifierPattern}$)|(?:^{_writtenAgoDateWithQuantifierPattern}$))";
         private static readonly Regex _digitalYearAndMonthAndDayRegex = new Regex(_digitalYearAndMonthAndDayPattern);
-        private static readonly Regex _writtenPreviousDateWithQuantifierRegex = new Regex(_writtenPreviousDateWithQuantifierPattern);
+        private static readonly Regex _writtenPreviousDateWithQuantifierRegex = new Regex(_writtenPreviousDateWithQuantifierPattern, RegexOptions.IgnoreCase);
         private static readonly Regex _writtenDateWithoutQuantifierRegex = new Regex(_writtenDateWithoutQuantifierPattern, RegexOptions.IgnoreCase);
-        private static readonly Regex _writtenAgoDateWithQuantifierRegex = new Regex($"^{_writtenAgoDateWithQuantifierPattern}$");
-        private static readonly Regex _writtenCombinableDateRegex = new Regex(_writtenCombinableDatePattern);
+        private static readonly Regex _writtenAgoDateWithQuantifierRegex = new Regex($"^{_writtenAgoDateWithQuantifierPattern}$", RegexOptions.IgnoreCase);
+        private static readonly Regex _writtenCombinableDateRegex = new Regex(_writtenCombinableDatePattern, RegexOptions.IgnoreCase);
 
         private Func<File<IReplay>, bool> ParseDateFilter(string dateExpressionString)
         {
@@ -975,8 +975,8 @@ namespace ReplayParser.ReplaySorter.Filtering
         private static readonly Regex _lessThanGreaterThanOperatorsRegex = new Regex(_lessThanGreaterThanOperatorsPattern);
         private static readonly Regex _digitalMinutesSecondsRegex = new Regex(_digitalMinutesSecondsPattern);
         private static readonly Regex _digitalHoursMinutesSecondsRegex = new Regex(_digitalHoursMinutesSecondsPattern);
-        private static readonly Regex _writtenHoursMinutesSecondsRegex = new Regex(_writtenHoursMinutesSecondsPattern);
-        private static readonly Regex _timeRangeRegex = new Regex(_timeRangePattern);
+        private static readonly Regex _writtenHoursMinutesSecondsRegex = new Regex(_writtenHoursMinutesSecondsPattern, RegexOptions.IgnoreCase);
+        private static readonly Regex _timeRangeRegex = new Regex(_timeRangePattern, RegexOptions.IgnoreCase);
 
         private Func<File<IReplay>, bool> ParseDurationFilter(string durationExpressionString)
         {

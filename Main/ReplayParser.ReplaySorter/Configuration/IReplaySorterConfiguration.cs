@@ -14,5 +14,6 @@ namespace ReplayParser.ReplaySorter.Configuration
         string Version { get; }
         Regex VersionRegex { get; }
         string LogDirectory { get; }
+        int MaxUndoLevel { get; }
     }
 }

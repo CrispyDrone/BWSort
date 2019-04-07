@@ -159,7 +159,7 @@ namespace ReplayParser.ReplaySorter
                         {
                             ReplayHandler.RemoveBadReplay(BadReplaysOutputDirectory.Directory + @"\BadReplays", replay);
                         }
-                        ReplayHandler.LogBadReplays(ReplaysThrowingExceptions, replaySorterConfiguration.LogDirectory, $"{DateTime.Now} - Error while parsing replay: {0}");
+                        ReplayHandler.LogBadReplays(ReplaysThrowingExceptions, replaySorterConfiguration.LogDirectory, $"{DateTime.Now} - Error while parsing replay: {{0}}");
                         
                     }
                 }
@@ -261,7 +261,7 @@ namespace ReplayParser.ReplaySorter
                         // use SortCriteriaParameters
                         sorter.ExecuteSort(CriteriaParameters.SortCriteriaParameters, (bool)KeepOriginalReplayNames.Yes, replaysThrowingExceptions);
                         Console.WriteLine("Sort finished.");
-                        ReplayHandler.LogBadReplays(replaysThrowingExceptions, replaySorterConfiguration.LogDirectory, $"{DateTime.Now} - Error while sorting replay: {0} using arguments: {sorter.ToString()}");
+                        ReplayHandler.LogBadReplays(replaysThrowingExceptions, replaySorterConfiguration.LogDirectory, $"{DateTime.Now} - Error while sorting replay: {{0}} using arguments: {sorter.ToString()}");
                     }
                     catch (Exception ex)
                     {

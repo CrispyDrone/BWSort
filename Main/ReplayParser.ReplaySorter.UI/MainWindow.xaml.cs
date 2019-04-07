@@ -18,6 +18,7 @@ using ReplayParser.ReplaySorter.IO;
 using System.Net.Http;
 using System.Windows.Data;
 using ReplayParser.ReplaySorter.Filtering;
+using System.Configuration;
 
 namespace ReplayParser.ReplaySorter.UI
 {
@@ -200,7 +201,7 @@ namespace ReplayParser.ReplaySorter.UI
             ListReplays = parsedReplays;
             sw.Stop();
             ErrorMessage = string.Empty;
-            ReplayHandler.LogBadReplays(ReplaysThrowingExceptions, _replaySorterConfiguration.LogDirectory, $"{DateTime.Now} - Error while parsing replay: {0}");
+            ReplayHandler.LogBadReplays(ReplaysThrowingExceptions, _replaySorterConfiguration.LogDirectory, $"{DateTime.Now} - Error while parsing replay: {{0}}");
             if (MoveBadReplays == true)
             {
                 MovingBadReplays = true;
@@ -736,7 +737,7 @@ namespace ReplayParser.ReplaySorter.UI
             {
                 SortingReplays = true;
                 e.Result = sorter.ExecuteSortAsync(KeepOriginalReplayNames, worker_ReplaySorter, ReplaysThrowingExceptions);
-                ReplayHandler.LogBadReplays(ReplaysThrowingExceptions, _replaySorterConfiguration.LogDirectory, $"{DateTime.Now} - Error while sorting replay: {0} with arguments {sorter.ToString()}");
+                ReplayHandler.LogBadReplays(ReplaysThrowingExceptions, _replaySorterConfiguration.LogDirectory, $"{DateTime.Now} - Error while sorting replay: {{0}} with arguments {sorter.ToString()}");
 
                 if (worker_ReplaySorter.CancellationPending == true)
                 {
@@ -1038,7 +1039,7 @@ namespace ReplayParser.ReplaySorter.UI
                 response = replayRenamer.RenameToDirectoryAsync(sender as BackgroundWorker);
             }
 
-            ReplayHandler.LogBadReplays(ReplaysThrowingExceptions, _replaySorterConfiguration.LogDirectory, $"{DateTime.Now} - Error while renaming replay: {0} using arguments: {replayRenamer.ToString()}");
+            ReplayHandler.LogBadReplays(ReplaysThrowingExceptions, _replaySorterConfiguration.LogDirectory, $"{DateTime.Now} - Error while renaming replay: {{0}} using arguments: {replayRenamer.ToString()}");
             e.Result = response;
         }
 
@@ -1309,6 +1310,17 @@ namespace ReplayParser.ReplaySorter.UI
         }
 
         #endregion
+
+        private void SetLoggingDirectoryMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            var folderDialog = new CommonOpenFileDialog();
+            folderDialog.IsFolderPicker = true;
+            if (folderDialog.ShowDialog() == CommonFileDialogResult.Ok)
+            {
+                //TODO error handling? sanitizing?
+                ConfigurationManager.AppSettings["LogDirectory"] = folderDialog.FileName;
+            }
+        }
     }
 }
 

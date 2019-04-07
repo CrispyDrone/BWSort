@@ -85,6 +85,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
@@ -184,7 +185,9 @@
   <ItemGroup>
     <Resource Include="images\crown.png" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Windows\" />
+  </ItemGroup>
   <ItemGroup>
     <Resource Include="images\races\protoss.png" />
     <Resource Include="images\races\terran.png" />
