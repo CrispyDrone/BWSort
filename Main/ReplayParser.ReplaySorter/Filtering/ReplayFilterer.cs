@@ -597,95 +597,100 @@ namespace ReplayParser.ReplaySorter.Filtering
             Expression<Func<File<IReplay>, bool>> filterExpression = null;
             //TODO i don't think it's necessary to name your parameters...
             var replay = Expression.Parameter(typeof(File<IReplay>), "r");
-            var player = Expression.Parameter(typeof(IPlayer), "p");
-            var playerName = Expression.PropertyOrField(player, "Name");
-
-            //TODO make playername regex based
-            // var body = Expression.IsTrue(
-            //     Expression.Call(
-            //         Expression.Constant(mapRegex),
-            //         typeof(Regex).GetMethod("IsMatch", new Type[] { typeof(string)}),
-            //         mapNameExpression
-            //     )
-            // );
+            Expression body = null;
+            var replayContent = Expression.PropertyOrField(replay, "Content");
+            Expression replayPlayers = Expression.PropertyOrField(replayContent, "Players");
+            Expression replayWinners = Expression.PropertyOrField(replayContent, "Winners");
+            MethodInfo any = GetExtensionMethod(typeof(Enumerable).Assembly, "Any", typeof(IEnumerable<>)).MakeGenericMethod(new Type[] { typeof(IPlayer) });
+            MethodInfo asQueryable = GetExtensionMethod(typeof(Enumerable).Assembly, "AsQueryable", typeof(IEnumerable<>)).MakeGenericMethod(new Type[] { typeof(IPlayer) });
+            MethodInfo isMatch = typeof(Regex).GetMethod("IsMatch", new Type[] { typeof(string) });
 
             foreach (var replayExpression in replayExpressions)
             {
                 // playername, isWinner, race
-                var playerProperties = ParsePlayerProperties(replayExpression);
-                if (playerProperties == null)
+                var playersProperties = ParsePlayerProperties(replayExpression);
+                if (playersProperties == null)
                     return null;
 
-                Expression body = null;
-                var replayContent = Expression.PropertyOrField(replay, "Content");
-                Expression replayPlayers = Expression.PropertyOrField(replayContent, "Players");
-                Expression requestedPlayerName = Expression.Constant(new Regex(playerProperties.Item1, RegexOptions.IgnoreCase), typeof(Regex));
-
-                // iswinner
-                if (playerProperties.Item2.HasValue)
+                // List<IReplay> replaysList = new List<IReplay>();
+                // List<string> requestePlayers = new List<string>();
+                // replaysList.Where(r => requestedPlayers.All(pn => r.Players.Any(p => p.Name == pn.Name)));
+                // replaysList.Where(r => r.Players.Intersect(requestePlayers).Count() == requestePlayers.Count());
+                // FOR NOW ==> replaysList.Where(r => r.Players.Any(p => p.Name == "") && r.Players.Any(p1 => p1.Name == "")); <== FOR NOW
+                // replaysList.Where(r => r.Players.Any(p => p.Name == "") && r.Players.Any(p => p.Name == ""));
+                foreach (var playerProperties in playersProperties)
                 {
-                    Expression replayWinners = Expression.PropertyOrField(replayContent, "Winners");
-                    // replays.where(r => r.winners.contains(p => p.Name == "name"))
-                    body = Expression.IsTrue(
-                        Expression.Call(
-                            GetExtensionMethod(typeof(Enumerable).Assembly, "Any", typeof(IEnumerable<>)).MakeGenericMethod(new Type[] { typeof(IPlayer) }),
-                            Expression.Call(
-                               GetExtensionMethod(typeof(Enumerable).Assembly, "AsQueryable", typeof(IEnumerable<>)).MakeGenericMethod(new Type[] { typeof(IPlayer) }),
-                               replayWinners
-                            ),
-                            Expression.Lambda<Func<IPlayer, bool>>(
-                                Expression.IsTrue(
-                                    Expression.Call(
-                                        requestedPlayerName,
-                                        typeof(Regex).GetMethod("IsMatch", new Type[] { typeof(string) }),
-                                        playerName
-                                    )
-                                ),
-                                player
-                            )
-                        )
-                    );
-                }
-                else
-                {
-                    // replays.where(r => r.players.any(p => p.Name == "name"))
-                    body = Expression.IsTrue(
-                        Expression.Call(
-                            GetExtensionMethod(typeof(Enumerable).Assembly, "Any", typeof(IEnumerable<>)).MakeGenericMethod(new Type[] { typeof(IPlayer) }),
-                            Expression.Call(
-                                GetExtensionMethod(typeof(Enumerable).Assembly, "AsQueryable", typeof(IEnumerable<>)).MakeGenericMethod(new Type[] { typeof(IPlayer) }),
-                                replayPlayers
-                            ),
-                            Expression.Lambda<Func<IPlayer, bool>>(
-                                Expression.IsTrue(
-                                    Expression.Call(
-                                        requestedPlayerName,
-                                        typeof(Regex).GetMethod("IsMatch", new Type[] { typeof(string) }),
-                                        playerName
-                                    )
-                                ),
-                                player
-                            )
-                        )
-                    );
-                }
-
-                // race
-                if (playerProperties.Item3.HasValue)
-                {
-                    var requestedRaceValue = ToRaceType(playerProperties.Item3.Value);
-                    if (!requestedRaceValue.HasValue)
-                        return null;
-
-                    Expression requestedRace = Expression.Constant(requestedRaceValue.Value, typeof(ReplayParser.Entities.RaceType));
+                    var player = Expression.Parameter(typeof(IPlayer), "p");
+                    var playerName = Expression.PropertyOrField(player, "Name");
                     Expression playerRace = Expression.PropertyOrField(player, "RaceType");
-                    // replays.where(r => r.players.any(p => p.Name && p.RaceType == "race"))
-                    Expression raceExpression = Expression.Equal(
-                        playerRace,
-                        requestedRace
-                    );
+                    Expression requestedPlayerName = Expression.Constant(new Regex(playerProperties.Item1, RegexOptions.IgnoreCase), typeof(Regex));
 
-                    body = new AddAdditionalAndAlsoToMethodCallModifier(raceExpression, "Any").Modify(body);
+                    // iswinner
+                    if (playerProperties.Item2.HasValue)
+                    {
+                        // replays.where(r => r.winners.Any(p => p.Name == "name"))
+                        body = Expression.IsTrue(
+                            Expression.Call(
+                                any,
+                                Expression.Call(
+                                    asQueryable,
+                                    replayWinners
+                                ),
+                                Expression.Lambda<Func<IPlayer, bool>>(
+                                    Expression.IsTrue(
+                                        Expression.Call(
+                                            requestedPlayerName,
+                                            isMatch,
+                                            playerName
+                                        )
+                                    ),
+                                    player
+                                )
+                            )
+                        );
+                    }
+                    else
+                    {
+                        // replays.where(r => r.players.Any(p => p.Name == "name"))
+                        body = Expression.IsTrue(
+                            Expression.Call(
+                                any,
+                                Expression.Call(
+                                    asQueryable,
+                                    replayPlayers
+                                ),
+                                Expression.Lambda<Func<IPlayer, bool>>(
+                                    Expression.IsTrue(
+                                        Expression.Call(
+                                            requestedPlayerName,
+                                            isMatch,
+                                            playerName
+                                        )
+                                    ),
+                                    player
+                                )
+                            )
+                        );
+                    }
+
+                    // race
+                    if (playerProperties.Item3.HasValue)
+                    {
+                        var requestedRaceValue = ToRaceType(playerProperties.Item3.Value);
+                        if (!requestedRaceValue.HasValue)
+                            return null;
+
+                        Expression requestedRace = Expression.Constant(requestedRaceValue.Value, typeof(ReplayParser.Entities.RaceType));
+                        // replays.where(r => r.players.Any(p => p.Name && p.RaceType == "race"))
+                        Expression raceExpression = Expression.Equal(
+                            playerRace,
+                            requestedRace
+                        );
+
+                        body = new AddAdditionalAndAlsoToMethodCallModifier(raceExpression, "Any").Modify(body);
+                    }
+
+                    filterExpression = CreateOrAddAndExpression(filterExpression, body, replay);
                 }
 
                 filterExpression = CreateOrAddOrExpression(filterExpression, body, replay);
@@ -725,47 +730,57 @@ namespace ReplayParser.ReplaySorter.Filtering
         private static readonly Regex _raceRegex = new Regex(_racePattern, RegexOptions.IgnoreCase);
         private static readonly Regex _playerPropertyRegex = new Regex(_playerPropertyPattern, RegexOptions.IgnoreCase);
 
-        private Tuple<string, bool?, RaceType?> ParsePlayerProperties(string playerExpression)
+        private Tuple<string, bool?, RaceType?>[] ParsePlayerProperties(string playerExpressionString)
         {
-            if (!_playerPropertyRegex.IsMatch(playerExpression))
+            if (string.IsNullOrWhiteSpace(playerExpressionString))
                 return null;
 
-            var match = _playerPropertyRegex.Match(playerExpression);
+            var playerExpressions = playerExpressionString.Split(',').Select(p => p.Trim(' ')).ToArray();
+            Tuple<string, bool?, RaceType?>[] playerProperties = new Tuple<string, bool?, RaceType?>[playerExpressions.Length];
 
-            Tuple<string, bool?, RaceType?> properties = null;
-            string playerName = match.Groups[1].Value;
-            bool? isWinner = null;
-            RaceType? race = null;
-
-            for (int i = 2; i < match.Groups.Count; i++)
+            for (int i = 0; i < playerExpressions.Count(); i++)
             {
-                if (string.IsNullOrWhiteSpace(match.Groups[i].Value))
-                    continue;
+                if (!_playerPropertyRegex.IsMatch(playerExpressions[i]))
+                    return null;
 
-                if (isWinner == null && _isWinnerRegex.IsMatch(match.Groups[i].Value))
-                {
-                    var winnerMatch = _isWinnerRegex.Match(match.Groups[i].Value);
-                    isWinner = string.IsNullOrWhiteSpace(winnerMatch.Groups[1].Value) ? true : bool.Parse(winnerMatch.Groups[i].Value);
-                }
+                var match = _playerPropertyRegex.Match(playerExpressions[i]);
 
-                if (race == null && _raceRegex.IsMatch(match.Groups[i].Value))
+                string playerName = match.Groups[1].Value;
+                bool? isWinner = null;
+                RaceType? race = null;
+
+                for (int j = 2; j < match.Groups.Count; j++)
                 {
-                    var raceMatch = _raceRegex.Match(match.Groups[i].Value);
-                    var raceString = raceMatch.Groups[1].Value;
-                    RaceType raceValue;
-                    if (raceString.Length == 1)
+                    if (string.IsNullOrWhiteSpace(match.Groups[j].Value))
+                        continue;
+
+                    if (isWinner == null && _isWinnerRegex.IsMatch(match.Groups[j].Value))
                     {
-                        raceString = ToLongRaceForm(raceString);
+                        var winnerMatch = _isWinnerRegex.Match(match.Groups[j].Value);
+                        isWinner = string.IsNullOrWhiteSpace(winnerMatch.Groups[j].Value) ? true : bool.Parse(winnerMatch.Groups[j].Value);
                     }
 
-                    if (!Enum.TryParse(raceString, true, out raceValue))
+                    if (race == null && _raceRegex.IsMatch(match.Groups[j].Value))
                     {
-                        return null;
+                        var raceMatch = _raceRegex.Match(match.Groups[j].Value);
+                        var raceString = raceMatch.Groups[1].Value;
+                        RaceType raceValue;
+                        if (raceString.Length == 1)
+                        {
+                            raceString = ToLongRaceForm(raceString);
+                        }
+
+                        if (!Enum.TryParse(raceString, true, out raceValue))
+                        {
+                            return null;
+                        }
+                        race = raceValue;
                     }
-                    race = raceValue;
                 }
+                playerProperties[i] = new Tuple<string, bool?, RaceType?>(playerName, isWinner, race);
             }
-            return new Tuple<string, bool?, RaceType?>(playerName, isWinner, race);
+
+            return playerProperties;
         }
 
         private string ToLongRaceForm(string singleLetterRace)
@@ -1201,6 +1216,22 @@ namespace ReplayParser.ReplaySorter.Filtering
                 newParameters
             );
             // return Expression.Lambda<Func<T1, T2>>(Expression.Or(expression, Expression.Lambda<Func<T1, T2>>(body, parameters)));
+        }
+
+        private Expression<Func<T1, T2>> CreateOrAddAndExpression<T1, T2>(Expression<Func<T1, T2>> expression, Expression body, params ParameterExpression[] parameters)
+        {
+            if (expression == null)
+                return Expression.Lambda<Func<T1, T2>>(body, parameters);
+
+            var newParameters = expression.Parameters.ToList().Union(parameters);
+
+            return expression.Update(
+                Expression.AndAlso(
+                    expression.Body,
+                    body
+                ),
+                newParameters
+            );
         }
 
         private class RaceEqWithWildCardComparer : IEqualityComparer<int[]>
