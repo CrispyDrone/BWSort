@@ -8,13 +8,15 @@ using System.Threading.Tasks;
 
 namespace ReplayParser.ReplaySorter.Filtering
 {
-    public class AddAdditionalAndAlsoToWhereMethodCallModifier : ExpressionVisitor
+    public class AddAdditionalAndAlsoToMethodCallModifier : ExpressionVisitor
     {
         private Expression _additionalExpression;
+        private string _methodName;
 
-        public AddAdditionalAndAlsoToWhereMethodCallModifier(Expression additionalExpression)
+        public AddAdditionalAndAlsoToMethodCallModifier(Expression additionalExpression, string methodName)
         {
             _additionalExpression = additionalExpression;
+            _methodName = methodName;
         }
 
         public Expression Modify(Expression expression)
@@ -24,10 +26,7 @@ namespace ReplayParser.ReplaySorter.Filtering
 
         protected override Expression VisitMethodCall(MethodCallExpression methodCallExpression)
         {
-            if (methodCallExpression.NodeType != ExpressionType.Call)
-                throw new Exception();
-
-            if (methodCallExpression.Method.Name != "Where")
+            if (methodCallExpression.Method.Name != _methodName)
                 return base.VisitMethodCall(methodCallExpression);
 
             var lambdaExpressions = methodCallExpression.Arguments.Where(a => a.NodeType == ExpressionType.Lambda && (a as LambdaExpression).Type == typeof(Func<IPlayer, bool>));

@@ -45,7 +45,7 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
                 //    Races[index] = aWinner.RaceType.ToString().First().ToString();
                 //    index++;
                 //}
-                var winnerTeam = Replay.Winner;
+                var winnerTeam = Replay.Winners;
 
                 if (winnerTeam == null || winnerTeam.Count() == 0)
                 {

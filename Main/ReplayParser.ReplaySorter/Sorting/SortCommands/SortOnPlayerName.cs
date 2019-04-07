@@ -117,7 +117,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                 {
                     try
                     {
-                        foreach (var player in replay.Content.Winner)
+                        foreach (var player in replay.Content.Winners)
                         {
                             var PlayerName = player.Name;
 
@@ -141,11 +141,11 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                 {
                     try
                     {
-                        if (replay.Content.Winner.Count() != 0)
+                        if (replay.Content.Winners.Count() != 0)
                         {
                             foreach (var aPlayer in ParsePlayers)
                             {
-                                if (!replay.Content.Winner.Contains(aPlayer))
+                                if (!replay.Content.Winners.Contains(aPlayer))
                                 {
                                     var PlayerName = aPlayer.Name;
 
@@ -225,7 +225,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                         {
                             try
                             {
-                                if (replay.Content.Winner.Contains(aplayer))
+                                if (replay.Content.Winners.Contains(aplayer))
                                 {
                                     players.Add(aplayer.Name);
                                 }
@@ -251,7 +251,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                         {
                             try
                             {
-                                if (!replay.Content.Winner.Contains(aplayer))
+                                if (!replay.Content.Winners.Contains(aplayer))
                                 {
                                     players.Add(aplayer.Name);
                                 }
@@ -396,7 +396,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                 {
                     try
                     {
-                        foreach (var player in replay.Content.Winner)
+                        foreach (var player in replay.Content.Winners)
                         {
                             var PlayerName = player.Name;
                             if (IsNested == true && player == ParsePlayers.Last())
@@ -419,11 +419,11 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                 {
                     try
                     {
-                        if (replay.Content.Winner.Count() != 0)
+                        if (replay.Content.Winners.Count() != 0)
                         {
                             foreach (var aPlayer in ParsePlayers)
                             {
-                                if (!replay.Content.Winner.Contains(aPlayer))
+                                if (!replay.Content.Winners.Contains(aPlayer))
                                 {
                                     var PlayerName = aPlayer.Name;
                                     if (IsNested == true && aPlayer == ParsePlayers.Last())

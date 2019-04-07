@@ -47,7 +47,7 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
                 //    Races[index] = aLoser.RaceType.ToString().First().ToString();
                 //    index++;
                 //}
-                var winner = Replay.Winner;
+                var winner = Replay.Winners;
                 List<IPlayer> loserTeam;
                 if (winner != null && winner.Count() != 0)
                 {

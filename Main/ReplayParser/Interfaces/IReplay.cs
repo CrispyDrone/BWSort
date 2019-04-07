@@ -16,7 +16,7 @@ namespace ReplayParser.Interfaces
         String GameName { get; }
         IEnumerable<IPlayer> Players { get; }
         DateTime Timestamp { get; }
-        IEnumerable<IPlayer> Winner { get; }
+        IEnumerable<IPlayer> Winners { get; }
         IReplayMap ReplayMap { get; } 
 
         IEnumerable<IPlayer> Observers { get; }

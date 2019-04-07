@@ -59,7 +59,7 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
                 //    index++;
                 //}
 
-                var winner = Replay.Winner;
+                var winner = Replay.Winners;
                 List<IPlayer> loserTeam;
                 if (winner != null && winner.Count() != 0)
                 {

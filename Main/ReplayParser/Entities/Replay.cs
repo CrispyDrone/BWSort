@@ -40,7 +40,7 @@ namespace ReplayParser.Entities
 
         private IEnumerable<IPlayer> winner = new List<IPlayer>();
         private bool winnerChecked;
-        public IEnumerable<IPlayer> Winner
+        public IEnumerable<IPlayer> Winners
         {
             get
             {

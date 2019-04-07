@@ -21,7 +21,7 @@ namespace ReplayParser.ReplaySorter.UI.Converters
             if (file == null)
                 return Visibility.Hidden;
 
-            if (file.Content.Winner.Contains(player))
+            if (file.Content.Winners.Contains(player))
                 return Visibility.Visible;
 
             return Visibility.Hidden;

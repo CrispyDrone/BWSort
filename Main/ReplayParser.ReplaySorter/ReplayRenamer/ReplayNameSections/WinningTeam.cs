@@ -57,7 +57,7 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
                 //    index++;
                 //}
 
-                var winnerTeam = Replay.Winner;
+                var winnerTeam = Replay.Winners;
                 if (winnerTeam == null || winnerTeam.Count() == 0)
                 {
                     throw new NullReferenceException();
