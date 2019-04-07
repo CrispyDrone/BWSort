@@ -136,10 +136,12 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
             // not implemented yet
             return DirectoryFileReplay;
         }
+
         private IDictionary<RaceType, int> EncodeRacesFrequency(string raceCombination)
         {
             IDictionary<RaceType, int> EncodedRacesFrequency = new Dictionary<RaceType, int>();
 
+            //TODO what about random??
             foreach (var Race in Enum.GetNames(typeof(RaceType)))
             {
                 int RaceFrequency = raceCombination.Select((r, i) => r == Race.First() ? i : -1).Where(i => i != -1).Count();

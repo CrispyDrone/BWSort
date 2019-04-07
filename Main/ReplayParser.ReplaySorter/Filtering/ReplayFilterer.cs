@@ -1,10 +1,14 @@
 ﻿using ReplayParser.Interfaces;
 using ReplayParser.ReplaySorter.IO;
 using ReplayParser.ReplaySorter.ReplayRenamer;
+using ReplayParser.ReplaySorter.Sorting;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -173,16 +177,18 @@ namespace ReplayParser.ReplaySorter.Filtering
             return filteredList.ToList();
         }
 
+        //TODO your regexes should not contain optional spaces at start or end (will give better performance i think...), you should instead trim the user input...
         private const string _dateSeparator = "[-\\.\\/]";
         private static readonly string _digitalYearAndMonthAndDayPattern = $"(\\d{{2,4}})(?:{_dateSeparator}(\\d{{1,2}}))?(?:{_dateSeparator}(\\d{{1,2}}))?";
-        private static readonly string _writtenDateWithoutQuantifierPattern = "^(this year|last year|this month|last month|this week|last week|today|yesterday)$";
-        private static readonly string _writtenAgoDateWithQuantifierPattern = "(?:(\\d+) years ago|(\\d+) months ago|(\\d+) weeks ago|(\\d+) days ago)";
-        private static readonly string _writtenAgoWithoutAgoDateWithQuantifierPattern = "(?:(\\d+) years|(\\d+) months|(\\d+) weeks|(\\d+) days)";
-        private static readonly string _writtenPreviousDateWithQuantifierPattern = "(?:previous (\\d+) years|previous (\\d+) months|previous (\\d+) weeks|previous (\\d+) days)";
-        private static readonly string _writtenCombinableDatePattern = $"(?(^{_writtenAgoWithoutAgoDateWithQuantifierPattern})(^{_writtenAgoWithoutAgoDateWithQuantifierPattern})(?: and ({_writtenAgoWithoutAgoDateWithQuantifierPattern}))* ({_writtenAgoDateWithQuantifierPattern})$|^({_writtenAgoDateWithQuantifierPattern}$))";
+        private static readonly string _writtenDateWithoutQuantifierPattern = "^(this year|last year|this month|last month|this week|last week|today|yesterday|january|february|march|april|may|june|july|august|september|october|november|december)$";
+        private static readonly string _writtenAgoDateWithQuantifierPattern = "(?:(?<WithAgo>(\\d+)\\s+(years|months|weeks|days))\\s+ago)";
+        private static readonly string _writtenAgoWithoutAgoDateWithQuantifierPattern = "(?:(?:(\\d+)\\s+(years|months|weeks|days)))";
+        private static readonly string _writtenPreviousDateWithQuantifierPattern = "(?:previous\\s+(?:(\\d+)\\s+(years|months|weeks|days)))";
+        private static readonly string _writtenCombinableDatePattern = $"(?(^{_writtenAgoWithoutAgoDateWithQuantifierPattern}(?!\\s+ago))(?:(?<FirstWithoutAgo>^{_writtenAgoWithoutAgoDateWithQuantifierPattern})(?: and (?<VariableWithoutAgo>{_writtenAgoWithoutAgoDateWithQuantifierPattern}))* and {_writtenAgoDateWithQuantifierPattern}$)|(?:^{_writtenAgoDateWithQuantifierPattern}$))";
         private static readonly Regex _digitalYearAndMonthAndDayRegex = new Regex(_digitalYearAndMonthAndDayPattern);
         private static readonly Regex _writtenPreviousDateWithQuantifierRegex = new Regex(_writtenPreviousDateWithQuantifierPattern);
-        private static readonly Regex _writtenDateWithoutQuantifierRegex = new Regex(_writtenDateWithoutQuantifierPattern);
+        private static readonly Regex _writtenDateWithoutQuantifierRegex = new Regex(_writtenDateWithoutQuantifierPattern, RegexOptions.IgnoreCase);
+        private static readonly Regex _writtenAgoDateWithQuantifierRegex = new Regex($"^{_writtenAgoDateWithQuantifierPattern}$");
         private static readonly Regex _writtenCombinableDateRegex = new Regex(_writtenCombinableDatePattern);
 
         private Func<File<IReplay>, bool> ParseDateFilter(string dateExpressionString)
@@ -298,85 +304,71 @@ namespace ReplayParser.ReplaySorter.Filtering
             else if (_writtenDateWithoutQuantifierRegex.IsMatch(dateExpression))
             {
                 // this year | last year | ... are also time ranges
+                var now = DateTime.Now;
                 switch (dateExpression)
                 {
                     case "this year":
-                        return new DateTime?[2] { new DateTime(DateTime.Now.Year, 1, 1), DateTime.Now };
+                        return new DateTime?[2] { ResetTimePart(ToStartOfYear(now)), ResetTimePart(now) };
                     case "last year":
-                        return new DateTime?[2] { new DateTime(DateTime.Now.Year - 1, 1, 1), new DateTime(DateTime.Now.Year, 1, 1)};
+                        return new DateTime?[2] { ResetTimePart(ToStartOfYear(now.AddYears(-1))), ResetTimePart(ToStartOfYear(now).AddDays(-1)) };
                     case "this month":
-                        return new DateTime?[2] { new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1), DateTime.Now };
+                        return new DateTime?[2] { new DateTime(now.Year, now.Month, 1), ResetTimePart(now) };
                     case "last month":
-                        return DateTime.Now.Month == 1 ? 
-                            new DateTime?[2] { new DateTime(DateTime.Now.Year - 1, 12, 1), new DateTime(DateTime.Now.Year, 1, 1)} : 
-                            new DateTime?[2] { new DateTime(DateTime.Now.Year, DateTime.Now.Month - 1, 1), new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1)};
+                        var startLastMonth = ResetTimePart(new DateTime(now.Year, now.Month, 1).AddMonths(-1));
+                        return new DateTime?[2] { startLastMonth, startLastMonth.AddDays(DateTime.DaysInMonth(startLastMonth.Year, startLastMonth.Month) - 1) };
                     case "this week":
-                        return new DateTime?[2] { new DateTime(DateTime.Now.Year, DateTime.Now.Month, GetStartOfWeek()), DateTime.Now };
+                        return new DateTime?[2] { ResetTimePart(ToStartOfWeek(now)), ResetTimePart(now) };
                     case "last week":
-                        return (GetStartOfWeek() < 0 || (DateTime.Now.DayOfYear < 8 && new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1).DayOfWeek == DayOfWeek.Monday)) ?
-                            new DateTime?[2] { new DateTime(DateTime.Now.Year - 1, 12, GetStartOfWeek() < 0 ? 31 + GetStartOfWeek() - 7 : 31 - 6), new DateTime(DateTime.Now.Year, DateTime.Now.Month, GetStartOfWeek() < 0 ? 31 + GetStartOfWeek() : 31 - 6)} : 
-                            new DateTime?[2] { new DateTime(DateTime.Now.Year, DateTime.Now.Month, GetStartOfWeek() - 7), new DateTime(DateTime.Now.Year, DateTime.Now.Month, GetStartOfWeek())};
+                        return new DateTime?[2] { ResetTimePart(ToStartOfWeek(now).AddDays(-7)), ResetTimePart(ToStartOfWeek(now).AddDays(-1)) };
                     case "today":
-                        return new DateTime?[2] { new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day), DateTime.Now };
+                        return new DateTime?[2] { ResetTimePart(now), ResetTimePart(now) };
                     case "yesterday":
-                        return new DateTime?[2] { new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day - 1), new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day)};
+                        return new DateTime?[2] { ResetTimePart(now.AddDays(-1)), ResetTimePart(DateTime.Now)};
                     default:
-                        return null;
+                        {
+                            var month = GetMonth(dateExpression);
+                            if (!month.HasValue)
+                                return null;
+
+                            var monthDate = new DateTime(DateTime.Now.Year, month.Value, 1);
+
+                            return new DateTime?[2] { monthDate, monthDate.AddMonths(1).AddDays(-1)};
+                        }
                 }
             }
             else if (_writtenPreviousDateWithQuantifierRegex.IsMatch(dateExpression))
             {
                 //  the "previous 2 weeks" refers to the past 2 weeks counting back from the start of this week
                 var match = _writtenPreviousDateWithQuantifierRegex.Match(dateExpression);
-                if (match.Groups.Count != 2)
+                if (match.Groups.Count != 3)
                     return null;
 
                 int timeNumber;
                 if (!int.TryParse(match.Groups[1].Value, out timeNumber))
                     return null;
 
-                var timeUnit = dateExpression.Substring(match.Groups[1].Index + match.Groups[1].Length).Trim(' ');
-                int[][] dates = new int[2][];
-                // year, month, day
-                dates[0] = new int[3];
-                dates[1] = new int[3];
-                
+                var timeUnit = match.Groups[2].Value;
+
+                var dates = new DateTime?[2];
+                var now = DateTime.Now;
+
                 switch (timeUnit)
                 {
                     case "years":
-                        dates[0][0] = DateTime.Now.Year - timeNumber;
-                        dates[0][1] = 1;
-                        dates[0][2] = 1;
-                        dates[1][0] = DateTime.Now.Year - 1;
-                        dates[1][1] = 12;
-                        dates[1][2] = 31;
-                        // dates =  new DateTime?[2] { new DateTime(DateTime.Now.Year - timeNumber, 1, 1), new DateTime(DateTime.Now.Year, 1, 1)};
+                        dates[0] = ResetTimePart(ToStartOfYear(now.AddYears(-timeNumber)));
+                        dates[1] = ResetTimePart(ToStartOfYear(now).AddDays(-1));
                         break;
                     case "months":
-                        dates[0][0] = timeNumber >= DateTime.Now.Month ? DateTime.Now.Year - Math.Max(1, (timeNumber / 12)) : DateTime.Now.Year;
-                        dates[0][1] = DateTime.Now.Month - timeNumber <= 0 ? 12 - ((timeNumber % 12) - DateTime.Now.Month) : DateTime.Now.Month - timeNumber;
-                        dates[0][2] = 1;
-                        dates[1][0] = DateTime.Now.Month == 1 ? DateTime.Now.Year - 1 : DateTime.Now.Year;
-                        dates[1][1] = DateTime.Now.Month == 1 ? 12 : DateTime.Now.Month - 1;
-                        dates[1][2] = 31;
+                        dates[0] = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1).AddMonths(-timeNumber);
+                        dates[1] = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1).AddDays(-1);
                         break;
                     case "weeks":
-                        //TODO timenumber can cause it to span multiple years, so you need to take this into account...
-                        // dates[0][0] =  
-                        // dates[0][1] = 
-                        // dates[0][2] = 
-                        // dates[1][0] = 
-                        // dates[1][1] = 
-                        // dates[1][2] = 
+                        dates[0] = ResetTimePart(ToStartOfWeek(now).AddDays(-timeNumber * 7));
+                        dates[1] = ResetTimePart(ToStartOfWeek(now).AddDays(-1));
                         break;
                     case "days":
-                        //TODO timenumber can cause it to span multiple years, so you need to take this into account...
-                        // dates[0][0] =  
-                        // dates[0][1] = 
-                        // dates[0][2] = 
-                        // dates[1][0] = 
-                        // dates[1][1] = 
-                        // dates[1][2] = 
+                        dates[0] = ResetTimePart(DateTime.Now.AddDays(-timeNumber));
+                        dates[1] = ResetTimePart(DateTime.Now.AddDays(-1));
                         break;
                     default:
                         return null;
@@ -387,11 +379,52 @@ namespace ReplayParser.ReplaySorter.Filtering
                     if (!EnsureValidDate(dates[i]))
                         return null;
                 }
+
+                return dates;
             }
             else
             {
                 return new DateTime?[1] { ParseDatevalue(dateExpression) };
             }
+        }
+
+        private int? GetMonth(string dateExpression)
+        {
+            dateExpression = dateExpression.ToLower();
+            switch (dateExpression)
+            {
+                case "january":
+                    return 1;
+                case "february":
+                    return 2;
+                case "march":
+                    return 3;
+                case "april":
+                    return 4;
+                case "may":
+                    return 5;
+                case "june":
+                    return 6;
+                case "july":
+                    return 7;
+                case "august":
+                    return 8;
+                case "september":
+                    return 9;
+                case "october":
+                    return 10;
+                case "november":
+                    return 11;
+                case "december":
+                    return 12;
+                default:
+                    return null;
+            }
+        }
+
+        private DateTime ToStartOfYear(DateTime dateTime)
+        {
+            return dateTime.AddDays(-(dateTime.DayOfYear - 1));
         }
 
         private DateTime? ParseDatevalue(string dateValue)
@@ -406,34 +439,135 @@ namespace ReplayParser.ReplaySorter.Filtering
             if (_digitalYearAndMonthAndDayRegex.IsMatch(dateValue))
             {
                 match = _digitalYearAndMonthAndDayRegex.Match(dateValue);
+
+                // years, months, days
+                int[] dateParts = new int[3];
+                for (int i = match.Groups.Count - 1, j = 2; i > 0; i--, j--)
+                {
+                    int.TryParse(match.Groups[i].Value, out dateParts[j]);
+                }
+
+                if (!EnsureValidDate(dateParts))
+                    return null;
+
+                return new DateTime(dateParts[0], dateParts[1], dateParts[2]);
             }
             else if (_writtenCombinableDateRegex.IsMatch(dateValue))
             {
-                // interpretation is very simple. Similar to today, yesterday, 2 days ago, 3 days ago; it's this week, last week, 2 weeks ago,... So these units just refer to those time spans.
+                if (_writtenAgoDateWithQuantifierRegex.IsMatch(dateValue))
+                {
+                    match = _writtenAgoDateWithQuantifierRegex.Match(dateValue);
 
+                    var now = ResetTimePart(DateTime.Now);
+                    var timeSpan = ParseTimeSpan(match.Groups["WithAgo"].Value, dateValue);
+                    if (!timeSpan.HasValue)
+                        return null;
+
+                    return now.Add(timeSpan.Value.Negate());
+                }
+                else
+                {
+                    // 1 week = 7 days, 1 month = 31 days, 1 year = 365 days
+                    match = _writtenCombinableDateRegex.Match(dateValue);
+                    var originalNow = ResetTimePart(DateTime.Now);
+                    var now = originalNow;
+
+                    var groups = ExtractAgoDates(match);
+                    if (groups == null)
+                        return null;
+
+                    for (int i = 0; i < groups.Count; i++)
+                    {
+                        if (string.IsNullOrWhiteSpace(groups[i].Value))
+                            continue;
+
+                        for (int j = 0; j < groups[i].Captures.Count; j++)
+                        {
+                            var timeSpan = ParseTimeSpan(groups[i].Captures[j].Value, dateValue);
+                            if (!timeSpan.HasValue)
+                                continue;
+
+                            now = now.Add(timeSpan.Value.Negate());
+                        }
+                    }
+                    return (originalNow == now) ? (DateTime?)null : now;
+                }
             }
             else
             {
                 return null;
             }
-
-            // years, months, days
-            int[] dateParts = new int[3];
-            for (int i = match.Groups.Count - 1, j = 2; i > 0; i--, j--)
-            {
-                int.TryParse(match.Groups[i].Value, out dateParts[j]);
-            }
-
-            if (!EnsureValidDate(dateParts))
-                return null;
-
-            return new DateTime(dateParts[0], dateParts[1], dateParts[2]);
         }
 
-        private int GetStartOfWeek()
+        private List<Group> ExtractAgoDates(Match match)
         {
-            var dayOfWeek = DateTime.Now.DayOfWeek;
-            return DateTime.Now.Day -((((int)dayOfWeek) + 6) % 7);
+            List<Group> groups = new List<Group>();
+            var FirstWithoutAgo = match.Groups["FirstWithoutAgo"];
+            var VariableWithoutAgo = match.Groups["VariableWithoutAgo"];
+            var WithAgo = match.Groups["WithAgo"];
+
+            if (FirstWithoutAgo == null || VariableWithoutAgo == null || WithAgo == null)
+                return null;
+
+            groups.Add(FirstWithoutAgo);
+            groups.Add(VariableWithoutAgo);
+            groups.Add(WithAgo);
+
+            return groups;
+        }
+
+        private static readonly Regex _number = new Regex(@"\d+");
+        private TimeSpan? ParseTimeSpan(string timeSpan, string dateValue)
+        {
+            if (string.IsNullOrWhiteSpace(timeSpan))
+                return null;
+
+            if (!_number.IsMatch(timeSpan))
+                return null;
+
+            var timeNumberMatch = _number.Match(timeSpan);
+            int timeNumber;
+            if (!int.TryParse(timeNumberMatch.Value, out timeNumber))
+                return null;
+
+            if (timeNumber < 0)
+                return null;
+
+            var timeUnit = timeSpan.Substring(timeNumberMatch.Index + timeNumberMatch.Length).Trim(' ');
+            switch (timeUnit)
+            {
+                case "years":
+                    return new TimeSpan(timeNumber * 365, 0, 0, 0, 0);
+                case "months":
+                    return new TimeSpan(timeNumber * 31, 0, 0, 0, 0);
+                case "weeks":
+                    return new TimeSpan(timeNumber * 7, 0, 0, 0, 0);
+                case "days":
+                    return new TimeSpan(timeNumber, 0, 0, 0, 0);
+                default:
+                    return null;
+            }
+        }
+
+        private DateTime ToStartOfWeek(DateTime dateTime)
+        {
+            var dayOfWeek = dateTime.DayOfWeek;
+            return dateTime.AddDays(-((((int)dayOfWeek) + 6) % 7));
+        }
+
+        private bool EnsureValidDate(DateTime? date)
+        {
+            if (!date.HasValue)
+                return false;
+
+            var dateValue = date.Value;
+
+            return EnsureValidDate(new int[3]
+            {
+                dateValue.Year,
+                dateValue.Month,
+                dateValue.Day
+            });
         }
 
         private bool EnsureValidDate(int[] dateParts)
@@ -453,9 +587,202 @@ namespace ReplayParser.ReplaySorter.Filtering
             return true;
         }
 
-        private Func<File<IReplay>, bool> ParsePlayerFilter(string value)
+        private Func<File<IReplay>, bool> ParsePlayerFilter(string replayExpressionString)
         {
-            throw new NotImplementedException();
+            var replayExpressions = replayExpressionString.Split(new char[] { '|' });
+
+            if (replayExpressions.Count() == 0)
+                return null;
+
+            Expression<Func<File<IReplay>, bool>> filterExpression = null;
+            //TODO i don't think it's necessary to name your parameters...
+            var replay = Expression.Parameter(typeof(File<IReplay>), "r");
+            var player = Expression.Parameter(typeof(IPlayer), "p");
+            var playerName = Expression.PropertyOrField(player, "Name");
+
+            foreach (var replayExpression in replayExpressions)
+            {
+                // playername, isWinner, race
+                var playerProperties = ParsePlayerProperties(replayExpression);
+
+
+                Expression body = null;
+                var replayContent = Expression.PropertyOrField(replay, "Content");
+                Expression replayPlayers = Expression.PropertyOrField(replayContent, "Players");
+                Expression requestedPlayerName = Expression.Constant(playerProperties.Item1, typeof(string));
+
+                // iswinner
+                if (playerProperties.Item2.HasValue)
+                {
+                    Expression replayWinners = Expression.PropertyOrField(replayContent, "Winners");
+                    // replays.where(r => r.winners.contains(p => p.Name == "name"))
+                    body = Expression.IsTrue(
+                        Expression.Call(
+                            GetExtensionMethod(typeof(Enumerable).Assembly, "Any", typeof(IEnumerable<>)).MakeGenericMethod(new Type[] { typeof(IPlayer) }),
+                            Expression.Call(
+                               GetExtensionMethod(typeof(Enumerable).Assembly, "AsQueryable", typeof(IEnumerable<>)).MakeGenericMethod(new Type[] { typeof(IPlayer) }),
+                               replayWinners
+                            ),
+                            // Expression.Call(replayWinners, typeof(IEnumerable).GetMethod("AsQueryable")),
+                            Expression.Lambda<Func<IPlayer, bool>>(
+                                Expression.Equal(playerName, requestedPlayerName),
+                                player
+                            )
+                        )
+                    );
+                }
+                else
+                {
+                    // replays.where(r => r.players.any(p => p.Name == "name"))
+                    var playersAsQueryable = Expression.Call(
+                                GetExtensionMethod(typeof(Enumerable).Assembly, "AsQueryable", typeof(IEnumerable<>)).MakeGenericMethod(new Type[] { typeof(IPlayer) }),
+                                replayPlayers
+                            );
+
+                    // works... ??
+                    // body = Expression.IsTrue(
+                    //     Expression.Call(
+                    //         typeof(Queryable),
+                    //         "Any",
+                    //         new Type[] { typeof(IPlayer) },
+                    //         playersAsQueryable,
+                    //         // GetExtensionMethod(typeof(Enumerable).Assembly, "Any", typeof(IEnumerable<>)).MakeGenericMethod(new Type[] { typeof(IPlayer) }),
+                    //         // playersAsQueryable,
+                    //         // Expression.Call(replayPlayers, typeof(IEnumerable).GetMethod("AsQueryable")),
+                    //         Expression.Lambda<Func<IPlayer, bool>>(
+                    //             Expression.Equal(playerName, requestedPlayerName),
+                    //             player
+                    //         )
+                    //     )
+                    // );
+
+                    body = Expression.IsTrue(
+                        Expression.Call(
+                            GetExtensionMethod(typeof(Enumerable).Assembly, "Any", typeof(IEnumerable<>)).MakeGenericMethod(new Type[] { typeof(IPlayer) }),
+                            playersAsQueryable,
+                            Expression.Lambda<Func<IPlayer, bool>>(
+                                Expression.Equal(playerName, requestedPlayerName),
+                                player
+                            )
+                        )
+                    );
+                }
+
+                // race
+                if (playerProperties.Item3.HasValue)
+                {
+                    var requestedRaceValue = ToRaceType(playerProperties.Item3.Value);
+                    if (!requestedRaceValue.HasValue)
+                        return null;
+
+                    Expression requestedRace = Expression.Constant(requestedRaceValue.Value, typeof(int));
+                    Expression playerRace = Expression.PropertyOrField(player, "RaceType");
+                    // replays.where(r => r.players.where(p => p.Name && p.RaceType == "race"))
+                    Expression raceExpression = Expression.Equal(
+                        playerRace,
+                        requestedRace
+                    );
+
+                    body = new AddAdditionalAndAlsoToWhereMethodCallModifier(raceExpression).Modify(body);
+                }
+
+                filterExpression = CreateOrAddOrExpression(filterExpression, body, replay);
+            }
+            return filterExpression?.Compile();
+        }
+
+        private MethodInfo GetExtensionMethod(Assembly assembly, string methodName, Type type)
+        {
+            return assembly.GetTypes()
+                .Where(t => t.IsSealed && !t.IsGenericType && !type.IsNested)
+                    .SelectMany(t => t.GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)
+                    .Where(m => m.Name == methodName))
+                .FirstOrDefault();
+        }
+
+        private int? ToRaceType(RaceType raceType)
+        {
+            switch (raceType)
+            {
+                case RaceType.Zerg:
+                    return (int)ReplayParser.Entities.RaceType.Zerg;
+                case RaceType.Protoss:
+                    return (int)ReplayParser.Entities.RaceType.Protoss;
+                case RaceType.Terran:
+                    return (int)ReplayParser.Entities.RaceType.Terran;
+                default:
+                    return null;
+            }
+        }
+
+        private static readonly string _andOperator = "\\s+&\\s+";
+        private static readonly string _isWinnerPattern = "iswinner(?:\\s?=\\s?(true|false))";
+        private static readonly string _racePattern = "race=(zerg|protoss|terran|z|t|p)";
+        private static readonly string _playerPropertyPattern = $"([^\\s]+)(?:(?:{_andOperator}({_isWinnerPattern}))?(?:{_andOperator}({_racePattern}))?|(?:{_andOperator}({_racePattern}))?(?:{_andOperator}({_isWinnerPattern}))?)";
+        private static readonly Regex _isWinnerRegex = new Regex(_isWinnerPattern, RegexOptions.IgnoreCase);
+        private static readonly Regex _raceRegex = new Regex(_racePattern, RegexOptions.IgnoreCase);
+        private static readonly Regex _playerPropertyRegex = new Regex(_playerPropertyPattern, RegexOptions.IgnoreCase);
+
+        private Tuple<string, bool?, RaceType?> ParsePlayerProperties(string playerExpression)
+        {
+            if (!_playerPropertyRegex.IsMatch(playerExpression))
+                return null;
+
+            var match = _playerPropertyRegex.Match(playerExpression);
+
+            Tuple<string, bool?, RaceType?> properties = null;
+            string playerName = match.Groups[1].Value;
+            bool? isWinner = null;
+            RaceType? race = null;
+
+            for (int i = 2; i < match.Groups.Count; i++)
+            {
+                if (string.IsNullOrWhiteSpace(match.Groups[i].Value))
+                    continue;
+
+                if (isWinner == null && _isWinnerRegex.IsMatch(match.Groups[i].Value))
+                {
+                    var winnerMatch = _isWinnerRegex.Match(match.Groups[i].Value);
+                    isWinner = string.IsNullOrWhiteSpace(winnerMatch.Groups[1].Value) ? true : bool.Parse(winnerMatch.Groups[i].Value);
+                }
+
+                if (race == null && _raceRegex.IsMatch(match.Groups[i].Value))
+                {
+                    var raceMatch = _raceRegex.Match(match.Groups[i].Value);
+                    RaceType raceValue;
+                    string raceString = null;
+                    if (raceMatch.Value.Length == 1)
+                    {
+                        raceString = ToLongRaceForm(raceMatch.Value);
+                    }
+
+                    if (!Enum.TryParse(raceString, out raceValue))
+                    {
+                        return null;
+                    }
+                    race = raceValue;
+                }
+            }
+            return new Tuple<string, bool?, RaceType?>(playerName, isWinner, race);
+        }
+
+        private string ToLongRaceForm(string singleLetterRace)
+        {
+            if (string.IsNullOrWhiteSpace(singleLetterRace))
+                return null;
+
+            singleLetterRace = singleLetterRace.ToLower();
+            switch(singleLetterRace)
+            {
+                case "z":
+                    return "zerg";
+                case "p":
+                    return "protoss";
+                case "t":
+                    return "terran";
+                default:
+                    return null;
+            }
         }
 
         private Func<File<IReplay>, bool> ParseMatchupFilter(string matchupExpressionString)
@@ -623,7 +950,7 @@ namespace ReplayParser.ReplaySorter.Filtering
 
         // number - timeunit [ - number - timeunit ]1-2
         // classical 05:10, 00:20:17
-        private static readonly string _lessThanGreaterThanOperatorsPattern = "^(<(?!=)|<=|>(?!=)|>=)?";
+        private static readonly string _lessThanGreaterThanOperatorsPattern = "^(<(?!=)|<=|=|>(?!=)|>=)?";
         private static readonly string _digitalMinutesSecondsPattern = "^(\\d{2}):(\\d{2})$";
         private static readonly string _digitalHoursMinutesSecondsPattern = "^(\\d{2}):(\\d{2}):(\\d{2})$";
         private static readonly string _writtenHoursMinutesSecondsPattern = "^(?:(\\d+)(?:h(?:rs|hours)?))?(?:(\\d+)(?:m(?:in(?:utes)?)?))?(?:(\\d+)(?:s(?:ec(?:onds)?)?))?";

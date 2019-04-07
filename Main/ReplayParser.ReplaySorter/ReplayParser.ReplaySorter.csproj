@@ -83,6 +83,7 @@
     <Compile Include="Diagnostics\ErrorLogger.cs" />
     <Compile Include="Diagnostics\ProgressBar.cs" />
     <Compile Include="Extensions\ListExtensions.cs" />
+    <Compile Include="Filtering\AddAdditionalAndAlsoToWhereMethodCallModifier.cs" />
     <Compile Include="Filtering\ReplayFilterer.cs" />
     <Compile Include="IO\File.cs" />
     <Compile Include="IO\FileHandler.cs" />
