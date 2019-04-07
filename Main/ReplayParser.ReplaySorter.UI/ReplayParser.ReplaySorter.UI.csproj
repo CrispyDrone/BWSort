@@ -110,6 +110,9 @@
     <Compile Include="Converters\PlayerRaceToImagePathConverter.cs" />
     <Compile Include="Converters\PlayerToVisibilityConverter.cs" />
     <Compile Include="ReplayAction.cs" />
+    <Compile Include="Windows\AdvancedSettings.xaml.cs">
+      <DependentUpon>AdvancedSettings.xaml</DependentUpon>
+    </Compile>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -123,6 +126,10 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="Windows\AdvancedSettings.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">
@@ -152,7 +159,9 @@
     <None Include="ReplayParser.ReplaySorter.UI_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
+    <None Include="App.config">
+      <SubType>Designer</SubType>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ReplayParser.ReplaySorter\ReplayParser.ReplaySorter.csproj">
@@ -185,9 +194,7 @@
   <ItemGroup>
     <Resource Include="images\crown.png" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Windows\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <Resource Include="images\races\protoss.png" />
     <Resource Include="images\races\terran.png" />

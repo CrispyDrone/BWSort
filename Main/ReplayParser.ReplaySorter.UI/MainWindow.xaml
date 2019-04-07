@@ -45,7 +45,7 @@
                 </MenuItem>
                 <MenuItem x:Name="moveBadReplaysDirectoryMenuItem" Header="Set bad replay directory..." Click="moveBadReplaysDirectoryMenuItem_Click"></MenuItem>
                 <MenuItem x:Name="setLoggingDirectoryMenuItem" Header="Set log directory" Click="SetLoggingDirectoryMenuItem_Click"></MenuItem>
-                <MenuItem Header="Advanced Settings"></MenuItem>
+                <MenuItem x:Name="setAdvancedSettingsMenuItem" Header="Advanced Settings" Click="SetAdvancedSettingsMenuItem_Click"></MenuItem>
             </MenuItem>
             <MenuItem IsEnabled="false" Header="Help"></MenuItem>
         </Menu>

@@ -19,6 +19,7 @@ using System.Net.Http;
 using System.Windows.Data;
 using ReplayParser.ReplaySorter.Filtering;
 using System.Configuration;
+using ReplayParser.ReplaySorter.UI.Windows;
 
 namespace ReplayParser.ReplaySorter.UI
 {
@@ -38,21 +39,32 @@ namespace ReplayParser.ReplaySorter.UI
 
         private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            using (HttpClient client = new HttpClient())
+            if (_replaySorterConfiguration.CheckForUpdates)
             {
-                try
+                using (HttpClient client = new HttpClient())
                 {
-                    client.DefaultRequestHeaders.UserAgent.Add(new System.Net.Http.Headers.ProductInfoHeaderValue("BWSort", _replaySorterConfiguration.Version));
-                    string responseBody = await client.GetStringAsync(_replaySorterConfiguration.GithubAPIRepoUrl + @"/releases/latest");
-                    var versionTag = _replaySorterConfiguration.VersionRegex.Match(responseBody).Groups[1].Value;
-                    if (versionTag != _replaySorterConfiguration.Version)
-                        MessageBox.Show($"A new version is available at {_replaySorterConfiguration.RepositoryUrl}");
+                    try
+                    {
+                        client.DefaultRequestHeaders.UserAgent.Add(new System.Net.Http.Headers.ProductInfoHeaderValue("BWSort", _replaySorterConfiguration.Version));
+                        string responseBody = await client.GetStringAsync(_replaySorterConfiguration.GithubAPIRepoUrl + @"/releases/latest");
+                        var versionTag = _replaySorterConfiguration.VersionRegex.Match(responseBody).Groups[1].Value;
+                        if (versionTag != _replaySorterConfiguration.Version)
+                            MessageBox.Show($"A new version is available at {_replaySorterConfiguration.RepositoryUrl}");
+                    }
+                    catch (HttpRequestException ex)
+                    {
+                        statusBarErrors.Content = "Failed to check for updates.";
+                        ErrorLogger.GetInstance()?.LogError("Failed to check for updates.", ex: ex);
+                    }
                 }
-                catch (HttpRequestException ex)
-                {
-                    statusBarErrors.Content = "Failed to check for updates.";
-                    ErrorLogger.GetInstance()?.LogError("Failed to check for updates.", ex: ex);
-                }
+            }
+            if (_replaySorterConfiguration.RememberParsingDirectory)
+            {
+                replayDirectoryTextBox.Text = _replaySorterConfiguration.LastParsingDirectory;
+            }
+            if (_replaySorterConfiguration.LoadReplaysOnStartup)
+            {
+                parseReplays();
             }
         }
 
@@ -107,6 +119,11 @@ namespace ReplayParser.ReplaySorter.UI
 
         private void parseReplaysButton_Click(object sender, RoutedEventArgs e)
         {
+            parseReplays();
+        }
+
+        private void parseReplays()
+        {
             if (worker_ReplayParser != null && worker_ReplayParser.IsBusy)
                 return;
 
@@ -147,6 +164,7 @@ namespace ReplayParser.ReplaySorter.UI
             }
             // sigh... should I make some sort of new class that contains all the properties I want to access during the DoWork ??
             worker_ReplayParser.RunWorkerAsync(searchDirectory);
+
         }
 
         private void cancelParsingButton_Click(object sender, RoutedEventArgs e)
@@ -875,6 +893,10 @@ namespace ReplayParser.ReplaySorter.UI
             {
                 e.Cancel = true;
             }
+            if (_replaySorterConfiguration.RememberParsingDirectory)
+            {
+                _replaySorterConfiguration.LastParsingDirectory = replayDirectoryTextBox.Text;
+            }
         }
 
         private void MenuItemClose_Click(object sender, RoutedEventArgs e)
@@ -1317,9 +1339,15 @@ namespace ReplayParser.ReplaySorter.UI
             folderDialog.IsFolderPicker = true;
             if (folderDialog.ShowDialog() == CommonFileDialogResult.Ok)
             {
-                //TODO error handling? sanitizing?
-                ConfigurationManager.AppSettings["LogDirectory"] = folderDialog.FileName;
+                //TODO sanitize?
+                _replaySorterConfiguration.LogDirectory = folderDialog.FileName;
             }
+        }
+
+        private void SetAdvancedSettingsMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            var advancedSettingsWindow = new AdvancedSettings(_replaySorterConfiguration);
+            advancedSettingsWindow.ShowDialog();
         }
     }
 }

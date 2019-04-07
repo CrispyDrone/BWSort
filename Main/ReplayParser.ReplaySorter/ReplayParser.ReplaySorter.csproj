@@ -88,6 +88,11 @@
     <Compile Include="IO\File.cs" />
     <Compile Include="IO\FileHandler.cs" />
     <Compile Include="IO\FileHistory.cs" />
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>Settings.settings</DependentUpon>
+    </Compile>
     <Compile Include="ReplayRenamer\Renamer\RenamingParameters.cs" />
     <Compile Include="ReplayRenamer\Renamer\Renamer.cs" />
     <Compile Include="Replays.Designer.cs">
@@ -167,6 +172,10 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
     <None Include="Properties\app.manifest" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ReplayParser\ReplayParser.csproj">

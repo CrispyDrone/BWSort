@@ -13,7 +13,11 @@ namespace ReplayParser.ReplaySorter.Configuration
         string GithubAPIRepoUrl { get; }
         string Version { get; }
         Regex VersionRegex { get; }
-        string LogDirectory { get; }
-        int MaxUndoLevel { get; }
+        string LogDirectory { get; set; }
+        int MaxUndoLevel { get; set; }
+        bool CheckForUpdates { get; set; }
+        bool RememberParsingDirectory { get; set; }
+        string LastParsingDirectory { get; set; }
+        bool LoadReplaysOnStartup { get; set; }
     }
 }
