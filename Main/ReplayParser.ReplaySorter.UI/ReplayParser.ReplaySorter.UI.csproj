@@ -110,6 +110,7 @@
     <Compile Include="Converters\PlayerRaceToImagePathConverter.cs" />
     <Compile Include="Converters\PlayerToVisibilityConverter.cs" />
     <Compile Include="ReplayAction.cs" />
+    <Compile Include="Sorting\SortAdorner.cs" />
     <Compile Include="Windows\AdvancedSettings.xaml.cs">
       <DependentUpon>AdvancedSettings.xaml</DependentUpon>
     </Compile>

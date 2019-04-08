@@ -20,6 +20,8 @@ using System.Windows.Data;
 using ReplayParser.ReplaySorter.Filtering;
 using System.Configuration;
 using ReplayParser.ReplaySorter.UI.Windows;
+using ReplayParser.ReplaySorter.UI.Sorting;
+using System.Windows.Documents;
 
 namespace ReplayParser.ReplaySorter.UI
 {
@@ -1349,6 +1351,38 @@ namespace ReplayParser.ReplaySorter.UI
             var advancedSettingsWindow = new AdvancedSettings(_replaySorterConfiguration);
             advancedSettingsWindow.ShowDialog();
         }
+
+        #region sorting listview
+        private GridViewColumnHeader _currentSortCol = null;
+        private SortAdorner _sortAdorner = null;
+        private void listViewReplaysColumnHeader_Click(object sender, RoutedEventArgs e)
+        {
+            GridViewColumnHeader column = (sender as GridViewColumnHeader);
+            if (column == null)
+                return;
+
+            string sortBy = column.Tag.ToString();
+            if (sortBy == "Players")
+                return;
+
+            if (_currentSortCol != null)
+            {
+                AdornerLayer.GetAdornerLayer(_currentSortCol).Remove(_sortAdorner);
+                listViewReplays.Items.SortDescriptions.Clear();
+            }
+
+            ListSortDirection newDir = ListSortDirection.Ascending;
+            if (_currentSortCol == column && _sortAdorner.Direction == newDir)
+                newDir = ListSortDirection.Descending;
+
+            _currentSortCol = column;
+            _sortAdorner = new SortAdorner(_currentSortCol, newDir);
+            AdornerLayer.GetAdornerLayer(_currentSortCol).Add(_sortAdorner);
+            listViewReplays.Items.SortDescriptions.Add(new SortDescription(sortBy, newDir));
+
+            // (CollectionViewSource.GetDefaultView(listViewReplays) as ListCollectionView).CustomSort = new PlayerSorter();
+        }
+        #endregion
     }
 }
 

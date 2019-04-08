@@ -204,7 +204,10 @@
                         </ListView.ItemContainerStyle>
                         <ListView.View>
                             <GridView>
-                                <GridViewColumn Header="Players">
+                                <GridViewColumn>
+                                    <GridViewColumn.Header>
+                                        <GridViewColumnHeader Tag="Players" Click="listViewReplaysColumnHeader_Click">Players</GridViewColumnHeader>
+                                    </GridViewColumn.Header>
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
                                             <ItemsControl>
@@ -255,7 +258,10 @@
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
                                 <!--<GridViewColumn Header="Map" DisplayMemberBinding="{Binding Content.ReplayMap.MapName}">-->
-                                <GridViewColumn Header="Map">
+                                <GridViewColumn>
+                                    <GridViewColumn.Header>
+                                        <GridViewColumnHeader Tag="Content.ReplayMap.MapName" Click="listViewReplaysColumnHeader_Click">Map</GridViewColumnHeader>
+                                    </GridViewColumn.Header>
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
                                             <StackPanel>
@@ -269,9 +275,21 @@
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
-                                <GridViewColumn Header="Duration" DisplayMemberBinding="{Binding Content.FrameCount, Converter={StaticResource FTSConverter}, StringFormat={}{0:hh\\:mm\\:ss}}"></GridViewColumn>
-                                <GridViewColumn Header="Date" DisplayMemberBinding="{Binding Content.Timestamp}"></GridViewColumn>
-                                <GridViewColumn Header="Filepath" DisplayMemberBinding="{Binding FilePath}"></GridViewColumn>
+                                <GridViewColumn DisplayMemberBinding="{Binding Content.FrameCount, Converter={StaticResource FTSConverter}, StringFormat={}{0:hh\\:mm\\:ss}}">
+                                    <GridViewColumn.Header>
+                                        <GridViewColumnHeader Tag="Content.FrameCount" Click="listViewReplaysColumnHeader_Click">Duration</GridViewColumnHeader>
+                                    </GridViewColumn.Header>
+                                </GridViewColumn>
+                                <GridViewColumn  DisplayMemberBinding="{Binding Content.Timestamp}">
+                                    <GridViewColumn.Header>
+                                        <GridViewColumnHeader Tag="Content.Timestamp" Click="listViewReplaysColumnHeader_Click">Date</GridViewColumnHeader>
+                                    </GridViewColumn.Header>
+                                </GridViewColumn>
+                                <GridViewColumn  DisplayMemberBinding="{Binding FilePath}">
+                                    <GridViewColumn.Header>
+                                        <GridViewColumnHeader Tag="FilePath" Click="listViewReplaysColumnHeader_Click">Filepath</GridViewColumnHeader>
+                                    </GridViewColumn.Header>
+                                </GridViewColumn>
                             </GridView>
                         </ListView.View>
                     </ListView>

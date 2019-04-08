@@ -825,12 +825,15 @@ namespace ReplayParser.ReplaySorter.Filtering
                 var replayMatchupAsString = Expression.Call(replayMatchup, typeof(MatchUp).GetMethod("GetSection"), Expression.Constant(string.Empty, typeof(string)));
                 // where(r => CompareMatchups(new matchup(new team(replay), replay).GetSection(), matchupstring))
                 Expression body = Expression.IsTrue(
+                    Expression.TryCatch(
                         Expression.Call(
-                            typeof(ReplayFilterer).GetMethod(nameof(ReplayFilterer.CompareMatchups), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static), 
-                            replayMatchupAsString, 
+                            typeof(ReplayFilterer).GetMethod(nameof(ReplayFilterer.CompareMatchups), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static),
+                            replayMatchupAsString,
                             Expression.Constant(matchupExpression, typeof(string))
-                        )
-                    );
+                        ),
+                        Expression.Catch(typeof(Exception), Expression.Constant(false))
+                    )
+                );
 
                 filterExpression = CreateOrAddOrExpression(filterExpression, body, replay);
             }
@@ -838,69 +841,162 @@ namespace ReplayParser.ReplaySorter.Filtering
             return filterExpression.Compile();
         }
 
+        // private static bool CompareMatchups(string matchupA, string matchupExpression)
+        // {
+        //     // z,p,t,r
+        //     Dictionary<int, int[]> raceCountsA = GetRaceCountsPerTeam(matchupA, false);
+        //     // z,p,t,r,'.'
+        //     Dictionary<int[], int> raceCountsB = GetTeamPerRaceCountsAndPlaceHolder(matchupExpression);
+
+        //     if (raceCountsA == null || raceCountsB == null)
+        //         return false;
+
+        //     if (raceCountsA.Keys.Count != raceCountsB.Values.Count)
+        //         return false;
+
+        //     bool[] teamsMatched = new bool[raceCountsB.Values.Count];
+
+        //     foreach (var team in raceCountsA.Keys)
+        //     {
+        //         if (!raceCountsB.ContainsKey(raceCountsA[team]))
+        //         {
+        //             return false;
+        //         }
+        //         else
+        //         {
+        //             if (teamsMatched[raceCountsB[raceCountsA[team]]])
+        //             {
+        //                 return false;
+        //             }
+        //             else
+        //             {
+        //                 teamsMatched[raceCountsB[raceCountsA[team]]] = true;
+        //                 raceCountsB.Remove(raceCountsA[team]);
+        //             }
+        //         }
+        //     }
+
+        //     return true;
+        // }
+
+        //TODO: refactor
         private static bool CompareMatchups(string matchupA, string matchupExpression)
         {
-            // z,p,t,r
-            Dictionary<int, int[]> raceCountsA = GetRaceCountsPerTeam(matchupA, false);
-            // z,p,t,r,'.'
-            Dictionary<int[], int> raceCountsB = GetTeamPerRaceCountsAndPlaceHolder(matchupExpression);
+            var matchupAStrings = GetMatchups(matchupA);
+            var matchupBStrings = GetMatchups(matchupExpression);
 
-            if (raceCountsA == null || raceCountsB == null)
+            if (matchupAStrings == null || matchupBStrings == null)
                 return false;
 
-            if (raceCountsA.Keys.Count != raceCountsB.Values.Count)
+            if (matchupAStrings.Count() != matchupBStrings.Count())
                 return false;
 
-            bool[] teamsMatched = new bool[raceCountsB.Values.Count];
+            int[][] teamRaceCountsA = new int[matchupAStrings.Count()][];
+            int[][] teamRaceCountsB = new int[matchupBStrings.Count()][];
 
-            foreach (var team in raceCountsA.Keys)
+            for (int i = 0; i < matchupAStrings.Count(); i++)
             {
-                if (!raceCountsB.ContainsKey(raceCountsA[team]))
-                {
+                teamRaceCountsA[i] = GetRaceCounts(matchupAStrings[i]);
+            }
+
+            for (int i = 0; i < matchupBStrings.Count(); i++)
+            {
+                teamRaceCountsB[i] = GetRaceCounts(matchupBStrings[i], true);
+            }
+
+            bool[] matchedTeams = new bool[teamRaceCountsA.Count()];
+
+            for (int i = 0; i < teamRaceCountsA.Count(); i++)
+            {
+                var matchingTeamNumbers = FindMatchingTeams(teamRaceCountsA[i], teamRaceCountsB);
+                if (matchingTeamNumbers == null || matchingTeamNumbers.Count() == 0)
                     return false;
-                }
-                else
-                {
-                    if (teamsMatched[raceCountsB[raceCountsA[team]]])
-                    {
-                        return false;
-                    }
-                    else
-                    {
-                        teamsMatched[raceCountsB[raceCountsA[team]]] = true;
-                    }
-                }
+
+                var notYetMatched = matchedTeams.Where((isMatched, index) => matchingTeamNumbers.Contains(index) && isMatched == false).Select((isMatched, index) => index);
+                if (notYetMatched.Count() == 0)
+                    return false;
+
+                matchedTeams[notYetMatched.First()] = true;
             }
 
             return true;
         }
 
+        private static int[] FindMatchingTeams(int[] raceCountsTeamA, int[][] matchupRaceCountsB)
+        {
+            if (raceCountsTeamA == null || matchupRaceCountsB == null)
+                return null;
+
+            if (matchupRaceCountsB.Count() == 0)
+                return null;
+
+            int[] matchedTeams = new int[matchupRaceCountsB.Count()];
+
+            for (int i = 0; i < matchupRaceCountsB.Count(); i++)
+            {
+                if (TeamsEqual(raceCountsTeamA, matchupRaceCountsB[i]))
+                {
+                    matchedTeams[i] = i;
+                }
+                else
+                {
+                    matchedTeams[i] = -1; 
+                }
+            }
+
+            return matchedTeams;
+        }
+
+        private static bool TeamsEqual(int[] raceCountsTeamWithoutWildCards, int[] raceCountsTeamWithWildCards)
+        {
+            if (raceCountsTeamWithoutWildCards == null || raceCountsTeamWithWildCards == null)
+                return false;
+
+            if (raceCountsTeamWithWildCards.Length < raceCountsTeamWithoutWildCards.Length)
+                return TeamsEqual(raceCountsTeamWithWildCards, raceCountsTeamWithoutWildCards);
+
+            int numberOfWildCards = raceCountsTeamWithWildCards[4];
+
+            for (int i = 0; i < raceCountsTeamWithoutWildCards.Length; i++)
+            {
+                if (raceCountsTeamWithoutWildCards[i] != raceCountsTeamWithWildCards[i] && --numberOfWildCards < 0)
+                    return false;
+            }
+            return true;
+        }
+
+        // private class Matchup
+        // {
+        //     // teamNumber, RaceCounts (z, p, t, r, .)
+        //     public int[][] TeamRaceCounts { get; set; }
+        // }
+
         private static readonly string _versusPattern = "vs?";
         private static readonly Regex _versus = new Regex(_versusPattern);
 
-        private static Dictionary<int[], int> GetTeamPerRaceCountsAndPlaceHolder(string matchupExpression)
-        {
-            return GetRaceCountsPerTeam(matchupExpression, true)?.ToDictionary(kvp => kvp.Value, kvp => kvp.Key, new RaceEqWithWildCardComparer());
-        }
+        // private static Dictionary<int[], int> GetTeamPerRaceCountsAndPlaceHolder(string matchupExpression)
+        // {
+        //     return GetRaceCountsPerTeam(matchupExpression, true)?.ToDictionary(kvp => kvp.Value, kvp => kvp.Key, new RaceEqWithWildCardComparer());
+        // }
 
-        private static Dictionary<int, int[]> GetRaceCountsPerTeam(string matchupA, bool countPlaceHolders = false)
-        {
-            var matchupStrings = GetMatchups(matchupA);
+        // private static Dictionary<int, int[]> GetRaceCountsPerTeam(string matchupA, bool countPlaceHolders = false)
+        // {
+        //     var matchupStrings = GetMatchups(matchupA);
 
-            if (matchupStrings == null)
-                return null;
+        //     if (matchupStrings == null)
+        //         return null;
 
-            Dictionary<int, int[]> raceCountsPerTeam = new Dictionary<int, int[]>();
-            int teamNumber = 0;
+        //     Dictionary<int, int[]> raceCountsPerTeam = new Dictionary<int, int[]>();
+        //     int teamNumber = 0;
 
-            foreach (var team in matchupStrings)
-            {
-                raceCountsPerTeam[teamNumber] = GetRaceCounts(team, countPlaceHolders);
-                teamNumber++;
-            }
+        //     foreach (var team in matchupStrings)
+        //     {
+        //         raceCountsPerTeam[teamNumber] = GetRaceCounts(team, countPlaceHolders);
+        //         teamNumber++;
+        //     }
 
-            return raceCountsPerTeam;
-        }
+        //     return raceCountsPerTeam;
+        // }
 
         //TODO use stringbuilder??
         private static string[] GetMatchups(string matchupA)
@@ -916,7 +1012,7 @@ namespace ReplayParser.ReplaySorter.Filtering
             foreach (Match match in matches)
             {
                 matchups[counter] = matchupA.Substring(0, match.Index);
-                matchupA.Remove(0, match.Index + match.Value.Length);
+                matchupA = matchupA.Remove(0, match.Index + match.Value.Length);
                 counter++;
             }
 
@@ -1234,33 +1330,33 @@ namespace ReplayParser.ReplaySorter.Filtering
             );
         }
 
-        private class RaceEqWithWildCardComparer : IEqualityComparer<int[]>
-        {
-            public bool Equals(int[] raceCountsWithoutWildCards, int[] raceCountsWithWildCards)
-            {
-                if (raceCountsWithoutWildCards == null || raceCountsWithWildCards == null)
-                    return false;
+        // private class RaceEqWithWildCardComparer : IEqualityComparer<int[]>
+        // {
+        //     public bool Equals(int[] raceCountsWithoutWildCards, int[] raceCountsWithWildCards)
+        //     {
+        //         if (raceCountsWithoutWildCards == null || raceCountsWithWildCards == null)
+        //             return false;
 
-                if (raceCountsWithoutWildCards.Length < 4 || raceCountsWithoutWildCards.Length > 5 || raceCountsWithWildCards.Length < 4 || raceCountsWithWildCards.Length > 5 || raceCountsWithoutWildCards.Length == raceCountsWithWildCards.Length)
-                    return false;
+        //         if (raceCountsWithoutWildCards.Length < 4 || raceCountsWithoutWildCards.Length > 5 || raceCountsWithWildCards.Length < 4 || raceCountsWithWildCards.Length > 5 || raceCountsWithoutWildCards.Length == raceCountsWithWildCards.Length)
+        //             return false;
 
-                if (raceCountsWithoutWildCards.Length == 5 && raceCountsWithWildCards.Length == 4)
-                    return Equals(raceCountsWithWildCards, raceCountsWithoutWildCards);
+        //         if (raceCountsWithoutWildCards.Length == 5 && raceCountsWithWildCards.Length == 4)
+        //             return Equals(raceCountsWithWildCards, raceCountsWithoutWildCards);
 
-                int numberOfWildCards = raceCountsWithWildCards[4];
-                for (int i = 0; i < raceCountsWithoutWildCards.Length; i++)
-                {
-                    if (raceCountsWithoutWildCards[i] != raceCountsWithWildCards[i] && --numberOfWildCards < 0)
-                        return false;
-                }
+        //         int numberOfWildCards = raceCountsWithWildCards[4];
+        //         for (int i = 0; i < raceCountsWithoutWildCards.Length; i++)
+        //         {
+        //             if (raceCountsWithoutWildCards[i] != raceCountsWithWildCards[i] && --numberOfWildCards < 0)
+        //                 return false;
+        //         }
 
-                return true;
-            }
+        //         return true;
+        //     }
 
-            public int GetHashCode(int[] obj)
-            {
-                return obj.Sum(x => x).GetHashCode();
-            }
-        }
+        //     public int GetHashCode(int[] obj)
+        //     {
+        //         return obj.Sum(x => x).GetHashCode();
+        //     }
+        // }
     }
 }
