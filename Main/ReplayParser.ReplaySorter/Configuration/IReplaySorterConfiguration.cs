@@ -18,6 +18,7 @@ namespace ReplayParser.ReplaySorter.Configuration
         bool CheckForUpdates { get; set; }
         bool RememberParsingDirectory { get; set; }
         string LastParsingDirectory { get; set; }
+        bool IncludeSubDirectoriesByDefault { get; set; }
         bool LoadReplaysOnStartup { get; set; }
     }
 }

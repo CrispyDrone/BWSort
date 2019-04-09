@@ -25,6 +25,7 @@ namespace ReplayParser.ReplaySorter.UI.Windows
 
             _replaySorterConfiguration.CheckForUpdates = AutomaticCheckUpdatesCheckbox.IsChecked.HasValue && AutomaticCheckUpdatesCheckbox.IsChecked.Value;
             _replaySorterConfiguration.RememberParsingDirectory = SaveLastParseDirectoryCheckbox.IsChecked.HasValue && SaveLastParseDirectoryCheckbox.IsChecked.Value;
+            _replaySorterConfiguration.IncludeSubDirectoriesByDefault = IncludeSubDirectoriesByDefaultCheckbox.IsChecked.HasValue && IncludeSubDirectoriesByDefaultCheckbox.IsChecked.Value;
             _replaySorterConfiguration.LoadReplaysOnStartup = ParseReplaysOnStartupCheckbox.IsChecked.HasValue && ParseReplaysOnStartupCheckbox.IsChecked.Value;
             this.Close();
         }

@@ -21,15 +21,22 @@
                     <RowDefinition Height="*"></RowDefinition>
                     <RowDefinition Height="*"></RowDefinition>
                     <RowDefinition Height="*"></RowDefinition>
+                    <RowDefinition Height="*"></RowDefinition>
                 </Grid.RowDefinitions>
                 <Label x:Name="MaxUndoLevelLabel" Grid.Column="1" Grid.Row="0">Max undo level:</Label>
-                <ComboBox x:Name="MaxUndoLevelCombobox" Grid.Column="2" Grid.Row="0"></ComboBox>
+                <ComboBox x:Name="MaxUndoLevelCombobox" Grid.Column="2" Grid.Row="0" Margin="10 0"></ComboBox>
                 <Label x:Name="AutomaticCheckUpdatesLabel" Grid.Column="1" Grid.Row="1">Check for updates on startup:</Label>
-                <CheckBox x:Name="AutomaticCheckUpdatesCheckbox" Grid.Column="2" Grid.Row="1" IsChecked="True" VerticalAlignment="Center"></CheckBox>
+                <CheckBox x:Name="AutomaticCheckUpdatesCheckbox" Grid.Column="2" Grid.Row="1" IsChecked="True" VerticalAlignment="Center" Margin="10 0"></CheckBox>
                 <Label x:Name="SaveLastParseDirectoryLabel" Grid.Column="1" Grid.Row="2">Remember parsing directory</Label>
-                <CheckBox x:Name="SaveLastParseDirectoryCheckbox" Grid.Column="2" Grid.Row="2" IsChecked="True" VerticalAlignment="Center"></CheckBox>
-                <Label x:Name="ParseReplaysOnStartupLabel" Grid.Column="1" Grid.Row="3">Load replays on startup</Label>
-                <CheckBox x:Name="ParseReplaysOnStartupCheckbox" Grid.Column="2" Grid.Row="3" IsChecked="False" VerticalAlignment="Center" IsEnabled="{Binding ElementName=SaveLastParseDirectoryCheckbox, Path=IsChecked}"></CheckBox>
+                <CheckBox x:Name="SaveLastParseDirectoryCheckbox" Grid.Column="2" Grid.Row="2" IsChecked="True" VerticalAlignment="Center" Margin="10 0"></CheckBox>
+                <Label x:Name="IncludeSubDirectoriesByDefaultLabel" Grid.Column="1" Grid.Row="3">
+                    <Label.Content>
+                        <AccessText TextWrapping="Wrap" Text="Include subdirectories by default while parsing"></AccessText>
+                    </Label.Content>
+                </Label>
+                <CheckBox x:Name="IncludeSubDirectoriesByDefaultCheckbox" Grid.Column="2" Grid.Row="3" IsChecked="False" VerticalAlignment="Center" Margin="10 0"></CheckBox>
+                <Label x:Name="ParseReplaysOnStartupLabel" Grid.Column="1" Grid.Row="4">Load replays on startup</Label>
+                <CheckBox x:Name="ParseReplaysOnStartupCheckbox" Grid.Column="2" Grid.Row="4" IsChecked="False" VerticalAlignment="Center" IsEnabled="{Binding ElementName=SaveLastParseDirectoryCheckbox, Path=IsChecked}" Margin="10 0"></CheckBox>
             </Grid>
             <Button x:Name="saveSettingsButton" DockPanel.Dock="Bottom" HorizontalAlignment="Center" Margin="20" Padding="10 0" Click="SaveSettingsButton_Click">Save settings</Button>
         </DockPanel>

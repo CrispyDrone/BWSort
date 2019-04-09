@@ -15,6 +15,7 @@ namespace ReplayParser.ReplaySorter.Configuration
         private bool _checkForUpdates;
         private bool _rememberParsingDirectory;
         private string _lastParsingDirectory;
+        private bool _includeSubDirectoriesByDefault;
         private bool _loadReplaysOnStartup;
 
         private bool _logDirectoryChanged = true;
@@ -22,6 +23,7 @@ namespace ReplayParser.ReplaySorter.Configuration
         private bool _checkForUpdatesChanged = true;
         private bool _rememberParsingDirectoryChanged = true;
         private bool _lastParsingDirectoryChanged = true;
+        private bool _includeSubDirectoriesByDefaultChanged = true;
         private bool _loadReplaysOnStartupChanged = true;
 
         #endregion
@@ -152,6 +154,26 @@ namespace ReplayParser.ReplaySorter.Configuration
 
                 _lastParsingDirectoryChanged = true;
                 Properties.Settings.Default.LASTPARSINGDIRECTORY = value;
+                Save();
+            }
+        }
+
+        public bool IncludeSubDirectoriesByDefault
+        {
+            get
+            {
+                if (_includeSubDirectoriesByDefaultChanged)
+                {
+                    _includeSubDirectoriesByDefault = Properties.Settings.Default.PARSESUBDIRECTORIES;
+                    _includeSubDirectoriesByDefaultChanged = false;
+                }
+
+                return _includeSubDirectoriesByDefault;
+            }
+            set
+            {
+                _includeSubDirectoriesByDefaultChanged = true;
+                Properties.Settings.Default.PARSESUBDIRECTORIES = value;
                 Save();
             }
         }

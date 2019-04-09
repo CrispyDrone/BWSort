@@ -94,5 +94,17 @@ namespace ReplayParser.ReplaySorter.Properties {
                 this["LOADREPLAYSONSTARTUP"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool PARSESUBDIRECTORIES {
+            get {
+                return ((bool)(this["PARSESUBDIRECTORIES"]));
+            }
+            set {
+                this["PARSESUBDIRECTORIES"] = value;
+            }
+        }
     }
 }

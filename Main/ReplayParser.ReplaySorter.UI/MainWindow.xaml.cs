@@ -16,9 +16,7 @@ using ReplayParser.ReplaySorter.Configuration;
 using ReplayParser.ReplaySorter.Diagnostics;
 using ReplayParser.ReplaySorter.IO;
 using System.Net.Http;
-using System.Windows.Data;
 using ReplayParser.ReplaySorter.Filtering;
-using System.Configuration;
 using ReplayParser.ReplaySorter.UI.Windows;
 using ReplayParser.ReplaySorter.UI.Sorting;
 using System.Windows.Documents;
@@ -63,6 +61,10 @@ namespace ReplayParser.ReplaySorter.UI
             if (_replaySorterConfiguration.RememberParsingDirectory)
             {
                 replayDirectoryTextBox.Text = _replaySorterConfiguration.LastParsingDirectory;
+            }
+            if (_replaySorterConfiguration.IncludeSubDirectoriesByDefault)
+            {
+                includeSubdirectoriesCheckbox.IsChecked = true;
             }
             if (_replaySorterConfiguration.LoadReplaysOnStartup)
             {
@@ -270,6 +272,7 @@ namespace ReplayParser.ReplaySorter.UI
                     MessageBox.Show($"No replays found in {((SearchDirectory)e.Result).Directory}. Please specify an existing directory containing your replays.", "Failed to find replays.", MessageBoxButton.OK, MessageBoxImage.Exclamation);
                 else
                 {
+                    ResetFiltering();
                     statusBarAction.Content = string.Format("Finished parsing!");
                     MessageBox.Show(
                         string.Format("Parsing replays finished! It took {0} to parse {1} replays. {2} replays encountered exceptions during parsing. {3}", 
@@ -1298,7 +1301,7 @@ namespace ReplayParser.ReplaySorter.UI
                 if (worker_replayFilterer == null)
                 {
                     worker_replayFilterer = new BackgroundWorker();
-                    // worker_replayFilterer.WorkerReportsProgress = true;
+                    worker_replayFilterer.WorkerReportsProgress = true;
                     // worker_replayFilterer.WorkerSupportsCancellation = true;
                     worker_replayFilterer.DoWork += worker_FilterReplays;
                     // worker_replayFilterer.ProgressChanged += worker_ProgressChangedFilteringReplays;
@@ -1318,10 +1321,20 @@ namespace ReplayParser.ReplaySorter.UI
             e.Result = filterExpression;
         }
 
-        //TODO small progress bar or waiting cursor?
         private void worker_ProgressChangedFilteringReplays(object sender, ProgressChangedEventArgs e)
         {
-            throw new NotImplementedException();
+            filterReplaysProgressBar.Value = e.ProgressPercentage;
+            if (e.UserState == null)
+            {
+                if (ErrorMessage != string.Empty)
+                {
+                    statusBarErrors.Content = ErrorMessage;
+                }
+            }
+            else
+            {
+                statusBarAction.Content = (string)e.UserState;
+            }
         }
 
         private void worker_FilteringReplaysCompleted(object sender, RunWorkerCompletedEventArgs e)
@@ -1331,6 +1344,12 @@ namespace ReplayParser.ReplaySorter.UI
                 listViewReplays.ItemsSource = _filteredListReplays;
                 _lastExecutedFilter = e.Result as string;
             }
+        }
+
+        private void ResetFiltering()
+        {
+            _filteredListReplays?.Clear();
+            _lastExecutedFilter = null;
         }
 
         #endregion

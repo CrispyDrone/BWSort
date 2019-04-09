@@ -912,7 +912,8 @@ namespace ReplayParser.ReplaySorter.Filtering
                 if (matchingTeamNumbers == null || matchingTeamNumbers.Count() == 0)
                     return false;
 
-                var notYetMatched = matchedTeams.Where((isMatched, index) => matchingTeamNumbers.Contains(index) && isMatched == false).Select((isMatched, index) => index);
+
+                var notYetMatched = matchingTeamNumbers.Where(candidateMatch => candidateMatch != -1 && matchedTeams[candidateMatch] == false);
                 if (notYetMatched.Count() == 0)
                     return false;
 
