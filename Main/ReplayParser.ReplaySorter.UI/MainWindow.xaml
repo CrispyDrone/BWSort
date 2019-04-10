@@ -200,10 +200,20 @@
                         <TextBox Name="filterReplaysTextBox" Text="Type search criteria here..." Margin="10" KeyUp="FilterReplaysTextBox_KeyUp"></TextBox>
                     </DockPanel>
                     <ListView Name="listViewReplays">
+                        <ListView.Resources>
+                            <ContextMenu x:Key="cm">
+                                <MenuItem Header="Copy filepath" Name="copyFilePathMenuItem" Click="CopyFilePathMenuItem_Click"/>
+                                <MenuItem Header="Rename replay" Name="renameReplayMenuItem" Click="RenameReplayMenuItem_Click"/>
+                                <MenuItem Header="Details" Name="detailsReplayMenuItem" Click="DetailsReplayMenuItem_Click"/>
+                                <MenuItem Header="Open in file explorer" Name="openInFileExplorerMenuItem" Click="OpenInFileExplorerMenuItem_Click"/>
+                                <MenuItem Header="Launch in starcraft" Name="launchReplayInStarcraftMenuItem" Click="LaunchReplayInStarcraftMenuItem_Click"/>
+                            </ContextMenu>
+                        </ListView.Resources>
                         <ListView.ItemContainerStyle>
                             <Style TargetType="{x:Type ListViewItem}">
                                 <Setter Property="BorderBrush" Value="LightGray" />
                                 <Setter Property="BorderThickness" Value="0,0,0,1" />
+                                <Setter Property="ContextMenu" Value="{StaticResource cm}"/>
                             </Style>
                         </ListView.ItemContainerStyle>
                         <ListView.View>

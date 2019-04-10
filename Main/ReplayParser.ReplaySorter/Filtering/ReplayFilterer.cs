@@ -5,6 +5,7 @@ using ReplayParser.ReplaySorter.Sorting;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -40,7 +41,7 @@ namespace ReplayParser.ReplaySorter.Filtering
 
         private readonly Regex FILTERLABEL = new Regex("([md]u?|[pd]):");
 
-        public List<File<IReplay>> Apply(List<File<IReplay>> list, string filterExpression)
+        public List<File<IReplay>> Apply(List<File<IReplay>> list, string filterExpression, BackgroundWorker worker_ReplayFilterer)
         {
             Dictionary<int, string> filterExpressions = ExtractFilters(filterExpression);
             if (filterExpressions == null)
@@ -50,7 +51,7 @@ namespace ReplayParser.ReplaySorter.Filtering
             if (queries == null || queries.Count() == 0)
                 return list;
 
-            return ApplyTo(list, queries);
+            return ApplyTo(list, queries, worker_ReplayFilterer);
         }
 
         private Dictionary<int, string> ExtractFilters(string filterExpression)
@@ -164,17 +165,26 @@ namespace ReplayParser.ReplaySorter.Filtering
             }
             return funcs;
         }
-        private List<File<IReplay>> ApplyTo(List<File<IReplay>> list, Func<File<IReplay>, bool>[] queries)
+        private List<File<IReplay>> ApplyTo(List<File<IReplay>> list, Func<File<IReplay>, bool>[] queries, BackgroundWorker worker_ReplayFilterer)
         {
             IQueryable<File<IReplay>> filteredList = new List<File<IReplay>>(list).AsQueryable();
 
+            var totalNumberOfReplays = list.Count;
+            filteredList = filteredList.Where((r, i) => ReportProgress(i, totalNumberOfReplays, worker_ReplayFilterer));
             for (int i = 0; i < queries.Length; i++)
             {
                 int index = i;
                 if (queries[index] == null) return null;
                 filteredList = filteredList.Where(r => queries[index](r));
             }
+
             return filteredList.ToList();
+        }
+
+        private bool ReportProgress(int count, int totalCount, BackgroundWorker worker_ReplayFilterer)
+        {
+            worker_ReplayFilterer.ReportProgress(Convert.ToInt32(((double)count / totalCount) * 100));
+            return true;
         }
 
         //TODO your regexes should not contain optional spaces at start or end (will give better performance i think...), you should instead trim the user input...
@@ -841,44 +851,6 @@ namespace ReplayParser.ReplaySorter.Filtering
             return filterExpression.Compile();
         }
 
-        // private static bool CompareMatchups(string matchupA, string matchupExpression)
-        // {
-        //     // z,p,t,r
-        //     Dictionary<int, int[]> raceCountsA = GetRaceCountsPerTeam(matchupA, false);
-        //     // z,p,t,r,'.'
-        //     Dictionary<int[], int> raceCountsB = GetTeamPerRaceCountsAndPlaceHolder(matchupExpression);
-
-        //     if (raceCountsA == null || raceCountsB == null)
-        //         return false;
-
-        //     if (raceCountsA.Keys.Count != raceCountsB.Values.Count)
-        //         return false;
-
-        //     bool[] teamsMatched = new bool[raceCountsB.Values.Count];
-
-        //     foreach (var team in raceCountsA.Keys)
-        //     {
-        //         if (!raceCountsB.ContainsKey(raceCountsA[team]))
-        //         {
-        //             return false;
-        //         }
-        //         else
-        //         {
-        //             if (teamsMatched[raceCountsB[raceCountsA[team]]])
-        //             {
-        //                 return false;
-        //             }
-        //             else
-        //             {
-        //                 teamsMatched[raceCountsB[raceCountsA[team]]] = true;
-        //                 raceCountsB.Remove(raceCountsA[team]);
-        //             }
-        //         }
-        //     }
-
-        //     return true;
-        // }
-
         //TODO: refactor
         private static bool CompareMatchups(string matchupA, string matchupExpression)
         {
@@ -966,38 +938,8 @@ namespace ReplayParser.ReplaySorter.Filtering
             return true;
         }
 
-        // private class Matchup
-        // {
-        //     // teamNumber, RaceCounts (z, p, t, r, .)
-        //     public int[][] TeamRaceCounts { get; set; }
-        // }
-
         private static readonly string _versusPattern = "vs?";
-        private static readonly Regex _versus = new Regex(_versusPattern);
-
-        // private static Dictionary<int[], int> GetTeamPerRaceCountsAndPlaceHolder(string matchupExpression)
-        // {
-        //     return GetRaceCountsPerTeam(matchupExpression, true)?.ToDictionary(kvp => kvp.Value, kvp => kvp.Key, new RaceEqWithWildCardComparer());
-        // }
-
-        // private static Dictionary<int, int[]> GetRaceCountsPerTeam(string matchupA, bool countPlaceHolders = false)
-        // {
-        //     var matchupStrings = GetMatchups(matchupA);
-
-        //     if (matchupStrings == null)
-        //         return null;
-
-        //     Dictionary<int, int[]> raceCountsPerTeam = new Dictionary<int, int[]>();
-        //     int teamNumber = 0;
-
-        //     foreach (var team in matchupStrings)
-        //     {
-        //         raceCountsPerTeam[teamNumber] = GetRaceCounts(team, countPlaceHolders);
-        //         teamNumber++;
-        //     }
-
-        //     return raceCountsPerTeam;
-        // }
+        private static readonly Regex _versus = new Regex(_versusPattern, RegexOptions.IgnoreCase);
 
         //TODO use stringbuilder??
         private static string[] GetMatchups(string matchupA)

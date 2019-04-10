@@ -20,6 +20,7 @@ using ReplayParser.ReplaySorter.Filtering;
 using ReplayParser.ReplaySorter.UI.Windows;
 using ReplayParser.ReplaySorter.UI.Sorting;
 using System.Windows.Documents;
+using System.Windows.Data;
 
 namespace ReplayParser.ReplaySorter.UI
 {
@@ -1287,7 +1288,10 @@ namespace ReplayParser.ReplaySorter.UI
                 if (string.IsNullOrWhiteSpace(filterReplaysTextBox.Text))
                 {
                     if (listViewReplays.ItemsSource != ListReplays)
+                    {
                         listViewReplays.ItemsSource = ListReplays;
+                        filterReplaysProgressBar.Value = 0;
+                    }
 
                     return;
                 }
@@ -1304,7 +1308,7 @@ namespace ReplayParser.ReplaySorter.UI
                     worker_replayFilterer.WorkerReportsProgress = true;
                     // worker_replayFilterer.WorkerSupportsCancellation = true;
                     worker_replayFilterer.DoWork += worker_FilterReplays;
-                    // worker_replayFilterer.ProgressChanged += worker_ProgressChangedFilteringReplays;
+                    worker_replayFilterer.ProgressChanged += worker_ProgressChangedFilteringReplays;
                     worker_replayFilterer.RunWorkerCompleted += worker_FilteringReplaysCompleted;
                 }
                 worker_replayFilterer.RunWorkerAsync(filterReplaysTextBox.Text);
@@ -1317,7 +1321,7 @@ namespace ReplayParser.ReplaySorter.UI
             if (string.IsNullOrWhiteSpace(filterExpression))
                 return;
 
-            _filteredListReplays = _replayFilterer.Apply(ListReplays, filterExpression);
+            _filteredListReplays = _replayFilterer.Apply(ListReplays, filterExpression, sender as BackgroundWorker);
             e.Result = filterExpression;
         }
 
@@ -1343,6 +1347,7 @@ namespace ReplayParser.ReplaySorter.UI
             {
                 listViewReplays.ItemsSource = _filteredListReplays;
                 _lastExecutedFilter = e.Result as string;
+                statusBarAction.Content = $"{_filteredListReplays?.Count ?? 0} replays matched filter.";
             }
         }
 
@@ -1401,6 +1406,85 @@ namespace ReplayParser.ReplaySorter.UI
 
             // (CollectionViewSource.GetDefaultView(listViewReplays) as ListCollectionView).CustomSort = new PlayerSorter();
         }
+        #endregion
+
+        #region context menu
+
+        private void OpenInFileExplorerMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            MenuItem openFileInExplorer = sender as MenuItem;
+            ListViewItem listViewItemReplay = listViewReplays.ItemContainerGenerator.ContainerFromItem(openFileInExplorer.DataContext) as ListViewItem;
+            var replay = listViewItemReplay.Content as File<IReplay>;
+            var folderPath = Path.GetDirectoryName(replay.FilePath);
+            if (!File.Exists(replay.FilePath))
+            {
+                return;
+            }
+
+            string argument = "/select, \"" + replay.FilePath + "\"";
+            try
+            {
+                Process.Start("explorer.exe", argument);
+            }
+            catch (Exception)
+            {
+                MessageBox.Show("An error occurred while trying to open the file.", "Failed to open file.", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void CopyFilePathMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            MenuItem copyFilePath = sender as MenuItem;
+            ListViewItem listViewItemReplay = listViewReplays.ItemContainerGenerator.ContainerFromItem(copyFilePath.DataContext) as ListViewItem;
+            var replay = listViewItemReplay.Content as File<IReplay>;
+            Clipboard.SetText(replay.FilePath);
+        }
+
+        private void LaunchReplayInStarcraftMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        //TODO make this undoable??
+        private void RenameReplayMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            MenuItem copyFilePath = sender as MenuItem;
+            ListViewItem listViewItemReplay = listViewReplays.ItemContainerGenerator.ContainerFromItem(copyFilePath.DataContext) as ListViewItem;
+            var replay = listViewItemReplay.Content as File<IReplay>;
+            // Please enter a renaming syntax:
+            // Rename replay
+            CustomReplayFormat customReplayFormat = null;
+            var replayDialog = new TextInputDialog("Rename replay", "Please enter a renaming syntax:");
+            if (replayDialog.ShowDialog() == true)
+            {
+                try
+                {
+                    if (string.IsNullOrWhiteSpace(replayDialog.Answer))
+                        throw new ArgumentException();
+
+                    customReplayFormat = new CustomReplayFormat(replayDialog.Answer);
+                }
+                catch(ArgumentException)
+                {
+                    MessageBox.Show("Invalid custom replay format. Check help section for correct syntax", "Invalid syntax", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
+                    return;
+                }
+            }
+
+            replay.AddAfterCurrent(Path.GetDirectoryName(replay.FilePath) + @"\" + ReplayHandler.GenerateReplayName(replay.Content, customReplayFormat) + ".rep");
+            ReplayHandler.MoveReplay(replay, true);
+            //TODO investigate whether there actually was a binding active between the displaymember and FilePath...
+            Binding b = new Binding("FilePath");
+            GridView gv = (GridView)listViewReplays.View;
+            gv.Columns[4].DisplayMemberBinding = b;
+            // listViewReplays.Items.Refresh();
+        }
+
+        private void DetailsReplayMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
         #endregion
     }
 }
