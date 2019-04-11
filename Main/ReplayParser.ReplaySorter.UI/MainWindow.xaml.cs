@@ -21,6 +21,7 @@ using ReplayParser.ReplaySorter.UI.Windows;
 using ReplayParser.ReplaySorter.UI.Sorting;
 using System.Windows.Documents;
 using System.Windows.Data;
+using System.Text;
 
 namespace ReplayParser.ReplaySorter.UI
 {
@@ -899,6 +900,7 @@ namespace ReplayParser.ReplaySorter.UI
             {
                 e.Cancel = true;
             }
+            //TODO save after completing parsing instead??
             if (_replaySorterConfiguration.RememberParsingDirectory)
             {
                 _replaySorterConfiguration.LastParsingDirectory = replayDirectoryTextBox.Text;
@@ -1098,20 +1100,7 @@ namespace ReplayParser.ReplaySorter.UI
             var response = e.Result as ServiceResult<ServiceResultSummary<List<File<IReplay>>>>;
             progressBarSortingReplays.Value = 0;
 
-            if (_renamedReplayListHead == null)
-            {
-                _renamedReplaysList.AddFirst(response.Result.Result);
-                _renamedReplayListHead = _renamedReplaysList.First;
-            }
-            else
-            {
-                while (_renamedReplayListHead.Next != null)
-                {
-                    _renamedReplaysList.Remove(_renamedReplayListHead.Next);
-                }
-                _renamedReplaysList.AddAfter(_renamedReplayListHead, response.Result.Result);
-                _renamedReplayListHead = _renamedReplayListHead.Next;
-            }
+            AddUndoable(response.Result.Result);
 
             if (e.Cancelled == true)
             {
@@ -1130,6 +1119,35 @@ namespace ReplayParser.ReplaySorter.UI
                 {
                     MessageBox.Show(response.Result.Message, "Finished renaming", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);
                 }
+            }
+            listViewReplays.Items.Refresh();
+        }
+
+        private void AddUndoable(List<File<IReplay>> replays)
+        {
+            if (replays == null || replays.Count == 0 || _replaySorterConfiguration.MaxUndoLevel == 0)
+                return;
+
+            _renamedReplaysList = _renamedReplaysList ?? new LinkedList<List<File<IReplay>>>();
+
+            while (_renamedReplaysList.Count >= _replaySorterConfiguration.MaxUndoLevel)
+            {
+                _renamedReplaysList.RemoveFirst();
+            }
+
+            if (_renamedReplayListHead == null)
+            {
+                _renamedReplaysList.AddFirst(replays);
+                _renamedReplayListHead = _renamedReplaysList.First;
+            }
+            else
+            {
+                while (_renamedReplayListHead.Next != null)
+                {
+                    _renamedReplaysList.Remove(_renamedReplayListHead.Next);
+                }
+                _renamedReplaysList.AddAfter(_renamedReplayListHead, replays);
+                _renamedReplayListHead = _renamedReplayListHead.Next;
             }
         }
 
@@ -1255,8 +1273,8 @@ namespace ReplayParser.ReplaySorter.UI
                     MessageBox.Show(string.Join(". ", response.Errors), UndoingRename ? "Failed undoing last renaming" : "Failed redoing last renaming", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
                 }
             }
-
             UndoingRename = false;
+            listViewReplays.Items.Refresh();
         }
 
         private void cancelUndoRenamingButton_Click(object sender, RoutedEventArgs e)
@@ -1432,12 +1450,54 @@ namespace ReplayParser.ReplaySorter.UI
             }
         }
 
+        // private void CopyFilePathMenuItem_Click(object sender, RoutedEventArgs e)
+        // {
+        //     MenuItem copyFilePath = sender as MenuItem;
+        //     ListViewItem listViewItemReplay = listViewReplays.ItemContainerGenerator.ContainerFromItem(copyFilePath.DataContext) as ListViewItem;
+        //     var replay = listViewItemReplay.Content as File<IReplay>;
+
+        //     if (listViewReplays.SelectedItems.Count == 1)
+        //     {
+        //         Clipboard.SetText(replay.FilePath);
+        //     }
+        //     else
+        //     {
+        //         var listViewItemReplays = listViewReplays.SelectedItems as System.Collections.IList;
+        //         if (listViewItemReplays.Contains(replay))
+        //         {
+        //             var copiedFilePaths = new StringBuilder();
+        //             foreach (File<IReplay> aReplay in listViewItemReplays)
+        //             {
+        //                 copiedFilePaths.AppendLine(aReplay.FilePath);
+        //             }
+        //             Clipboard.SetText(copiedFilePaths.ToString());
+        //         }
+        //         else
+        //         {
+        //             Clipboard.SetText(replay.FilePath);
+        //         }
+        //     }
+        // }
+
         private void CopyFilePathMenuItem_Click(object sender, RoutedEventArgs e)
         {
-            MenuItem copyFilePath = sender as MenuItem;
-            ListViewItem listViewItemReplay = listViewReplays.ItemContainerGenerator.ContainerFromItem(copyFilePath.DataContext) as ListViewItem;
-            var replay = listViewItemReplay.Content as File<IReplay>;
-            Clipboard.SetText(replay.FilePath);
+            if (listViewReplays.SelectedItems.Count == 1)
+            {
+                MenuItem copyFilePath = sender as MenuItem;
+                ListViewItem listViewItemReplay = listViewReplays.ItemContainerGenerator.ContainerFromItem(copyFilePath.DataContext) as ListViewItem;
+                var replay = listViewItemReplay.Content as File<IReplay>;
+                Clipboard.SetText(replay.FilePath);
+            }
+            else
+            {
+                var listViewItemReplays = listViewReplays.SelectedItems as System.Collections.IList;
+                var copiedFilePaths = new StringBuilder();
+                foreach (File<IReplay> aReplay in listViewItemReplays)
+                {
+                    copiedFilePaths.AppendLine(aReplay.FilePath);
+                }
+                Clipboard.SetText(copiedFilePaths.ToString());
+            }
         }
 
         private void LaunchReplayInStarcraftMenuItem_Click(object sender, RoutedEventArgs e)
@@ -1478,6 +1538,7 @@ namespace ReplayParser.ReplaySorter.UI
             GridView gv = (GridView)listViewReplays.View;
             gv.Columns[4].DisplayMemberBinding = b;
             // listViewReplays.Items.Refresh();
+            AddUndoable(new List<File<IReplay>>() { replay });
         }
 
         private void DetailsReplayMenuItem_Click(object sender, RoutedEventArgs e)

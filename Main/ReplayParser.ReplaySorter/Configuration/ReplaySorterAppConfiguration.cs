@@ -11,7 +11,7 @@ namespace ReplayParser.ReplaySorter.Configuration
         #region fields
 
         private string _logDirectory;
-        private int _maxUndoLevel;
+        private uint _maxUndoLevel;
         private bool _checkForUpdates;
         private bool _rememberParsingDirectory;
         private string _lastParsingDirectory;
@@ -76,7 +76,7 @@ namespace ReplayParser.ReplaySorter.Configuration
             }
         }
 
-        public int MaxUndoLevel
+        public uint MaxUndoLevel
         {
             get
             {

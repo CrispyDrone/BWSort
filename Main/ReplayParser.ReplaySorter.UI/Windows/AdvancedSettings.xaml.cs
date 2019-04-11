@@ -21,7 +21,7 @@ namespace ReplayParser.ReplaySorter.UI.Windows
         private void SaveSettingsButton_Click(object sender, RoutedEventArgs e)
         {
             if (MaxUndoLevelCombobox.SelectedValue != null)
-                _replaySorterConfiguration.MaxUndoLevel = (int)MaxUndoLevelCombobox.SelectedValue;
+                _replaySorterConfiguration.MaxUndoLevel = (uint)MaxUndoLevelCombobox.SelectedValue;
 
             _replaySorterConfiguration.CheckForUpdates = AutomaticCheckUpdatesCheckbox.IsChecked.HasValue && AutomaticCheckUpdatesCheckbox.IsChecked.Value;
             _replaySorterConfiguration.RememberParsingDirectory = SaveLastParseDirectoryCheckbox.IsChecked.HasValue && SaveLastParseDirectoryCheckbox.IsChecked.Value;

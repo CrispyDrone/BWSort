@@ -5,7 +5,7 @@
     <Setting Name="LOGDIRECTORY" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="MAXUNDOLEVEL" Type="System.Int32" Scope="User">
+    <Setting Name="MAXUNDOLEVEL" Type="System.UInt32" Scope="User">
       <Value Profile="(Default)">10</Value>
     </Setting>
     <Setting Name="CHECKFORUPDATES" Type="System.Boolean" Scope="User">
