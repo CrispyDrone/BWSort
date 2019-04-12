@@ -17,6 +17,7 @@ namespace ReplayParser.ReplaySorter.Configuration
         private string _lastParsingDirectory;
         private bool _includeSubDirectoriesByDefault;
         private bool _loadReplaysOnStartup;
+        private bool _checkForDuplicatesOnCumulativeParsing;
 
         private bool _logDirectoryChanged = true;
         private bool _maxUndoLevelChanged = true;
@@ -25,6 +26,7 @@ namespace ReplayParser.ReplaySorter.Configuration
         private bool _lastParsingDirectoryChanged = true;
         private bool _includeSubDirectoriesByDefaultChanged = true;
         private bool _loadReplaysOnStartupChanged = true;
+        private bool _checkForDuplicatesOnCumulativeParsingChanged = true;
 
         #endregion
 
@@ -194,6 +196,26 @@ namespace ReplayParser.ReplaySorter.Configuration
             {
                 _loadReplaysOnStartupChanged = true;
                 Properties.Settings.Default.LOADREPLAYSONSTARTUP = value;
+                Save();
+            }
+        }
+
+        public bool CheckForDuplicates
+        {
+            get
+            {
+                if (_checkForDuplicatesOnCumulativeParsingChanged)
+                {
+                    _checkForDuplicatesOnCumulativeParsing = Properties.Settings.Default.CHECKFORDUPLICATES;
+                    _checkForDuplicatesOnCumulativeParsingChanged = false;
+                }
+
+                return _checkForDuplicatesOnCumulativeParsing;
+            }
+            set
+            {
+                _checkForDuplicatesOnCumulativeParsingChanged = true;
+                Properties.Settings.Default.CHECKFORDUPLICATES = value;
                 Save();
             }
         }

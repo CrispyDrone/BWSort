@@ -78,38 +78,39 @@ namespace ReplayParser.ReplaySorter.UI
         private IReplaySorterConfiguration _replaySorterConfiguration;
 
         // parsing
-        private string replayDirectory;
-        private List<File<IReplay>> ListReplays;
-        private IEnumerable<string> files;
-        List<string> ReplaysThrowingExceptions = new List<string>();
-        private BackgroundWorker worker_ReplayParser = null;
-        private bool NoReplaysFound = false;
-        private bool MoveBadReplays = false;
-        private bool MovingBadReplays = false;
+        private string _replayDirectory;
+        private List<File<IReplay>> _listReplays;
+        private IEnumerable<string> _files;
+        private HashSet<string> _replayHashes;
+        private List<string> _replaysThrowingExceptions = new List<string>();
+        private BackgroundWorker _worker_ReplayParser = null;
+        private bool _noReplaysFound = false;
+        private bool _moveBadReplays = false;
+        private bool _movingBadReplays = false;
         // this feels silly, you can only use the state object passed to RunWorkAsync in ReportProgress
-        private string ErrorMessage = string.Empty;
-        private string BadReplayDirectory = string.Empty;
+        private string _errorMessage = string.Empty;
+        private string _badReplayDirectory = string.Empty;
 
         // sorting
-        private Sorter sorter;
-        private BackgroundWorker worker_ReplaySorter = null;
-        bool SortingReplays = false;
-        bool KeepOriginalReplayNames = true;
-        BoolAnswer boolAnswer = null;
-        Stopwatch swSort = new Stopwatch();
+        private Sorter _sorter;
+        private BackgroundWorker _worker_ReplaySorter = null;
+        private bool _sortingReplays = false;
+        private bool _keepOriginalReplayNames = true;
+        private BoolAnswer _boolAnswer = null;
+        private Stopwatch _swSort = new Stopwatch();
 
         // renaming
-        private BackgroundWorker worker_ReplayRenamer = null;
-        private bool RenamingReplays = false;
+        private BackgroundWorker _worker_ReplayRenamer = null;
+        private bool _renamingReplays = false;
 
         // undoing
-        private BackgroundWorker worker_Undoer = null;
-        private bool UndoingRename = false;
+        private BackgroundWorker _worker_Undoer = null;
+        private bool _undoingRename = false;
 
         // renaming and undoing
         //TODO
-        LinkedList<List<File<IReplay>>> _renamedReplaysList = new LinkedList<List<File<IReplay>>>();
-        LinkedListNode<List<File<IReplay>>> _renamedReplayListHead;
+        private LinkedList<List<File<IReplay>>> _renamedReplaysList = new LinkedList<List<File<IReplay>>>();
+        private LinkedListNode<List<File<IReplay>>> _renamedReplayListHead;
 
         // filtering
         //TOOD
@@ -130,7 +131,7 @@ namespace ReplayParser.ReplaySorter.UI
 
         private void parseReplays()
         {
-            if (worker_ReplayParser != null && worker_ReplayParser.IsBusy)
+            if (_worker_ReplayParser != null && _worker_ReplayParser.IsBusy)
                 return;
 
             SearchOption searchOption;
@@ -144,40 +145,40 @@ namespace ReplayParser.ReplaySorter.UI
                 return;
             }
 
-            replayDirectory = replayDirectoryTextBox.Text;
-            SearchDirectory searchDirectory = new SearchDirectory(replayDirectory, searchOption);
+            _replayDirectory = replayDirectoryTextBox.Text;
+            SearchDirectory searchDirectory = new SearchDirectory(_replayDirectory, searchOption);
 
             statusBarAction.Content = "Parsing replays...";
             if (moveBadReplaysCheckBox.IsChecked == true)
             {
-                MoveBadReplays = true;
-                BadReplayDirectory = moveBadReplaysDirectory.Text;
-                if (!Directory.Exists(BadReplayDirectory))
+                _moveBadReplays = true;
+                _badReplayDirectory = moveBadReplaysDirectory.Text;
+                if (!Directory.Exists(_badReplayDirectory))
                 {
                     MessageBox.Show("The specified bad replay directory does not exist.", "Invalid directory", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
                     return;
                 }
             }
 
-            if (worker_ReplayParser == null)
+            if (_worker_ReplayParser == null)
             {
-                worker_ReplayParser = new BackgroundWorker();
-                worker_ReplayParser.WorkerReportsProgress = true;
-                worker_ReplayParser.WorkerSupportsCancellation = true;
-                worker_ReplayParser.DoWork += worker_ParseReplays;
-                worker_ReplayParser.ProgressChanged += worker_ProgressChangedParsingReplays;
-                worker_ReplayParser.RunWorkerCompleted += worker_ParsingReplaysCompleted;
+                _worker_ReplayParser = new BackgroundWorker();
+                _worker_ReplayParser.WorkerReportsProgress = true;
+                _worker_ReplayParser.WorkerSupportsCancellation = true;
+                _worker_ReplayParser.DoWork += worker_ParseReplays;
+                _worker_ReplayParser.ProgressChanged += worker_ProgressChangedParsingReplays;
+                _worker_ReplayParser.RunWorkerCompleted += worker_ParsingReplaysCompleted;
             }
             // sigh... should I make some sort of new class that contains all the properties I want to access during the DoWork ??
-            worker_ReplayParser.RunWorkerAsync(searchDirectory);
+            _worker_ReplayParser.RunWorkerAsync(searchDirectory);
 
         }
 
         private void cancelParsingButton_Click(object sender, RoutedEventArgs e)
         {
-            if (worker_ReplayParser != null && worker_ReplayParser.IsBusy)
+            if (_worker_ReplayParser != null && _worker_ReplayParser.IsBusy)
             {
-                worker_ReplayParser.CancelAsync();
+                _worker_ReplayParser.CancelAsync();
             }
         }
 
@@ -189,59 +190,117 @@ namespace ReplayParser.ReplaySorter.UI
             {
                 // how can I do this differently? Or is this the way to go about it? Define a bool to remember if the cancel is due to no replays, or due to a user...
                 // ...  how to break properly?
-                NoReplaysFound = true;
+                _noReplaysFound = true;
                 e.Result = e.Argument;
                 return;
             }
-            files = Potentialfiles;
+
+            _files = Potentialfiles;
             ResetReplayParsingVariables(true, false);
             Stopwatch sw = new Stopwatch();
             sw.Start();
+
             int currentPosition = 0;
             int progressPercentage = 0;
             var parsedReplays = new List<File<IReplay>>();
+            var hashedReplays = new HashSet<string>();
+            var checkForDuplicates = _replaySorterConfiguration.CheckForDuplicatesOnCumulativeParsing;
 
-            foreach (var replay in files)
+            if (checkForDuplicates)
             {
-                if (worker_ReplayParser.CancellationPending == true)
+                HashCurrentlyParsedReplays(_listReplays, _worker_ReplayParser);
+                statusBarAction.Content = "Calculating hashes...";
+            }
+
+            foreach (var replay in _files)
+            {
+                if (_worker_ReplayParser.CancellationPending == true)
                 {
                     e.Cancel = true;
                     return;
                 }
                 currentPosition++;
-                progressPercentage = Convert.ToInt32(((double)currentPosition / files.Count()) * 100);
+                progressPercentage = Convert.ToInt32(((double)currentPosition / _files.Count()) * 100);
                 (sender as BackgroundWorker).ReportProgress(progressPercentage);
-                try
-                {
-                    var ParsedReplay = ReplayLoader.LoadReplay(replay);
-                    parsedReplays.Add(File<IReplay>.Create(ParsedReplay, replay));
-                }
-                catch (Exception)
-                {
-                    ReplaysThrowingExceptions.Add(replay);
-                    ErrorMessage = string.Format("Error with replay {0}", replay.ToString());
-                }
+                ParseReplay(parsedReplays, hashedReplays, replay, checkForDuplicates);
             }
-            ListReplays = parsedReplays;
+
+            _replayHashes.UnionWith(hashedReplays);
+            _listReplays = parsedReplays;
             sw.Stop();
-            ErrorMessage = string.Empty;
-            ReplayHandler.LogBadReplays(ReplaysThrowingExceptions, _replaySorterConfiguration.LogDirectory, $"{DateTime.Now} - Error while parsing replay: {{0}}");
-            if (MoveBadReplays == true)
+            _errorMessage = string.Empty;
+            ReplayHandler.LogBadReplays(_replaysThrowingExceptions, _replaySorterConfiguration.LogDirectory, $"{DateTime.Now} - Error while parsing replay: {{0}}");
+            if (_moveBadReplays == true)
             {
-                MovingBadReplays = true;
+                _movingBadReplays = true;
                 currentPosition = 0;
                 progressPercentage = 0;
 
-                foreach (var replay in ReplaysThrowingExceptions)
+                foreach (var replay in _replaysThrowingExceptions)
                 {
                     currentPosition++;
-                    progressPercentage = Convert.ToInt32(((double)currentPosition / ReplaysThrowingExceptions.Count()) * 100);
+                    progressPercentage = Convert.ToInt32(((double)currentPosition / _replaysThrowingExceptions.Count()) * 100);
                     (sender as BackgroundWorker).ReportProgress(progressPercentage);
-                    ReplayHandler.RemoveBadReplay(BadReplayDirectory + @"\BadReplays", replay);
+                    ReplayHandler.RemoveBadReplay(_badReplayDirectory + @"\BadReplays", replay);
                 }
             }
-            files = files.Where(x => !ReplaysThrowingExceptions.Contains(x));
+            _files = _files.Where(x => !_replaysThrowingExceptions.Contains(x));
             e.Result = sw.Elapsed;
+        }
+
+        private void HashCurrentlyParsedReplays(List<File<IReplay>> listReplays, BackgroundWorker worker_ReplayParser)
+        {
+            if (listReplays == null || listReplays.Count() == 0)
+                return;
+
+            foreach (var replay in listReplays)
+            {
+                if (worker_ReplayParser.CancellationPending == true)
+                    return;
+
+                if (string.IsNullOrEmpty(replay.Hash))
+                {
+                    replay.Hash = HashReplay(replay.OriginalFilePath);
+                }
+            }
+        }
+
+        private void ParseReplay(List<File<IReplay>> parsedReplays, HashSet<string> hashedReplays, string replay, bool checkForDuplicatesOnCumulativeParsing)
+        {
+            try
+            {
+                string hashedReplay = null;
+
+                if (checkForDuplicatesOnCumulativeParsing)
+                {
+                    hashedReplay = HashReplay(replay);
+                    if (_replayHashes.Contains(hashedReplay))
+                        return;
+
+                    hashedReplays.Add(hashedReplay);
+                }
+
+                ParseReplay(parsedReplays, replay, hashedReplay);
+            }
+            catch (Exception)
+            {
+                _replaysThrowingExceptions.Add(replay);
+                _errorMessage = string.Format("Error with replay {0}", replay.ToString());
+            }
+        }
+
+        private string HashReplay(string replay)
+        {
+            if (!File.Exists(replay))
+                throw new FileNotFoundException($"Could not find replay {replay}!");
+
+            return FileHasher.GetMd5Hash(File.ReadAllBytes(replay));
+        }
+
+        private void ParseReplay(List<File<IReplay>> parsedReplays, string replay, string hash = null)
+        {
+            var ParsedReplay = ReplayLoader.LoadReplay(replay);
+            parsedReplays.Add(File<IReplay>.Create(ParsedReplay, replay, hash));
         }
 
         private void worker_ProgressChangedParsingReplays(object sender, ProgressChangedEventArgs e)
@@ -249,11 +308,11 @@ namespace ReplayParser.ReplaySorter.UI
             if (e.UserState == null)
             {
                 progressBarParsingReplays.Value = e.ProgressPercentage;
-                if (ErrorMessage != string.Empty)
+                if (_errorMessage != string.Empty)
                 {
-                    statusBarErrors.Content = ErrorMessage;
+                    statusBarErrors.Content = _errorMessage;
                 }
-                if (MovingBadReplays)
+                if (_movingBadReplays)
                 {
                     statusBarAction.Content = "Moving bad replays...";
                 }
@@ -270,7 +329,7 @@ namespace ReplayParser.ReplaySorter.UI
             }
             else
             {
-                if (NoReplaysFound)
+                if (_noReplaysFound)
                     MessageBox.Show($"No replays found in {((SearchDirectory)e.Result).Directory}. Please specify an existing directory containing your replays.", "Failed to find replays.", MessageBoxButton.OK, MessageBoxImage.Exclamation);
                 else
                 {
@@ -279,9 +338,9 @@ namespace ReplayParser.ReplaySorter.UI
                     MessageBox.Show(
                         string.Format("Parsing replays finished! It took {0} to parse {1} replays. {2} replays encountered exceptions during parsing. {3}", 
                             (TimeSpan)e.Result,
-                            ListReplays.Count(), 
-                            ReplaysThrowingExceptions.Count(), 
-                            MoveBadReplays ? "Bad replays have been moved to the specified directory." : ""), 
+                            _listReplays.Count(), 
+                            _replaysThrowingExceptions.Count(), 
+                            _moveBadReplays ? "Bad replays have been moved to the specified directory." : ""), 
                         "Parsing summary", 
                         MessageBoxButton.OK, 
                         MessageBoxImage.Information, 
@@ -290,22 +349,22 @@ namespace ReplayParser.ReplaySorter.UI
                     EnableSortingAndRenamingButtons(ReplayAction.Parse, true);
                 }
             }
-            listViewReplays.ItemsSource = ListReplays;
+            listViewReplays.ItemsSource = _listReplays;
         }
 
         private void ResetReplayParsingVariables(bool clearListReplays, bool resetMoveBadReplays)
         {
             if (clearListReplays)
             {
-                ListReplays?.Clear();
+                _listReplays?.Clear();
             }
             if (resetMoveBadReplays)
             {
-                MoveBadReplays = false;
+                _moveBadReplays = false;
             }
-            ReplaysThrowingExceptions?.Clear();
-            NoReplaysFound = false;
-            MovingBadReplays = false;
+            _replaysThrowingExceptions?.Clear();
+            _noReplaysFound = false;
+            _movingBadReplays = false;
         }
 
 
@@ -569,7 +628,7 @@ namespace ReplayParser.ReplaySorter.UI
 
         private void executeSortButton_Click(object sender, RoutedEventArgs e)
         {
-            if (worker_ReplaySorter != null && worker_ReplaySorter.IsBusy)
+            if (_worker_ReplaySorter != null && _worker_ReplaySorter.IsBusy)
                 return;
 
             // get textboxes value, you could also take them from your dictionary keys, add a tag with a number, and sort on this number so it's not as hardcoded?
@@ -592,10 +651,10 @@ namespace ReplayParser.ReplaySorter.UI
             SortCriteriaParameters SortCriteriaParameters;
             bool? makefolderforwinner = null;
             bool? makefolderforloser = null;
-            KeepOriginalReplayNames = (bool)keepOriginalReplayNamesCheckBox.IsChecked;
+            _keepOriginalReplayNames = (bool)keepOriginalReplayNamesCheckBox.IsChecked;
             CustomReplayFormat customReplayFormat = null;
 
-            if (!KeepOriginalReplayNames)
+            if (!_keepOriginalReplayNames)
             {
                 var customFormatTextBox = GetPanelWithName(keepOriginalReplayNamesPanel, "keepOriginalReplayNamesPanelPanel").Children.OfType<TextBox>().FirstOrDefault();
                 try
@@ -703,8 +762,8 @@ namespace ReplayParser.ReplaySorter.UI
             // only if directory exists
             if (Directory.Exists(sortOutputDirectoryTextBox.Text))
             {
-                sorter = new Sorter(sortOutputDirectoryTextBox.Text, ListReplays);
-                sorter.CurrentDirectory = sortOutputDirectoryTextBox.Text;
+                _sorter = new Sorter(sortOutputDirectoryTextBox.Text, _listReplays);
+                _sorter.CurrentDirectory = sortOutputDirectoryTextBox.Text;
             }
             else
             {
@@ -713,7 +772,7 @@ namespace ReplayParser.ReplaySorter.UI
             }
 
             SortCriteriaParameters = new SortCriteriaParameters(makefolderforwinner, makefolderforloser, validgametypes, durations);
-            sorter.SortCriteriaParameters = SortCriteriaParameters;
+            _sorter.SortCriteriaParameters = SortCriteriaParameters;
 
             var filterReplays = filterReplaysCheckBox.IsChecked.HasValue && filterReplaysCheckBox.IsChecked.Value;
 
@@ -722,49 +781,49 @@ namespace ReplayParser.ReplaySorter.UI
                 if (_filteredListReplays == null)
                     MessageBox.Show("Can not execute sort since filter did not return any replays!", "Failed to start sort: invalid filter", MessageBoxButton.OK, MessageBoxImage.Warning, MessageBoxResult.OK);
 
-                sorter.ListReplays = _filteredListReplays;
+                _sorter.ListReplays = _filteredListReplays;
             }
             else
             {
-                sorter.ListReplays = ListReplays;
+                _sorter.ListReplays = _listReplays;
             }
 
             if (CriteriaStringOrder.Length > 1)
             {
-                sorter.SortCriteria = (Criteria)Enum.Parse(typeof(Criteria), string.Join(",", CriteriaStringOrder));
+                _sorter.SortCriteria = (Criteria)Enum.Parse(typeof(Criteria), string.Join(",", CriteriaStringOrder));
             }
             else
             {
-                sorter.SortCriteria = (Criteria)Enum.Parse(typeof(Criteria), CriteriaStringOrder[0]);
+                _sorter.SortCriteria = (Criteria)Enum.Parse(typeof(Criteria), CriteriaStringOrder[0]);
             }
-            sorter.CriteriaStringOrder = CriteriaStringOrder;
+            _sorter.CriteriaStringOrder = CriteriaStringOrder;
             if (customReplayFormat != null)
-                sorter.CustomReplayFormat = customReplayFormat;
+                _sorter.CustomReplayFormat = customReplayFormat;
 
-            if (worker_ReplaySorter == null)
+            if (_worker_ReplaySorter == null)
             {
-                worker_ReplaySorter = new BackgroundWorker();
-                worker_ReplaySorter.WorkerReportsProgress = true;
-                worker_ReplaySorter.WorkerSupportsCancellation = true;
-                worker_ReplaySorter.DoWork += worker_SortReplays;
-                worker_ReplaySorter.ProgressChanged += worker_ProgressChangedSortingReplays;
-                worker_ReplaySorter.RunWorkerCompleted += worker_SortingReplaysCompleted;
+                _worker_ReplaySorter = new BackgroundWorker();
+                _worker_ReplaySorter.WorkerReportsProgress = true;
+                _worker_ReplaySorter.WorkerSupportsCancellation = true;
+                _worker_ReplaySorter.DoWork += worker_SortReplays;
+                _worker_ReplaySorter.ProgressChanged += worker_ProgressChangedSortingReplays;
+                _worker_ReplaySorter.RunWorkerCompleted += worker_SortingReplaysCompleted;
             }
-            swSort.Start();
-            worker_ReplaySorter.RunWorkerAsync();
+            _swSort.Start();
+            _worker_ReplaySorter.RunWorkerAsync();
         }
 
         private void worker_SortReplays(object sender, DoWorkEventArgs e)
         {
-            var SorterConditions = CheckSorterConditions(sorter);
+            var SorterConditions = CheckSorterConditions(_sorter);
 
             if (SorterConditions.GoodToGo == true)
             {
-                SortingReplays = true;
-                e.Result = sorter.ExecuteSortAsync(KeepOriginalReplayNames, worker_ReplaySorter, ReplaysThrowingExceptions);
-                ReplayHandler.LogBadReplays(ReplaysThrowingExceptions, _replaySorterConfiguration.LogDirectory, $"{DateTime.Now} - Error while sorting replay: {{0}} with arguments {sorter.ToString()}");
+                _sortingReplays = true;
+                e.Result = _sorter.ExecuteSortAsync(_keepOriginalReplayNames, _worker_ReplaySorter, _replaysThrowingExceptions);
+                ReplayHandler.LogBadReplays(_replaysThrowingExceptions, _replaySorterConfiguration.LogDirectory, $"{DateTime.Now} - Error while sorting replay: {{0}} with arguments {_sorter.ToString()}");
 
-                if (worker_ReplaySorter.CancellationPending == true)
+                if (_worker_ReplaySorter.CancellationPending == true)
                 {
                     e.Cancel = true;
                     return;
@@ -777,7 +836,7 @@ namespace ReplayParser.ReplaySorter.UI
             else
             {
                 e.Cancel = true;
-                boolAnswer = SorterConditions;
+                _boolAnswer = SorterConditions;
                 //e.Result = SorterConditions;
                 return;
             }
@@ -788,11 +847,11 @@ namespace ReplayParser.ReplaySorter.UI
             if (e.UserState == null)
             {
                 progressBarSortingReplays.Value = e.ProgressPercentage;
-                if (ErrorMessage != string.Empty)
+                if (_errorMessage != string.Empty)
                 {
-                    statusBarErrors.Content = ErrorMessage;
+                    statusBarErrors.Content = _errorMessage;
                 }
-                if (SortingReplays)
+                if (_sortingReplays)
                 {
                     statusBarAction.Content = "Sorting replays...";
                 }
@@ -806,15 +865,15 @@ namespace ReplayParser.ReplaySorter.UI
 
         private void worker_SortingReplaysCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            swSort.Stop();
+            _swSort.Stop();
             if (e.Cancelled == true)
             {
                 statusBarAction.Content = "Sorting cancelled...";
                 progressBarSortingReplays.Value = 0;
 
-                if (boolAnswer != null)
+                if (_boolAnswer != null)
                 {
-                    MessageBox.Show(boolAnswer.Message, "Failed to start sort", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
+                    MessageBox.Show(_boolAnswer.Message, "Failed to start sort", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
                 }
                 else
                 {
@@ -825,19 +884,19 @@ namespace ReplayParser.ReplaySorter.UI
             else
             {
                 statusBarAction.Content = "Finished sorting replays";
-                MessageBox.Show(string.Format("Finished sorting replays! It took {0} to sort {1} replays. {2} replays encountered exceptions.", swSort.Elapsed, ListReplays.Count, ReplaysThrowingExceptions.Count()), "Finished Sorting", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);
+                MessageBox.Show(string.Format("Finished sorting replays! It took {0} to sort {1} replays. {2} replays encountered exceptions.", _swSort.Elapsed, _listReplays.Count, _replaysThrowingExceptions.Count()), "Finished Sorting", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);
                 ResetReplaySortingVariables();
-                ReplaysThrowingExceptions.Clear();
+                _replaysThrowingExceptions.Clear();
             }
         }
 
         private void ResetReplaySortingVariables()
         {
             // not implemented
-            SortingReplays = false;
+            _sortingReplays = false;
             // KeepOriginalReplayNames = true;
-            boolAnswer = null;
-            swSort.Reset();
+            _boolAnswer = null;
+            _swSort.Reset();
         }
 
         private static BoolAnswer CheckSorterConditions(Sorter aSorter)
@@ -865,9 +924,9 @@ namespace ReplayParser.ReplaySorter.UI
 
         private void cancelSortButton_Click(object sender, RoutedEventArgs e)
         {
-            if (worker_ReplaySorter != null && worker_ReplaySorter.IsBusy)
+            if (_worker_ReplaySorter != null && _worker_ReplaySorter.IsBusy)
             {
-                worker_ReplaySorter.CancelAsync();
+                _worker_ReplaySorter.CancelAsync();
             }
         }
 
@@ -966,7 +1025,7 @@ namespace ReplayParser.ReplaySorter.UI
 
         private void executeRenamingButton_Click(object sender, RoutedEventArgs e)
         {
-            if (worker_ReplayRenamer != null && worker_ReplayRenamer.IsBusy)
+            if (_worker_ReplayRenamer != null && _worker_ReplayRenamer.IsBusy)
                 return;
 
             bool? renameInPlace = renameInPlaceCheckBox.IsChecked;
@@ -998,7 +1057,7 @@ namespace ReplayParser.ReplaySorter.UI
             }
             else
             {
-                if (ListReplays.All(r => r.FilePath == r.OriginalFilePath))
+                if (_listReplays.All(r => r.FilePath == r.OriginalFilePath))
                 {
                     MessageBox.Show("Replays still have their original file names. Restore is not necessary.", "Unnecessary restore", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);
                     return;
@@ -1030,21 +1089,21 @@ namespace ReplayParser.ReplaySorter.UI
             }
             else
             {
-                replayRenamer = new Renamer(renamingParameters, ListReplays);
+                replayRenamer = new Renamer(renamingParameters, _listReplays);
             }
 
             statusBarAction.Content = "Renaming replays...";
 
-            if (worker_ReplayRenamer == null)
+            if (_worker_ReplayRenamer == null)
             {
-                worker_ReplayRenamer = new BackgroundWorker();
-                worker_ReplayRenamer.WorkerReportsProgress = true;
-                worker_ReplayRenamer.WorkerSupportsCancellation = true;
-                worker_ReplayRenamer.DoWork += worker_RenameReplays;
-                worker_ReplayRenamer.ProgressChanged += worker_ProgressChangedRenamingReplays;
-                worker_ReplayRenamer.RunWorkerCompleted += worker_RenamingReplaysCompleted;
+                _worker_ReplayRenamer = new BackgroundWorker();
+                _worker_ReplayRenamer.WorkerReportsProgress = true;
+                _worker_ReplayRenamer.WorkerSupportsCancellation = true;
+                _worker_ReplayRenamer.DoWork += worker_RenameReplays;
+                _worker_ReplayRenamer.ProgressChanged += worker_ProgressChangedRenamingReplays;
+                _worker_ReplayRenamer.RunWorkerCompleted += worker_RenamingReplaysCompleted;
             }
-            worker_ReplayRenamer.RunWorkerAsync(replayRenamer);
+            _worker_ReplayRenamer.RunWorkerAsync(replayRenamer);
         }
 
         private void worker_RenameReplays(object sender, DoWorkEventArgs e)
@@ -1053,7 +1112,7 @@ namespace ReplayParser.ReplaySorter.UI
             var renameInPlace = replayRenamer.RenameInPlace;
             var restoreOriginalReplayNames = replayRenamer.RestoreOriginalReplayNames;
             ServiceResult<ServiceResultSummary<List<File<IReplay>>>> response = null;
-            RenamingReplays = true;
+            _renamingReplays = true;
 
             if (renameInPlace)
             {
@@ -1069,7 +1128,7 @@ namespace ReplayParser.ReplaySorter.UI
                 response = replayRenamer.RenameToDirectoryAsync(sender as BackgroundWorker);
             }
 
-            ReplayHandler.LogBadReplays(ReplaysThrowingExceptions, _replaySorterConfiguration.LogDirectory, $"{DateTime.Now} - Error while renaming replay: {{0}} using arguments: {replayRenamer.ToString()}");
+            ReplayHandler.LogBadReplays(_replaysThrowingExceptions, _replaySorterConfiguration.LogDirectory, $"{DateTime.Now} - Error while renaming replay: {{0}} using arguments: {replayRenamer.ToString()}");
             e.Result = response;
         }
 
@@ -1078,11 +1137,11 @@ namespace ReplayParser.ReplaySorter.UI
             if (e.UserState == null)
             {
                 progressBarRenamingOrRestoringReplays.Value = e.ProgressPercentage;
-                if (ErrorMessage != string.Empty)
+                if (_errorMessage != string.Empty)
                 {
-                    statusBarErrors.Content = ErrorMessage;
+                    statusBarErrors.Content = _errorMessage;
                 }
-                if (RenamingReplays)
+                if (_renamingReplays)
                 {
                     statusBarAction.Content = "Renaming replays...";
                 }
@@ -1096,7 +1155,7 @@ namespace ReplayParser.ReplaySorter.UI
 
         private void worker_RenamingReplaysCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            RenamingReplays = false;
+            _renamingReplays = false;
             var response = e.Result as ServiceResult<ServiceResultSummary<List<File<IReplay>>>>;
             progressBarSortingReplays.Value = 0;
 
@@ -1153,9 +1212,9 @@ namespace ReplayParser.ReplaySorter.UI
 
         private void cancelRenamingButton_Click(object sender, RoutedEventArgs e)
         {
-            if (worker_ReplayRenamer != null && worker_ReplayRenamer.IsBusy)
+            if (_worker_ReplayRenamer != null && _worker_ReplayRenamer.IsBusy)
             {
-                worker_ReplayRenamer.CancelAsync();
+                _worker_ReplayRenamer.CancelAsync();
             }
         }
 
@@ -1169,16 +1228,16 @@ namespace ReplayParser.ReplaySorter.UI
                 return;
             }
 
-            if (worker_Undoer == null)
+            if (_worker_Undoer == null)
             {
-                worker_Undoer = new BackgroundWorker();
-                worker_Undoer.WorkerReportsProgress = true;
-                worker_Undoer.WorkerSupportsCancellation = true;
-                worker_Undoer.DoWork += worker_UndoRename;
-                worker_Undoer.ProgressChanged += worker_ProgressChangedUndoRename;
-                worker_Undoer.RunWorkerCompleted += worker_UndoRenamingCompleted;
+                _worker_Undoer = new BackgroundWorker();
+                _worker_Undoer.WorkerReportsProgress = true;
+                _worker_Undoer.WorkerSupportsCancellation = true;
+                _worker_Undoer.DoWork += worker_UndoRename;
+                _worker_Undoer.ProgressChanged += worker_ProgressChangedUndoRename;
+                _worker_Undoer.RunWorkerCompleted += worker_UndoRenamingCompleted;
             }
-            worker_Undoer.RunWorkerAsync(true);
+            _worker_Undoer.RunWorkerAsync(true);
         }
 
         private void redoRenamingButton_Click(object sender, RoutedEventArgs e)
@@ -1191,16 +1250,16 @@ namespace ReplayParser.ReplaySorter.UI
                 return;
             }
 
-            if (worker_Undoer == null)
+            if (_worker_Undoer == null)
             {
-                worker_Undoer = new BackgroundWorker();
-                worker_Undoer.WorkerReportsProgress = true;
-                worker_Undoer.WorkerSupportsCancellation = true;
-                worker_Undoer.DoWork += worker_UndoRename;
-                worker_Undoer.ProgressChanged += worker_ProgressChangedUndoRename;
-                worker_Undoer.RunWorkerCompleted += worker_UndoRenamingCompleted;
+                _worker_Undoer = new BackgroundWorker();
+                _worker_Undoer.WorkerReportsProgress = true;
+                _worker_Undoer.WorkerSupportsCancellation = true;
+                _worker_Undoer.DoWork += worker_UndoRename;
+                _worker_Undoer.ProgressChanged += worker_ProgressChangedUndoRename;
+                _worker_Undoer.RunWorkerCompleted += worker_UndoRenamingCompleted;
             }
-            worker_Undoer.RunWorkerAsync(false);
+            _worker_Undoer.RunWorkerAsync(false);
         }
 
         private void worker_UndoRename(object sender, DoWorkEventArgs e)
@@ -1208,7 +1267,7 @@ namespace ReplayParser.ReplaySorter.UI
             if ((bool)e.Argument == true)
             {
                 // undo
-                UndoingRename = true;
+                _undoingRename = true;
 
                 _renamedReplayListHead = _renamedReplayListHead.Previous;
 
@@ -1230,11 +1289,11 @@ namespace ReplayParser.ReplaySorter.UI
             if (e.UserState == null)
             {
                 progressBarRenamingOrRestoringReplays.Value = e.ProgressPercentage;
-                if (ErrorMessage != string.Empty)
+                if (_errorMessage != string.Empty)
                 {
-                    statusBarErrors.Content = ErrorMessage;
+                    statusBarErrors.Content = _errorMessage;
                 }
-                if (UndoingRename)
+                if (_undoingRename)
                 {
                     statusBarAction.Content = "Undoing last renaming of replays...";
                 }
@@ -1257,31 +1316,31 @@ namespace ReplayParser.ReplaySorter.UI
 
             if (e.Cancelled)
             {
-                statusBarAction.Content = UndoingRename ? "Undoing renaming cancelled..." : "Redoing renaming cancelled...";
-                MessageBox.Show(response.Result.Message, UndoingRename ? "Undoing renaming cancelled" : "Redoing renaming cancelled", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);
+                statusBarAction.Content = _undoingRename ? "Undoing renaming cancelled..." : "Redoing renaming cancelled...";
+                MessageBox.Show(response.Result.Message, _undoingRename ? "Undoing renaming cancelled" : "Redoing renaming cancelled", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);
             }
             else
             {
-                statusBarAction.Content = UndoingRename ? "Finished undoing last renaming." : "Finished redoing last renaming";
+                statusBarAction.Content = _undoingRename ? "Finished undoing last renaming." : "Finished redoing last renaming";
 
                 if (response.Success)
                 {
-                    MessageBox.Show(response.Result.Message, UndoingRename ? "Finished undoing last renaming" : "Finished redoing last renaming", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);
+                    MessageBox.Show(response.Result.Message, _undoingRename ? "Finished undoing last renaming" : "Finished redoing last renaming", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);
                 }
                 else
                 {
-                    MessageBox.Show(string.Join(". ", response.Errors), UndoingRename ? "Failed undoing last renaming" : "Failed redoing last renaming", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
+                    MessageBox.Show(string.Join(". ", response.Errors), _undoingRename ? "Failed undoing last renaming" : "Failed redoing last renaming", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
                 }
             }
-            UndoingRename = false;
+            _undoingRename = false;
             listViewReplays.Items.Refresh();
         }
 
         private void cancelUndoRenamingButton_Click(object sender, RoutedEventArgs e)
         {
-            if (worker_Undoer != null && worker_Undoer.IsBusy)
+            if (_worker_Undoer != null && _worker_Undoer.IsBusy)
             {
-                worker_Undoer.CancelAsync();
+                _worker_Undoer.CancelAsync();
             }
         }
 
@@ -1305,9 +1364,9 @@ namespace ReplayParser.ReplaySorter.UI
             {
                 if (string.IsNullOrWhiteSpace(filterReplaysTextBox.Text))
                 {
-                    if (listViewReplays.ItemsSource != ListReplays)
+                    if (listViewReplays.ItemsSource != _listReplays)
                     {
-                        listViewReplays.ItemsSource = ListReplays;
+                        listViewReplays.ItemsSource = _listReplays;
                         filterReplaysProgressBar.Value = 0;
                     }
 
@@ -1339,7 +1398,7 @@ namespace ReplayParser.ReplaySorter.UI
             if (string.IsNullOrWhiteSpace(filterExpression))
                 return;
 
-            _filteredListReplays = _replayFilterer.Apply(ListReplays, filterExpression, sender as BackgroundWorker);
+            _filteredListReplays = _replayFilterer.Apply(_listReplays, filterExpression, sender as BackgroundWorker);
             e.Result = filterExpression;
         }
 
@@ -1348,9 +1407,9 @@ namespace ReplayParser.ReplaySorter.UI
             filterReplaysProgressBar.Value = e.ProgressPercentage;
             if (e.UserState == null)
             {
-                if (ErrorMessage != string.Empty)
+                if (_errorMessage != string.Empty)
                 {
-                    statusBarErrors.Content = ErrorMessage;
+                    statusBarErrors.Content = _errorMessage;
                 }
             }
             else

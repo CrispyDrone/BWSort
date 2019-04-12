@@ -144,8 +144,8 @@
                         </StackPanel>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" DockPanel.Dock="Bottom" HorizontalAlignment="Center">
-                        <Button x:Name="executeSortButton"  Content="Execute sort" Margin="10" HorizontalAlignment="Center" Padding="10 0 10 0" Click="executeSortButton_Click"></Button>
-                        <Button x:Name="cancelSortButton" Content="Cancel" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="10 0 10 0" Click="cancelSortButton_Click"></Button>
+                        <Button x:Name="executeSortButton"  Content="Sort" Margin="10" HorizontalAlignment="Center" Padding="10 0 10 0" MinWidth="70"  Click="executeSortButton_Click"></Button>
+                        <Button x:Name="cancelSortButton" Content="Cancel" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="10 0 10 0" MinWidth="70" Click="cancelSortButton_Click"></Button>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" DockPanel.Dock="Bottom" HorizontalAlignment="Center">
                         <Button IsEnabled="false" x:Name="previewSortButton" Content="Preview sort" Margin="10" HorizontalAlignment="Center" Padding="10 0 10 0"></Button>
@@ -174,14 +174,14 @@
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" DockPanel.Dock="Bottom" HorizontalAlignment="Center">
                         <StackPanel Orientation="Vertical">
-                            <Button x:Name="undoRenamingButton" Content="Undo rename " Click="undoRenamingButton_Click" Margin ="10" Padding="10 0 10 0"></Button>
-                            <Button x:Name="redoRenamingButton" Content="Redo rename " Click="redoRenamingButton_Click" Margin ="10" Padding="10 0 10 0"></Button>
+                            <Button x:Name="undoRenamingButton" Content="Undo" Click="undoRenamingButton_Click" Margin ="10" Padding="10 0 10 0" MinWidth="70"></Button>
+                            <Button x:Name="redoRenamingButton" Content="Redo" Click="redoRenamingButton_Click" Margin ="10" Padding="10 0 10 0" MinWidth="70"></Button>
                         </StackPanel>
-                        <Button x:Name="cancelUndoRenamingButton" Content="Cancel" Click="cancelUndoRenamingButton_Click" Margin ="10" Padding="10 0 10 0" VerticalAlignment="Center"></Button>
+                        <Button x:Name="cancelUndoRenamingButton" Content="Cancel" Click="cancelUndoRenamingButton_Click" Margin ="10" Padding="10 0 10 0" MinWidth="70" VerticalAlignment="Center"></Button>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" DockPanel.Dock="Bottom" HorizontalAlignment="Center">
-                        <Button x:Name="executeRenamingButton" Content="Rename" Click="executeRenamingButton_Click" Margin ="10" Padding="10 0 10 0"></Button>
-                        <Button x:Name="cancelRenamingButton" Content="Cancel" Click="cancelRenamingButton_Click" Margin ="10" Padding="10 0 10 0"></Button>
+                        <Button x:Name="executeRenamingButton" Content="Rename" Click="executeRenamingButton_Click" Margin ="10" Padding="10 0 10 0" MinWidth="70"></Button>
+                        <Button x:Name="cancelRenamingButton" Content="Cancel" Click="cancelRenamingButton_Click" Margin ="10" Padding="10 0 10 0" MinWidth="70"></Button>
                     </StackPanel>
                     <Grid DockPanel.Dock="Bottom">
                         <ProgressBar x:Name="progressBarRenamingOrRestoringReplays" Minimum="0" Maximum="100" Margin="10 0"></ProgressBar>

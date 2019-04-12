@@ -1,8 +1,9 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 
 namespace ReplayParser.ReplaySorter.IO
 {
-    public class File<T>
+    public class File<T> where T : class
     {
         #region private
 
@@ -10,15 +11,17 @@ namespace ReplayParser.ReplaySorter.IO
 
         private FileHistory _fileHistory;
         private T _content;
+        private string _hash;
 
         #endregion
 
         #region constructor
 
-        private File(T content, string originalFilePath)
+        private File(T content, string originalFilePath, string hash)
         {
             _fileHistory = FileHistory.Create(originalFilePath);
             _content = content;
+            _hash = hash;
         }
 
         #endregion
@@ -29,10 +32,10 @@ namespace ReplayParser.ReplaySorter.IO
 
         #region static constructor
 
-        public static File<T> Create(T content, string originalFilePath)
+        public static File<T> Create(T content, string originalFilePath, string hash = null)
         {
             if (content == null || string.IsNullOrWhiteSpace(originalFilePath)) return null;
-            return new File<T>(content, originalFilePath);
+            return new File<T>(content, originalFilePath, hash);
         }
 
         #endregion
@@ -44,6 +47,7 @@ namespace ReplayParser.ReplaySorter.IO
         public T Content => _content;
         public bool IsAtOriginal => _fileHistory.IsAtOriginal;
         public bool IsAtLast => _fileHistory.IsAtLast;
+        public string Hash { get => _hash; set => _hash = value; }
 
         #endregion
 

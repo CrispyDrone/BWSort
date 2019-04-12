@@ -106,5 +106,17 @@ namespace ReplayParser.ReplaySorter.Properties {
                 this["PARSESUBDIRECTORIES"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool CHECKFORDUPLICATES {
+            get {
+                return ((bool)(this["CHECKFORDUPLICATES"]));
+            }
+            set {
+                this["CHECKFORDUPLICATES"] = value;
+            }
+        }
     }
 }

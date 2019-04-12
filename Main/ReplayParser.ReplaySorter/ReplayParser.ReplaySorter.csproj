@@ -87,6 +87,7 @@
     <Compile Include="Filtering\ReplayFilterer.cs" />
     <Compile Include="IO\File.cs" />
     <Compile Include="IO\FileHandler.cs" />
+    <Compile Include="IO\FileHasher.cs" />
     <Compile Include="IO\FileHistory.cs" />
     <Compile Include="Properties\Settings.Designer.cs">
       <AutoGen>True</AutoGen>

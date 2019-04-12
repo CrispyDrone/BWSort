@@ -22,6 +22,7 @@
                     <RowDefinition Height="*"></RowDefinition>
                     <RowDefinition Height="*"></RowDefinition>
                     <RowDefinition Height="*"></RowDefinition>
+                    <RowDefinition Height="*"></RowDefinition>
                 </Grid.RowDefinitions>
                 <Label x:Name="MaxUndoLevelLabel" Grid.Column="1" Grid.Row="0">Max undo level:</Label>
                 <ComboBox x:Name="MaxUndoLevelCombobox" Grid.Column="2" Grid.Row="0" Margin="10 0"></ComboBox>
@@ -37,6 +38,12 @@
                 <CheckBox x:Name="IncludeSubDirectoriesByDefaultCheckbox" Grid.Column="2" Grid.Row="3" IsChecked="False" VerticalAlignment="Center" Margin="10 0"></CheckBox>
                 <Label x:Name="ParseReplaysOnStartupLabel" Grid.Column="1" Grid.Row="4">Load replays on startup</Label>
                 <CheckBox x:Name="ParseReplaysOnStartupCheckbox" Grid.Column="2" Grid.Row="4" IsChecked="False" VerticalAlignment="Center" IsEnabled="{Binding ElementName=SaveLastParseDirectoryCheckbox, Path=IsChecked}" Margin="10 0"></CheckBox>
+                <Label x:Name="CheckForDuplicatesLabel" Grid.Column="1" Grid.Row="5">
+                    <Label.Content>
+                        <AccessText TextWrapping="Wrap" Text="Check for duplicates when parsing additional replays"></AccessText>
+                    </Label.Content>
+                </Label>
+                <CheckBox x:Name="CheckForDuplicatesCheckbox" Grid.Column="2" Grid.Row="5" IsChecked="True" VerticalAlignment="Center" Margin="10 0"></CheckBox>
             </Grid>
             <Button x:Name="saveSettingsButton" DockPanel.Dock="Bottom" HorizontalAlignment="Center" Margin="20" Padding="10 0" Click="SaveSettingsButton_Click">Save settings</Button>
         </DockPanel>

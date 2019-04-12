@@ -27,6 +27,7 @@ namespace ReplayParser.ReplaySorter.UI.Windows
             _replaySorterConfiguration.RememberParsingDirectory = SaveLastParseDirectoryCheckbox.IsChecked.HasValue && SaveLastParseDirectoryCheckbox.IsChecked.Value;
             _replaySorterConfiguration.IncludeSubDirectoriesByDefault = IncludeSubDirectoriesByDefaultCheckbox.IsChecked.HasValue && IncludeSubDirectoriesByDefaultCheckbox.IsChecked.Value;
             _replaySorterConfiguration.LoadReplaysOnStartup = ParseReplaysOnStartupCheckbox.IsChecked.HasValue && ParseReplaysOnStartupCheckbox.IsChecked.Value;
+            _replaySorterConfiguration.CheckForDuplicatesOnCumulativeParsing = CheckForDuplicatesCheckbox.IsChecked.HasValue && CheckForDuplicatesCheckbox.IsChecked.Value;
             this.Close();
         }
 
@@ -46,7 +47,9 @@ namespace ReplayParser.ReplaySorter.UI.Windows
             MaxUndoLevelCombobox.SelectedValue = _replaySorterConfiguration.MaxUndoLevel;
             AutomaticCheckUpdatesCheckbox.IsChecked = _replaySorterConfiguration.CheckForUpdates;
             SaveLastParseDirectoryCheckbox.IsChecked = _replaySorterConfiguration.RememberParsingDirectory;
+            IncludeSubDirectoriesByDefaultCheckbox.IsChecked = _replaySorterConfiguration.IncludeSubDirectoriesByDefault;
             ParseReplaysOnStartupCheckbox.IsChecked = _replaySorterConfiguration.LoadReplaysOnStartup;
+            CheckForDuplicatesCheckbox.IsChecked = _replaySorterConfiguration.CheckForDuplicatesOnCumulativeParsing;
         }
     }
 }
