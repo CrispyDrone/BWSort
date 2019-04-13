@@ -21,6 +21,7 @@ using ReplayParser.ReplaySorter.UI.Sorting;
 using System.Windows.Documents;
 using System.Windows.Data;
 using System.Text;
+using System.Windows.Media;
 
 namespace ReplayParser.ReplaySorter.UI
 {
@@ -37,7 +38,7 @@ namespace ReplayParser.ReplaySorter.UI
         // parsing
         private string _replayDirectory;
         private List<File<IReplay>> _listReplays;
-        private List<string> _files = new List<string>();
+        private List<ParseFile> _files = new List<ParseFile>();
         private HashSet<string> _replayHashes = new HashSet<string>();
         private List<string> _replaysThrowingExceptions = new List<string>();
         private BackgroundWorker _worker_ReplayParser = null;
@@ -176,6 +177,48 @@ namespace ReplayParser.ReplaySorter.UI
 
         #region parsing
 
+        private class ParseFile
+        {
+            public string Path { get; set; }
+            public FeedBack Feedback { get; set; }
+        }
+
+        private void DiscoverReplayFiles()
+        {
+            if (!Directory.Exists(replayDirectoryTextBox.Text))
+            {
+                MessageBox.Show("Please select an existing directory first.", "Invalid directory", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
+                return;
+            }
+
+            SearchOption searchOption = SearchOption.TopDirectoryOnly;
+            if (includeSubdirectoriesCheckbox.IsChecked.HasValue && includeSubdirectoriesCheckbox.IsChecked.Value)
+                searchOption = SearchOption.AllDirectories;
+
+            _replayDirectory = replayDirectoryTextBox.Text;
+
+            var potentialfiles = Directory.EnumerateFiles(_replayDirectory, "*.rep", searchOption);
+
+            if (potentialfiles.Count() == 0)
+            {
+                MessageBox.Show($"No replays found in {_replayDirectory}. Please specify an existing directory containing your replays.", "Failed to find replays.", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                return;
+            }
+
+            _files.AddRange(potentialfiles.Select(f => new ParseFile { Path = f, Feedback = FeedBack.NONE}));
+
+            replayFilesFoundListBox.ItemsSource = _files;
+            replayFilesFoundListBox.Items.Refresh();
+        }
+
+        private void ClearFoundReplayFilesButton_Click(object sender, RoutedEventArgs e)
+        {
+            ResetReplayParsingVariables(false, true);
+            ResetFiltering();
+            replayFilesFoundListBox.ItemsSource = null;
+            _files.Clear();
+        }
+
         private void parseReplaysButton_Click(object sender, RoutedEventArgs e)
         {
             parseReplays();
@@ -286,8 +329,9 @@ namespace ReplayParser.ReplaySorter.UI
                     ReplayHandler.RemoveBadReplay(_badReplayDirectory + @"\BadReplays", replay);
                 }
             }
-            _files = _files.Where(x => !_replaysThrowingExceptions.Contains(x)).ToList();
-            e.Result = new Tuple<TimeSpan, uint>(sw.Elapsed, numberOfDuplicates);
+            //TODO is this still necessary? I don't think so...
+            // _files = _files.Where(x => !_replaysThrowingExceptions.Contains(x)).ToList();
+            e.Result = new Tuple<List<File<IReplay>>, TimeSpan, uint>(parsedReplays, sw.Elapsed, numberOfDuplicates);
         }
 
         private void HashCurrentlyParsedReplays(List<File<IReplay>> listReplays, BackgroundWorker worker_ReplayParser)
@@ -308,7 +352,7 @@ namespace ReplayParser.ReplaySorter.UI
         }
 
         //TODO failed replays will still be added to hashed set... it this problematic? I don't think so.
-        private void ParseReplay(List<File<IReplay>> parsedReplays, HashSet<string> hashedReplays, string replay, bool checkForDuplicatesOnCumulativeParsing, ref uint numberOfDuplicates)
+        private void ParseReplay(List<File<IReplay>> parsedReplays, HashSet<string> hashedReplays, ParseFile replay, bool checkForDuplicatesOnCumulativeParsing, ref uint numberOfDuplicates)
         {
             try
             {
@@ -316,7 +360,7 @@ namespace ReplayParser.ReplaySorter.UI
 
                 if (checkForDuplicatesOnCumulativeParsing)
                 {
-                    hashedReplay = HashReplay(replay);
+                    hashedReplay = HashReplay(replay.Path);
                     if (_replayHashes.Contains(hashedReplay))
                     {
                         numberOfDuplicates++;
@@ -326,11 +370,13 @@ namespace ReplayParser.ReplaySorter.UI
                     hashedReplays.Add(hashedReplay);
                 }
 
-                ParseReplay(parsedReplays, replay, hashedReplay);
+                ParseReplay(parsedReplays, replay.Path, hashedReplay);
+                replay.Feedback = FeedBack.OK;
             }
             catch (Exception)
             {
-                _replaysThrowingExceptions.Add(replay);
+                replay.Feedback = FeedBack.FAILED;
+                _replaysThrowingExceptions.Add(replay.Path);
                 _errorMessage = string.Format("Error with replay {0}", replay.ToString());
             }
         }
@@ -376,15 +422,15 @@ namespace ReplayParser.ReplaySorter.UI
             }
             else
             {
-                var result = e.Result as Tuple<TimeSpan, uint>;
+                var result = e.Result as Tuple<List<File<IReplay>>, TimeSpan, uint>;
 
                 statusBarAction.Content = string.Format("Finished parsing!");
                 MessageBox.Show(
                     string.Format("Parsing replays finished! It took {0} to parse {1} replays. {2} replays encountered exceptions. {3} duplicates were found. {4}",
-                        result.Item1,
-                        _listReplays.Count(),
-                        _replaysThrowingExceptions.Count(),
                         result.Item2,
+                        result.Item1.Count,
+                        _replaysThrowingExceptions.Count(),
+                        result.Item3,
                         _moveBadReplays ? "Bad replays have been moved to the specified directory." : ""),
                     "Parsing summary",
                     MessageBoxButton.OK,
@@ -392,8 +438,10 @@ namespace ReplayParser.ReplaySorter.UI
                     MessageBoxResult.OK);
                 ResetReplayParsingVariables(false, true);
                 EnableSortingAndRenamingButtons(ReplayAction.Parse, true);
+                listViewReplays.ItemsSource = _listReplays;
+                listViewReplays.Items.Refresh();
+                replayFilesFoundListBox.Items.Refresh();
             }
-            listViewReplays.ItemsSource = _listReplays;
         }
 
         private void ResetReplayParsingVariables(bool clearListReplays, bool resetMoveBadReplays)
@@ -432,41 +480,6 @@ namespace ReplayParser.ReplaySorter.UI
         private void AddNewReplayFilesButton_Click(object sender, RoutedEventArgs e)
         {
             DiscoverReplayFiles();
-        }
-
-        private void DiscoverReplayFiles()
-        {
-            if (!Directory.Exists(replayDirectoryTextBox.Text))
-            {
-                MessageBox.Show("Please select an existing directory first.", "Invalid directory", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
-                return;
-            }
-
-            SearchOption searchOption = SearchOption.TopDirectoryOnly;
-            if (includeSubdirectoriesCheckbox.IsChecked.HasValue && includeSubdirectoriesCheckbox.IsChecked.Value)
-                searchOption = SearchOption.AllDirectories;
-
-            _replayDirectory = replayDirectoryTextBox.Text;
-
-            var potentialfiles = Directory.EnumerateFiles(_replayDirectory, "*.rep", searchOption);
-
-            if (potentialfiles.Count() == 0)
-            {
-                MessageBox.Show($"No replays found in {_replayDirectory}. Please specify an existing directory containing your replays.", "Failed to find replays.", MessageBoxButton.OK, MessageBoxImage.Exclamation);
-                return;
-            }
-
-            _files.AddRange(potentialfiles);
-
-            replayFilesFoundListBox.ItemsSource = _files;
-            replayFilesFoundListBox.Items.Refresh();
-        }
-
-        private void ClearFoundReplayFilesButton_Click(object sender, RoutedEventArgs e)
-        {
-            ResetReplayParsingVariables(true, true);
-            ResetFiltering();
-            replayFilesFoundListBox.ItemsSource = null;
         }
 
         #endregion

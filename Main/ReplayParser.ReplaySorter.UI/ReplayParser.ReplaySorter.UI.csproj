@@ -106,10 +106,12 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Converters\FeedbackToColorConverter.cs" />
     <Compile Include="Converters\FramesToTimeSpanInSecondsConverter.cs" />
     <Compile Include="Converters\MapToFileNameConverter.cs" />
     <Compile Include="Converters\PlayerRaceToImagePathConverter.cs" />
     <Compile Include="Converters\PlayerToVisibilityConverter.cs" />
+    <Compile Include="Feedback.cs" />
     <Compile Include="ReplayAction.cs" />
     <Compile Include="Sorting\SortAdorner.cs" />
     <Compile Include="Windows\AdvancedSettings.xaml.cs">
