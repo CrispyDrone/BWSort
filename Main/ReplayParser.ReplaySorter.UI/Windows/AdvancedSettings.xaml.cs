@@ -39,7 +39,7 @@ namespace ReplayParser.ReplaySorter.UI.Windows
 
         private void InitializeMaximumUndoLevels()
         {
-            MaxUndoLevelCombobox.ItemsSource = Enumerable.Range(1, 50);
+            MaxUndoLevelCombobox.ItemsSource = Enumerable.Range(1, 50).Select(i => (uint)i);
         }
 
         private void LoadSettings()

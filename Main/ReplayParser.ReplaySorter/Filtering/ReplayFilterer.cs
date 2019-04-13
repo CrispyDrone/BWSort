@@ -92,7 +92,7 @@ namespace ReplayParser.ReplaySorter.Filtering
 
             int start = match.Index + match.Value.Length;
 
-            return nextMatchIndex == -1 ? filterExpression.Substring(start) : filterExpression.Substring(start, nextMatchIndex - start);
+            return nextMatchIndex == -1 ? filterExpression.Substring(start) : filterExpression.Substring(start, nextMatchIndex - (start + 1));
         }
 
         private bool ValidateMatch(Match match, string filterExpression)

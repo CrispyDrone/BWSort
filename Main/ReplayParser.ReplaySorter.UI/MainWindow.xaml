@@ -72,12 +72,47 @@
         </StatusBar>
         <TabControl DockPanel.Dock="Top">
             <TabItem Header="Parse">
-                <DockPanel>
-                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="10 10 10 0">
-                        <TextBox x:Name="replayDirectoryTextBox" Text="" HorizontalAlignment="Stretch" MinWidth="300"></TextBox>
-                        <Button x:Name="replayDirectoryButton" Content="Set directory" Click="replayDirectoryButton_Click" Margin="10 0 10 0"></Button>
-                    </StackPanel>
-                    <StackPanel DockPanel.Dock="Bottom">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"></ColumnDefinition>
+                        <ColumnDefinition Width="*"></ColumnDefinition>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"></RowDefinition>
+                        <RowDefinition Height="Auto"></RowDefinition>
+                    </Grid.RowDefinitions>
+                    <DockPanel Grid.Column="0" Grid.Row="0">
+                        <DockPanel DockPanel.Dock="Top">
+                            <Button x:Name="clearFoundReplayFilesButton" DockPanel.Dock="Right" Content="Clear" Margin="10" MinWidth="70" Click="ClearFoundReplayFilesButton_Click"></Button>
+                            <Button x:Name="addNewReplayFilesButton" DockPanel.Dock="Right" Content="Add" Margin="10" MinWidth="70" Click="AddNewReplayFilesButton_Click"></Button>
+                            <Label Content="Replays found:" Margin="10"></Label>
+                        </DockPanel>
+                        <ListBox x:Name="replayFilesFoundListBox" DockPanel.Dock="Top"></ListBox>
+                    </DockPanel>
+                    <Grid Grid.Column="1" Grid.Row="0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"></ColumnDefinition>
+                            <ColumnDefinition Width="*"></ColumnDefinition>
+                            <ColumnDefinition Width="Auto"></ColumnDefinition>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"></RowDefinition>
+                            <RowDefinition Height="Auto"></RowDefinition>
+                            <RowDefinition Height="Auto"></RowDefinition>
+                            <RowDefinition Height="Auto"></RowDefinition>
+                        </Grid.RowDefinitions>
+                        <Label Grid.Row="0" Grid.Column="0" Content="Find replays in:"></Label>
+                        <TextBox Grid.Row="0" Grid.Column="1" x:Name="replayDirectoryTextBox"></TextBox>
+                        <Button Grid.Row="0" Grid.Column="2" x:Name="replayDirectoryButton" Content="Set directory" Click="replayDirectoryButton_Click"></Button>
+                        <CheckBox Grid.Row="1" Grid.Column="0" x:Name="includeSubdirectoriesCheckbox" Content="Include subdirectories"></CheckBox>
+                        <CheckBox Grid.Row="2" Grid.Column="0" IsEnabled="false" VerticalAlignment="Center" Content="Ignore specific files and directories"></CheckBox>
+                        <TextBox Grid.Row="2" Grid.Column="1" IsEnabled="false"></TextBox>
+                        <Button Grid.Row="2" Grid.Column="2" IsEnabled="false" Content="Use ignore file"></Button>
+                        <CheckBox Grid.Row="3" Grid.Column="0" x:Name="moveBadReplaysCheckBox" Content="Move bad replays to:" VerticalAlignment="Center"></CheckBox>
+                        <TextBox Grid.Row="3" Grid.Column="1" x:Name="moveBadReplaysDirectory" VerticalContentAlignment="Center" VerticalAlignment="Center"></TextBox>
+                        <Button Grid.Row="3" Grid.Column="2" x:Name="badReplayDirectory" Content="Set directory" VerticalAlignment="Center" Click="badReplayDirectory_Click"></Button>
+                    </Grid>
+                    <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2">
                         <Grid>
                             <ProgressBar x:Name="progressBarParsingReplays" Minimum="0" Maximum="100" Margin="10 0"></ProgressBar>
                             <Label x:Name="progressBarLabel" Content="{Binding ElementName=progressBarParsingReplays, Path=Value, StringFormat={}{0:0}%}" HorizontalAlignment="Center"></Label>
@@ -87,20 +122,7 @@
                             <Button x:Name="cancelParsingButton" Content="Break" Click="cancelParsingButton_Click" Margin="10" Width="60"></Button>
                         </StackPanel>
                     </StackPanel>
-                    <StackPanel Margin="0 10">
-                        <CheckBox x:Name="includeSubdirectoriesCheckbox" Content="Include subdirectories" Margin="10 10 10 0"></CheckBox>
-                        <StackPanel Orientation="Horizontal"  Margin="0 0 ">
-                            <CheckBox IsEnabled="false" Content="Ignore specific files and directories" Margin="10"></CheckBox>
-                            <TextBox IsEnabled="false" Text="" MinWidth="100" VerticalContentAlignment="Center" VerticalAlignment="Center" Margin="0 0 10 0"></TextBox>
-                            <Button  IsEnabled="false" Content="Use ignore file" VerticalAlignment="Center"></Button>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal"  Margin="0">
-                            <CheckBox x:Name="moveBadReplaysCheckBox" Content="Move bad replays to: " Margin="10"></CheckBox>
-                            <TextBox x:Name="moveBadReplaysDirectory" Text="" MinWidth="100" VerticalContentAlignment="Center" VerticalAlignment="Center" Margin="0 0 10 0"></TextBox>
-                            <Button x:Name="badReplayDirectory" Content="Set directory" VerticalAlignment="Center" Click="badReplayDirectory_Click"></Button>
-                        </StackPanel>
-                    </StackPanel>
-                </DockPanel>
+                </Grid>
             </TabItem>
             <TabItem Header="Sort">
                 <DockPanel>
