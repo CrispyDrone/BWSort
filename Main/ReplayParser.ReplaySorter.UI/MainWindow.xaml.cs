@@ -42,7 +42,6 @@ namespace ReplayParser.ReplaySorter.UI
         private List<string> _replaysThrowingExceptions = new List<string>();
         private BackgroundWorker _worker_ReplayParser = null;
         private bool _moveBadReplays = false;
-        private bool _movingBadReplays = false;
         // this feels silly, you can only use the state object passed to RunWorkAsync in ReportProgress
         private string _errorMessage = string.Empty;
         private string _badReplayDirectory = string.Empty;
@@ -239,6 +238,7 @@ namespace ReplayParser.ReplaySorter.UI
             var parsedReplays = new List<File<IReplay>>();
             var hashedReplays = new HashSet<string>();
             var checkForDuplicates = _replaySorterConfiguration.CheckForDuplicatesOnCumulativeParsing;
+            uint numberOfDuplicates = 0;
 
             if (checkForDuplicates)
             {
@@ -255,8 +255,8 @@ namespace ReplayParser.ReplaySorter.UI
                 }
                 currentPosition++;
                 progressPercentage = Convert.ToInt32(((double)currentPosition / _files.Count()) * 100);
-                (sender as BackgroundWorker).ReportProgress(progressPercentage);
-                ParseReplay(parsedReplays, hashedReplays, replay, checkForDuplicates);
+                (sender as BackgroundWorker).ReportProgress(progressPercentage, "Parsing replays...");
+                ParseReplay(parsedReplays, hashedReplays, replay, checkForDuplicates, ref numberOfDuplicates);
             }
 
             _replayHashes?.UnionWith(hashedReplays);
@@ -275,7 +275,6 @@ namespace ReplayParser.ReplaySorter.UI
             ReplayHandler.LogBadReplays(_replaysThrowingExceptions, _replaySorterConfiguration.LogDirectory, $"{DateTime.Now} - Error while parsing replay: {{0}}");
             if (_moveBadReplays == true)
             {
-                _movingBadReplays = true;
                 currentPosition = 0;
                 progressPercentage = 0;
 
@@ -283,12 +282,12 @@ namespace ReplayParser.ReplaySorter.UI
                 {
                     currentPosition++;
                     progressPercentage = Convert.ToInt32(((double)currentPosition / _replaysThrowingExceptions.Count()) * 100);
-                    (sender as BackgroundWorker).ReportProgress(progressPercentage);
+                    (sender as BackgroundWorker).ReportProgress(progressPercentage, "Moving bad replays...");
                     ReplayHandler.RemoveBadReplay(_badReplayDirectory + @"\BadReplays", replay);
                 }
             }
             _files = _files.Where(x => !_replaysThrowingExceptions.Contains(x)).ToList();
-            e.Result = sw.Elapsed;
+            e.Result = new Tuple<TimeSpan, uint>(sw.Elapsed, numberOfDuplicates);
         }
 
         private void HashCurrentlyParsedReplays(List<File<IReplay>> listReplays, BackgroundWorker worker_ReplayParser)
@@ -308,7 +307,8 @@ namespace ReplayParser.ReplaySorter.UI
             }
         }
 
-        private void ParseReplay(List<File<IReplay>> parsedReplays, HashSet<string> hashedReplays, string replay, bool checkForDuplicatesOnCumulativeParsing)
+        //TODO failed replays will still be added to hashed set... it this problematic? I don't think so.
+        private void ParseReplay(List<File<IReplay>> parsedReplays, HashSet<string> hashedReplays, string replay, bool checkForDuplicatesOnCumulativeParsing, ref uint numberOfDuplicates)
         {
             try
             {
@@ -318,7 +318,10 @@ namespace ReplayParser.ReplaySorter.UI
                 {
                     hashedReplay = HashReplay(replay);
                     if (_replayHashes.Contains(hashedReplay))
+                    {
+                        numberOfDuplicates++;
                         return;
+                    }
 
                     hashedReplays.Add(hashedReplay);
                 }
@@ -356,10 +359,6 @@ namespace ReplayParser.ReplaySorter.UI
                 {
                     statusBarErrors.Content = _errorMessage;
                 }
-                if (_movingBadReplays)
-                {
-                    statusBarAction.Content = "Moving bad replays...";
-                }
             }
             else
             {
@@ -377,12 +376,15 @@ namespace ReplayParser.ReplaySorter.UI
             }
             else
             {
+                var result = e.Result as Tuple<TimeSpan, uint>;
+
                 statusBarAction.Content = string.Format("Finished parsing!");
                 MessageBox.Show(
-                    string.Format("Parsing replays finished! It took {0} to parse {1} replays. {2} replays encountered exceptions during parsing. {3}",
-                        (TimeSpan)e.Result,
+                    string.Format("Parsing replays finished! It took {0} to parse {1} replays. {2} replays encountered exceptions. {3} duplicates were found. {4}",
+                        result.Item1,
                         _listReplays.Count(),
                         _replaysThrowingExceptions.Count(),
+                        result.Item2,
                         _moveBadReplays ? "Bad replays have been moved to the specified directory." : ""),
                     "Parsing summary",
                     MessageBoxButton.OK,
@@ -405,7 +407,6 @@ namespace ReplayParser.ReplaySorter.UI
                 _moveBadReplays = false;
             }
             _replaysThrowingExceptions?.Clear();
-            _movingBadReplays = false;
         }
         
         private void replayDirectoryButton_Click(object sender, RoutedEventArgs e)

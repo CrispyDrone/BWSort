@@ -3,16 +3,12 @@ using ReplayParser.ReplaySorter.IO;
 using ReplayParser.ReplaySorter.ReplayRenamer;
 using ReplayParser.ReplaySorter.Sorting;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace ReplayParser.ReplaySorter.Filtering
 {
@@ -1272,34 +1268,5 @@ namespace ReplayParser.ReplaySorter.Filtering
                 newParameters
             );
         }
-
-        // private class RaceEqWithWildCardComparer : IEqualityComparer<int[]>
-        // {
-        //     public bool Equals(int[] raceCountsWithoutWildCards, int[] raceCountsWithWildCards)
-        //     {
-        //         if (raceCountsWithoutWildCards == null || raceCountsWithWildCards == null)
-        //             return false;
-
-        //         if (raceCountsWithoutWildCards.Length < 4 || raceCountsWithoutWildCards.Length > 5 || raceCountsWithWildCards.Length < 4 || raceCountsWithWildCards.Length > 5 || raceCountsWithoutWildCards.Length == raceCountsWithWildCards.Length)
-        //             return false;
-
-        //         if (raceCountsWithoutWildCards.Length == 5 && raceCountsWithWildCards.Length == 4)
-        //             return Equals(raceCountsWithWildCards, raceCountsWithoutWildCards);
-
-        //         int numberOfWildCards = raceCountsWithWildCards[4];
-        //         for (int i = 0; i < raceCountsWithoutWildCards.Length; i++)
-        //         {
-        //             if (raceCountsWithoutWildCards[i] != raceCountsWithWildCards[i] && --numberOfWildCards < 0)
-        //                 return false;
-        //         }
-
-        //         return true;
-        //     }
-
-        //     public int GetHashCode(int[] obj)
-        //     {
-        //         return obj.Sum(x => x).GetHashCode();
-        //     }
-        // }
     }
 }
