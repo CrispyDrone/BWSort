@@ -4,7 +4,7 @@ using ReplayParser.ReplaySorter.IO;
 
 namespace ReplayParser.ReplaySorter.Sorting.SortResult
 {
-    public class DirectoryFileTree<T>
+    public class DirectoryFileTree<T> where T : class
     {
         public DirectoryFileTree(DirectoryInfo self, List<File<T>> files = null, List<DirectoryFileTree<T>> children = null)
         {

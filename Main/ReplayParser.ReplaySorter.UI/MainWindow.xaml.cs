@@ -81,7 +81,7 @@ namespace ReplayParser.ReplaySorter.UI
         private string _replayDirectory;
         private List<File<IReplay>> _listReplays;
         private IEnumerable<string> _files;
-        private HashSet<string> _replayHashes;
+        private HashSet<string> _replayHashes = new HashSet<string>();
         private List<string> _replaysThrowingExceptions = new List<string>();
         private BackgroundWorker _worker_ReplayParser = null;
         private bool _noReplaysFound = false;
@@ -109,8 +109,8 @@ namespace ReplayParser.ReplaySorter.UI
 
         // renaming and undoing
         //TODO
-        private LinkedList<List<File<IReplay>>> _renamedReplaysList = new LinkedList<List<File<IReplay>>>();
-        private LinkedListNode<List<File<IReplay>>> _renamedReplayListHead;
+        private LinkedList<IEnumerable<File<IReplay>>> _renamedReplaysList = new LinkedList<IEnumerable<File<IReplay>>>();
+        private LinkedListNode<IEnumerable<File<IReplay>>> _renamedReplayListHead;
 
         // filtering
         //TOOD
@@ -208,8 +208,8 @@ namespace ReplayParser.ReplaySorter.UI
 
             if (checkForDuplicates)
             {
+                (sender as BackgroundWorker).ReportProgress(0, "Verifying parsed replays for hashes...");
                 HashCurrentlyParsedReplays(_listReplays, _worker_ReplayParser);
-                statusBarAction.Content = "Calculating hashes...";
             }
 
             foreach (var replay in _files)
@@ -225,7 +225,7 @@ namespace ReplayParser.ReplaySorter.UI
                 ParseReplay(parsedReplays, hashedReplays, replay, checkForDuplicates);
             }
 
-            _replayHashes.UnionWith(hashedReplays);
+            _replayHashes?.UnionWith(hashedReplays);
             _listReplays = parsedReplays;
             sw.Stop();
             _errorMessage = string.Empty;
@@ -1111,7 +1111,7 @@ namespace ReplayParser.ReplaySorter.UI
             var replayRenamer = e.Argument as Renamer;
             var renameInPlace = replayRenamer.RenameInPlace;
             var restoreOriginalReplayNames = replayRenamer.RestoreOriginalReplayNames;
-            ServiceResult<ServiceResultSummary<List<File<IReplay>>>> response = null;
+            ServiceResult<ServiceResultSummary<IEnumerable<File<IReplay>>>> response = null;
             _renamingReplays = true;
 
             if (renameInPlace)
@@ -1182,20 +1182,16 @@ namespace ReplayParser.ReplaySorter.UI
             listViewReplays.Items.Refresh();
         }
 
-        private void AddUndoable(List<File<IReplay>> replays)
+        private void AddUndoable(IEnumerable<File<IReplay>> replays)
         {
-            if (replays == null || replays.Count == 0 || _replaySorterConfiguration.MaxUndoLevel == 0)
+            if (replays == null || replays.Count() == 0 || _replaySorterConfiguration.MaxUndoLevel == 0)
                 return;
 
-            _renamedReplaysList = _renamedReplaysList ?? new LinkedList<List<File<IReplay>>>();
-
-            while (_renamedReplaysList.Count >= _replaySorterConfiguration.MaxUndoLevel)
-            {
-                _renamedReplaysList.RemoveFirst();
-            }
+            _renamedReplaysList = _renamedReplaysList ?? new LinkedList<IEnumerable<File<IReplay>>>();
 
             if (_renamedReplayListHead == null)
             {
+                _renamedReplaysList.Clear();
                 _renamedReplaysList.AddFirst(replays);
                 _renamedReplayListHead = _renamedReplaysList.First;
             }
@@ -1208,6 +1204,11 @@ namespace ReplayParser.ReplaySorter.UI
                 _renamedReplaysList.AddAfter(_renamedReplayListHead, replays);
                 _renamedReplayListHead = _renamedReplayListHead.Next;
             }
+
+            while (_renamedReplaysList.Count > _replaySorterConfiguration.MaxUndoLevel)
+            {
+                _renamedReplaysList.RemoveFirst();
+            }
         }
 
         private void cancelRenamingButton_Click(object sender, RoutedEventArgs e)
@@ -1218,9 +1219,10 @@ namespace ReplayParser.ReplaySorter.UI
             }
         }
 
+        // undo look at head
         private void undoRenamingButton_Click(object sender, RoutedEventArgs e)
         {
-            var isRenamed = _renamedReplayListHead != _renamedReplaysList?.First;
+            var isRenamed = _renamedReplaysList?.Count > 0 && _renamedReplayListHead != null;
 
             if (!isRenamed)
             {
@@ -1240,9 +1242,11 @@ namespace ReplayParser.ReplaySorter.UI
             _worker_Undoer.RunWorkerAsync(true);
         }
 
+        // redo look at head.next
         private void redoRenamingButton_Click(object sender, RoutedEventArgs e)
         {
-            var canRedo = _renamedReplayListHead != _renamedReplaysList.Last;
+            //var canRedo = _renamedReplayListHead != _renamedReplaysList.Last;
+            var canRedo = _renamedReplaysList?.Count > 0 && (_renamedReplayListHead == null || _renamedReplayListHead.Next != null);
 
             if (!canRedo)
             {
@@ -1269,15 +1273,15 @@ namespace ReplayParser.ReplaySorter.UI
                 // undo
                 _undoingRename = true;
 
-                _renamedReplayListHead = _renamedReplayListHead.Previous;
-
                 var replayRenamer = new Renamer(RenamingParameters.Default, _renamedReplayListHead.Value);
                 e.Result = replayRenamer.UndoRename(sender as BackgroundWorker);
+
+                _renamedReplayListHead = _renamedReplayListHead.Previous;
             }
             else
             {
                 // redo
-                _renamedReplayListHead = _renamedReplayListHead.Next;
+                _renamedReplayListHead = _renamedReplayListHead?.Next ?? _renamedReplaysList.First;
 
                 var replayRenamer = new Renamer(RenamingParameters.Default, _renamedReplayListHead.Value);
                 e.Result = replayRenamer.RedoRename(sender as BackgroundWorker);
@@ -1311,7 +1315,7 @@ namespace ReplayParser.ReplaySorter.UI
 
         private void worker_UndoRenamingCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            var response = e.Result as ServiceResult<ServiceResultSummary>;
+            var response = e.Result as ServiceResult<ServiceResultSummary<IEnumerable<File<IReplay>>>>;
             progressBarRenamingOrRestoringReplays.Value = 0;
 
             if (e.Cancelled)
@@ -1509,35 +1513,7 @@ namespace ReplayParser.ReplaySorter.UI
             }
         }
 
-        // private void CopyFilePathMenuItem_Click(object sender, RoutedEventArgs e)
-        // {
-        //     MenuItem copyFilePath = sender as MenuItem;
-        //     ListViewItem listViewItemReplay = listViewReplays.ItemContainerGenerator.ContainerFromItem(copyFilePath.DataContext) as ListViewItem;
-        //     var replay = listViewItemReplay.Content as File<IReplay>;
-
-        //     if (listViewReplays.SelectedItems.Count == 1)
-        //     {
-        //         Clipboard.SetText(replay.FilePath);
-        //     }
-        //     else
-        //     {
-        //         var listViewItemReplays = listViewReplays.SelectedItems as System.Collections.IList;
-        //         if (listViewItemReplays.Contains(replay))
-        //         {
-        //             var copiedFilePaths = new StringBuilder();
-        //             foreach (File<IReplay> aReplay in listViewItemReplays)
-        //             {
-        //                 copiedFilePaths.AppendLine(aReplay.FilePath);
-        //             }
-        //             Clipboard.SetText(copiedFilePaths.ToString());
-        //         }
-        //         else
-        //         {
-        //             Clipboard.SetText(replay.FilePath);
-        //         }
-        //     }
-        // }
-
+        //TODO shouldn't make a difference whether 1 or multiple are selected, rewrite...
         private void CopyFilePathMenuItem_Click(object sender, RoutedEventArgs e)
         {
             if (listViewReplays.SelectedItems.Count == 1)
@@ -1567,9 +1543,10 @@ namespace ReplayParser.ReplaySorter.UI
         //TODO make this undoable??
         private void RenameReplayMenuItem_Click(object sender, RoutedEventArgs e)
         {
-            MenuItem copyFilePath = sender as MenuItem;
-            ListViewItem listViewItemReplay = listViewReplays.ItemContainerGenerator.ContainerFromItem(copyFilePath.DataContext) as ListViewItem;
-            var replay = listViewItemReplay.Content as File<IReplay>;
+            var listViewItemReplays = listViewReplays.SelectedItems as System.Collections.IList;
+            // MenuItem renameReplay = sender as MenuItem;
+            // ListViewItem listViewItemReplay = listViewReplays.ItemContainerGenerator.ContainerFromItem(renameReplay.DataContext) as ListViewItem;
+            // var replay = listViewItemReplay.Content as File<IReplay>;
             // Please enter a renaming syntax:
             // Rename replay
             CustomReplayFormat customReplayFormat = null;
@@ -1589,15 +1566,36 @@ namespace ReplayParser.ReplaySorter.UI
                     return;
                 }
             }
+            var replaysSuccessfullyRenamed = new List<File<IReplay>>();
+            StringBuilder exceptions = new StringBuilder();
+            exceptions.AppendLine("Failed to rename the following replays:");
+            int numberOfFailedReplays = 0;
 
-            replay.AddAfterCurrent(Path.GetDirectoryName(replay.FilePath) + @"\" + ReplayHandler.GenerateReplayName(replay.Content, customReplayFormat) + ".rep");
-            ReplayHandler.MoveReplay(replay, true);
-            //TODO investigate whether there actually was a binding active between the displaymember and FilePath...
-            Binding b = new Binding("FilePath");
-            GridView gv = (GridView)listViewReplays.View;
-            gv.Columns[4].DisplayMemberBinding = b;
-            // listViewReplays.Items.Refresh();
-            AddUndoable(new List<File<IReplay>>() { replay });
+            foreach (File<IReplay> replay in listViewItemReplays)
+            {
+                try
+                {
+                    replay.AddAfterCurrent(Path.GetDirectoryName(replay.FilePath) + @"\" + ReplayHandler.GenerateReplayName(replay.Content, customReplayFormat) + ".rep");
+                    ReplayHandler.MoveReplay(replay, true);
+                    //TODO investigate whether there actually was a binding active between the displaymember and FilePath...
+                    Binding b = new Binding("FilePath");
+                    GridView gv = (GridView)listViewReplays.View;
+                    gv.Columns[4].DisplayMemberBinding = b;
+                    // listViewReplays.Items.Refresh();
+                    replaysSuccessfullyRenamed.Add(replay);
+                }
+                catch (Exception)
+                {
+                    numberOfFailedReplays++;
+                    exceptions.AppendLine($"{numberOfFailedReplays}. {replay.FilePath}");
+                }
+            }
+            
+            AddUndoable(replaysSuccessfullyRenamed);
+            if (numberOfFailedReplays > 0)
+            {
+                MessageBox.Show(exceptions.ToString(), "Rename exceptions", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
+            }
         }
 
         private void DetailsReplayMenuItem_Click(object sender, RoutedEventArgs e)

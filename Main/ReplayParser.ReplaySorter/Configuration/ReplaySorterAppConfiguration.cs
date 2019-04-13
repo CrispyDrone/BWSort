@@ -200,7 +200,7 @@ namespace ReplayParser.ReplaySorter.Configuration
             }
         }
 
-        public bool CheckForDuplicates
+        public bool CheckForDuplicatesOnCumulativeParsing
         {
             get
             {
