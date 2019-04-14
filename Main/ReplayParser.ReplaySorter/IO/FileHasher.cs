@@ -28,6 +28,14 @@ namespace ReplayParser.ReplaySorter.IO
             }
         }
 
+        public static string GetMd5Hash(string filepath)
+        {
+            if (!System.IO.File.Exists(filepath))
+                return null;
+
+            return GetMd5Hash(System.IO.File.ReadAllBytes(filepath));
+        }
+
         public static bool VerifyHash(string input, string hash)
         {
             if (input == null || hash == null)

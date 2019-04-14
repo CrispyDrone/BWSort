@@ -118,5 +118,17 @@ namespace ReplayParser.ReplaySorter.Properties {
                 this["CHECKFORDUPLICATES"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string IGNOREFILEPATH {
+            get {
+                return ((string)(this["IGNOREFILEPATH"]));
+            }
+            set {
+                this["IGNOREFILEPATH"] = value;
+            }
+        }
     }
 }

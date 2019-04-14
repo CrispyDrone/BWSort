@@ -22,6 +22,7 @@ using System.Windows.Documents;
 using System.Windows.Data;
 using System.Text;
 using System.Windows.Media;
+using ReplayParser.ReplaySorter.Ignoring;
 
 namespace ReplayParser.ReplaySorter.UI
 {
@@ -46,6 +47,7 @@ namespace ReplayParser.ReplaySorter.UI
         // this feels silly, you can only use the state object passed to RunWorkAsync in ReportProgress
         private string _errorMessage = string.Empty;
         private string _badReplayDirectory = string.Empty;
+        private IgnoreFileManager _ignoreFileManager = new IgnoreFileManager();
 
         // sorting
         private Sorter _sorter;
@@ -197,7 +199,16 @@ namespace ReplayParser.ReplaySorter.UI
 
             _replayDirectory = replayDirectoryTextBox.Text;
 
-            var potentialfiles = Directory.EnumerateFiles(_replayDirectory, "*.rep", searchOption);
+            var potentialfiles = Directory.EnumerateFiles(_replayDirectory, "*.rep", searchOption).Where(file => Path.GetExtension(file) == ".rep");
+            if (applyIgnoreFilesCheckbox.IsChecked.HasValue && applyIgnoreFilesCheckbox.IsChecked.Value)
+            {
+                var ignoredFiles = _ignoreFileManager.Load(_replaySorterConfiguration.IgnoreFilePath)?.IgnoredFiles.Select(f => f.Item2);
+                if (!(ignoredFiles == null || ignoredFiles.Count() == 0))
+                {
+                    var ignoredFilesSetHashes = new HashSet<string>(ignoredFiles);
+                    potentialfiles = potentialfiles.Where(f => !ignoredFilesSetHashes.Contains(HashReplay(f)));
+                }
+            }
 
             if (potentialfiles.Count() == 0)
             {
@@ -480,6 +491,12 @@ namespace ReplayParser.ReplaySorter.UI
         private void AddNewReplayFilesButton_Click(object sender, RoutedEventArgs e)
         {
             DiscoverReplayFiles();
+        }
+
+        private void CreateNewIgnoreFile_Click(object sender, RoutedEventArgs e)
+        {
+            var createNewIgnoreFileDialog = new CreateIgnoreFile(_replaySorterConfiguration, _ignoreFileManager);
+            createNewIgnoreFileDialog.Show();
         }
 
         #endregion

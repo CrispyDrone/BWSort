@@ -125,9 +125,8 @@
                         <TextBox Grid.Row="0" Grid.Column="1" x:Name="replayDirectoryTextBox" Margin="10"></TextBox>
                         <Button Grid.Row="0" Grid.Column="2" x:Name="replayDirectoryButton" Content="Set directory" Click="replayDirectoryButton_Click" Margin="10 10 0 10"></Button>
                         <CheckBox Grid.Row="1" Grid.Column="0" x:Name="includeSubdirectoriesCheckbox" Content="Include subdirectories" Margin="10"></CheckBox>
-                        <CheckBox Grid.Row="2" Grid.Column="0" IsEnabled="false" VerticalAlignment="Center" Content="Ignore specific files and directories" Margin="10"></CheckBox>
-                        <TextBox Grid.Row="2" Grid.Column="1" IsEnabled="false" Margin="10"></TextBox>
-                        <Button Grid.Row="2" Grid.Column="2" IsEnabled="false" Content="Set file" Margin="10 10 0 10"></Button>
+                        <CheckBox x:Name="applyIgnoreFilesCheckbox" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Content="Ignore specific files and directories" Margin="10"></CheckBox>
+                        <Button x:Name="createNewIgnoreFile" Grid.Row="2" Grid.Column="2" Content="Create - Edit" Margin="10 10 0 10" Click="CreateNewIgnoreFile_Click"></Button>
                         <CheckBox Grid.Row="3" Grid.Column="0" x:Name="moveBadReplaysCheckBox" Content="Move bad replays to:" VerticalAlignment="Center" Margin="10"></CheckBox>
                         <TextBox Grid.Row="3" Grid.Column="1" x:Name="moveBadReplaysDirectory" VerticalContentAlignment="Center" VerticalAlignment="Center" Margin="10"></TextBox>
                         <Button Grid.Row="3" Grid.Column="2" x:Name="badReplayDirectory" Content="Set directory" VerticalAlignment="Center" Click="badReplayDirectory_Click" Margin="10 10 0 10"></Button>

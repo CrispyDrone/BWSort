@@ -21,5 +21,6 @@ namespace ReplayParser.ReplaySorter.Configuration
         bool IncludeSubDirectoriesByDefault { get; set; }
         bool LoadReplaysOnStartup { get; set; }
         bool CheckForDuplicatesOnCumulativeParsing { get; set; }
+        string IgnoreFilePath { get; set; }
     }
 }

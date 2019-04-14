@@ -1,0 +1,31 @@
+﻿<Window x:Class="ReplayParser.ReplaySorter.UI.Windows.CreateIgnoreFile"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ReplayParser.ReplaySorter.UI.Windows"
+        mc:Ignorable="d"
+        Title="Edit ignore file" Height="450" Width="800"
+        Loaded="Window_Loaded">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"></ColumnDefinition>
+            <ColumnDefinition Width="Auto"></ColumnDefinition>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"></RowDefinition>
+            <RowDefinition Height="Auto"></RowDefinition>
+            <RowDefinition Height="Auto"></RowDefinition>
+            <RowDefinition Height="*"></RowDefinition>
+            <RowDefinition Height="Auto"></RowDefinition>
+        </Grid.RowDefinitions>
+        <Label Grid.Row="0" Grid.Column="0" Margin="10" FontSize="16" FontWeight="SemiBold">Add replay filepaths here to ignore them:</Label>
+        <TextBox x:Name="editIgnoreFileTextBox" Grid.Row="1" Grid.Column="0" Grid.RowSpan="3" AcceptsReturn="True" BorderBrush="Black" Margin="10"></TextBox>
+        <Button x:Name="importFileNamesButton" Grid.Row="1" Grid.Column="1" Margin="10" MinWidth="70" Click="ImportFileNamesButton_Click">Import directory</Button>
+        <Button x:Name="selectFileNamesButton" Grid.Row="2" Grid.Column="1" Margin="10" MinWidth="70" Click="SelectFileNamesButton_Click">Select filenames</Button>
+        <StackPanel Grid.Row="4" Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button x:Name="saveEditingIgnoreFileButton" Margin="10" MinWidth="70" Click="SaveEditingIgnoreFileButton_Click">Save</Button>
+            <Button x:Name="cancelEditingIgnoreFileButton" Margin="10" MinWidth="70" IsCancel="True">Cancel</Button>
+        </StackPanel>
+    </Grid>
+</Window>

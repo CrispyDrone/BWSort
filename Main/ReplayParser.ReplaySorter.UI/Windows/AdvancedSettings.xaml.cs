@@ -1,4 +1,5 @@
-﻿using ReplayParser.ReplaySorter.Configuration;
+﻿using Microsoft.WindowsAPICodePack.Dialogs;
+using ReplayParser.ReplaySorter.Configuration;
 using System;
 using System.Linq;
 using System.Windows;
@@ -28,6 +29,8 @@ namespace ReplayParser.ReplaySorter.UI.Windows
             _replaySorterConfiguration.IncludeSubDirectoriesByDefault = IncludeSubDirectoriesByDefaultCheckbox.IsChecked.HasValue && IncludeSubDirectoriesByDefaultCheckbox.IsChecked.Value;
             _replaySorterConfiguration.LoadReplaysOnStartup = ParseReplaysOnStartupCheckbox.IsChecked.HasValue && ParseReplaysOnStartupCheckbox.IsChecked.Value;
             _replaySorterConfiguration.CheckForDuplicatesOnCumulativeParsing = CheckForDuplicatesCheckbox.IsChecked.HasValue && CheckForDuplicatesCheckbox.IsChecked.Value;
+            _replaySorterConfiguration.IgnoreFilePath = IgnoreFileTextbox.Text;
+            _replaySorterConfiguration.LogDirectory = LoggingDirectoryTextbox.Text;
             this.Close();
         }
 
@@ -50,6 +53,28 @@ namespace ReplayParser.ReplaySorter.UI.Windows
             IncludeSubDirectoriesByDefaultCheckbox.IsChecked = _replaySorterConfiguration.IncludeSubDirectoriesByDefault;
             ParseReplaysOnStartupCheckbox.IsChecked = _replaySorterConfiguration.LoadReplaysOnStartup;
             CheckForDuplicatesCheckbox.IsChecked = _replaySorterConfiguration.CheckForDuplicatesOnCumulativeParsing;
+            IgnoreFileTextbox.Text = _replaySorterConfiguration.IgnoreFilePath;
+            LoggingDirectoryTextbox.Text = _replaySorterConfiguration.LogDirectory;
+        }
+
+        private void SetIgnoreFileButton_Click(object sender, RoutedEventArgs e)
+        {
+            var selectIgnoreFile = new CommonOpenFileDialog();
+            selectIgnoreFile.EnsureFileExists = true;
+            if (selectIgnoreFile.ShowDialog() == CommonFileDialogResult.Ok)
+            {
+                IgnoreFileTextbox.Text = selectIgnoreFile.FileName;
+            }
+        }
+
+        private void SetLoggingDirectoryButton_Click(object sender, RoutedEventArgs e)
+        {
+            var setLoggingDirectory = new CommonOpenFileDialog();
+            setLoggingDirectory.IsFolderPicker = true;
+            if (setLoggingDirectory.ShowDialog() == CommonFileDialogResult.Ok)
+            {
+                LoggingDirectoryTextbox.Text = setLoggingDirectory.FileName;
+            }
         }
     }
 }

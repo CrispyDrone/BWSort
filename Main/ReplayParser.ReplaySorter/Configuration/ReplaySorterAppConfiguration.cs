@@ -18,6 +18,7 @@ namespace ReplayParser.ReplaySorter.Configuration
         private bool _includeSubDirectoriesByDefault;
         private bool _loadReplaysOnStartup;
         private bool _checkForDuplicatesOnCumulativeParsing;
+        private string _ignoreFilePath;
 
         private bool _logDirectoryChanged = true;
         private bool _maxUndoLevelChanged = true;
@@ -27,6 +28,7 @@ namespace ReplayParser.ReplaySorter.Configuration
         private bool _includeSubDirectoriesByDefaultChanged = true;
         private bool _loadReplaysOnStartupChanged = true;
         private bool _checkForDuplicatesOnCumulativeParsingChanged = true;
+        private bool _ignoreFilePathChanged = true;
 
         #endregion
 
@@ -56,7 +58,7 @@ namespace ReplayParser.ReplaySorter.Configuration
                     var logDirectorySetting = Properties.Settings.Default.LOGDIRECTORY;
                     if (string.IsNullOrWhiteSpace(logDirectorySetting))
                     {
-                        _logDirectory = AppDomain.CurrentDomain.BaseDirectory;
+                        LogDirectory = AppDomain.CurrentDomain.BaseDirectory;
                     }
                     else
                     {
@@ -216,6 +218,37 @@ namespace ReplayParser.ReplaySorter.Configuration
             {
                 _checkForDuplicatesOnCumulativeParsingChanged = true;
                 Properties.Settings.Default.CHECKFORDUPLICATES = value;
+                Save();
+            }
+        }
+
+        public string IgnoreFilePath
+        {
+            get
+            {
+                if (_ignoreFilePathChanged)
+                {
+                    var ignoreFilePath = Properties.Settings.Default.IGNOREFILEPATH;
+                    if (string.IsNullOrWhiteSpace(ignoreFilePath))
+                    {
+                        IgnoreFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, ".repignore");
+                    }
+                    else
+                    {
+                        _ignoreFilePath = ignoreFilePath;
+                    }
+
+                    _ignoreFilePathChanged = false;
+                }
+                return _ignoreFilePath;
+            }
+            set
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                    return;
+
+                _ignoreFilePathChanged = true;
+                Properties.Settings.Default.IGNOREFILEPATH = value;
                 Save();
             }
         }

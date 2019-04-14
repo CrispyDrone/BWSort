@@ -84,7 +84,9 @@
     <Compile Include="Diagnostics\ProgressBar.cs" />
     <Compile Include="Extensions\ListExtensions.cs" />
     <Compile Include="Filtering\AddAdditionalAndAlsoToMethodCallModifier.cs" />
+    <Compile Include="Ignoring\IgnoreFile.cs" />
     <Compile Include="Filtering\ReplayFilterer.cs" />
+    <Compile Include="Ignoring\IgnoreFileManager.cs" />
     <Compile Include="IO\File.cs" />
     <Compile Include="IO\FileHandler.cs" />
     <Compile Include="IO\FileHasher.cs" />
