@@ -1559,7 +1559,19 @@ namespace ReplayParser.ReplaySorter.UI
         }
         #endregion
 
-        #region context menu
+        #region context menus
+
+        private void RemoveFoundReplay_Click(object sender, RoutedEventArgs e)
+        {
+            MenuItem removeFoundReplay = sender as MenuItem;
+
+            var replayFiles = replayFilesFoundListBox.SelectedItems.Cast<ParseFile>().ToList();
+            foreach (var aRep in replayFiles)
+            {
+                _files.Remove(aRep);
+            }
+            replayFilesFoundListBox.Items.Refresh();
+        }
 
         private void OpenInFileExplorerMenuItem_Click(object sender, RoutedEventArgs e)
         {
