@@ -21,7 +21,6 @@ using ReplayParser.ReplaySorter.UI.Sorting;
 using System.Windows.Documents;
 using System.Windows.Data;
 using System.Text;
-using System.Windows.Media;
 using ReplayParser.ReplaySorter.Ignoring;
 
 namespace ReplayParser.ReplaySorter.UI
