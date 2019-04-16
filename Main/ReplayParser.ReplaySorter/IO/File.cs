@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ReplayParser.Interfaces;
+using System;
 using System.Linq;
 
 namespace ReplayParser.ReplaySorter.IO
@@ -17,7 +18,7 @@ namespace ReplayParser.ReplaySorter.IO
 
         #region constructor
 
-        private File(T content, string originalFilePath, string hash)
+        protected File(T content, string originalFilePath, string hash)
         {
             _fileHistory = FileHistory.Create(originalFilePath);
             _content = content;
@@ -109,5 +110,16 @@ namespace ReplayParser.ReplaySorter.IO
         #endregion
 
         //TODO add extension + filename + directory properties + tostring() override?
+    }
+
+    public class FileReplay : File<IReplay>
+    {
+        private FileReplay(IReplay content, string originalFilePath, string hash = null) : base(content, originalFilePath, hash) { }
+
+        public new static FileReplay Create(IReplay content, string originalFilePath, string hash = null)
+        {
+            return new FileReplay(content, originalFilePath, hash);
+        }
+
     }
 }

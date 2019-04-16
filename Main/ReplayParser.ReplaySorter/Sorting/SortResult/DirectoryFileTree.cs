@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using ReplayParser.Interfaces;
 using ReplayParser.ReplaySorter.IO;
 
 namespace ReplayParser.ReplaySorter.Sorting.SortResult
@@ -16,6 +17,12 @@ namespace ReplayParser.ReplaySorter.Sorting.SortResult
         public DirectoryInfo Self { get; set; }
         public List<File<T>> Files { get; set; }
         public List<DirectoryFileTree<T>> Children { get; set; }
+
+    }
+
+    public class DirectoryFileTree : DirectoryFileTree<IReplay>
+    {
+        public DirectoryFileTree(DirectoryInfo self, List<File<IReplay>> files = null, List<DirectoryFileTree<IReplay>> children = null) : base(self, files, children) { }
 
     }
 }
