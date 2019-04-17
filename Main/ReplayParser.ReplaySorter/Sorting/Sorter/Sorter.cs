@@ -100,11 +100,11 @@ namespace ReplayParser.ReplaySorter
             return DirectoryFileReplay;
         }
 
-        public DirectoryFileTree<IReplay> ExecuteSortAsync(bool keeporiginalreplaynames, BackgroundWorker worker_ReplaySorter, List<string> replaysThrowingExceptions)
+        public DirectoryFileTree<File<IReplay>> ExecuteSortAsync(bool keeporiginalreplaynames, BackgroundWorker worker_ReplaySorter, List<string> replaysThrowingExceptions)
         {
             ReplayHandler.SaveReplayFilePaths(OriginalListReplays);
             // Sort Result ! 
-            DirectoryFileTree<IReplay> TotalSortResult = new DirectoryFileTree<IReplay>(new DirectoryInfo(OriginalDirectory));
+            DirectoryFileTree<File<IReplay>> TotalSortResult = new DirectoryFileTree<File<IReplay>>(new DirectoryInfo(OriginalDirectory));
 
             // why do i need this silly string array with the original order...
             IDictionary<string, List<File<IReplay>>> SortOnXResult = new Dictionary<string, List<File<IReplay>>>();
@@ -120,17 +120,17 @@ namespace ReplayParser.ReplaySorter
                         return null;
                     }
                     // make separate functions for this
-                    DirectoryFileTree<IReplay> FirstSort = new DirectoryFileTree<IReplay>(new DirectoryInfo(CurrentDirectory + @"\" + SortCriteria.ToString()));
+                    DirectoryFileTree<File<IReplay>> FirstSort = new DirectoryFileTree<File<IReplay>>(new DirectoryInfo(CurrentDirectory + @"\" + SortCriteria.ToString()));
                     foreach (var directory in SortOnXResult.Keys)
                     {
                         if (FirstSort.Children != null)
                         {
-                            FirstSort.Children.Add(new DirectoryFileTree<IReplay>(new DirectoryInfo(directory), SortOnXResult[directory]));
+                            FirstSort.Children.Add(new DirectoryFileTree<File<IReplay>>(new DirectoryInfo(directory), SortOnXResult[directory]));
                         }
                         else
                         {
-                            FirstSort.Children = new List<DirectoryFileTree<IReplay>>();
-                            FirstSort.Children.Add(new DirectoryFileTree<IReplay>(new DirectoryInfo(directory), SortOnXResult[directory]));
+                            FirstSort.Children = new List<DirectoryFileTree<File<IReplay>>>();
+                            FirstSort.Children.Add(new DirectoryFileTree<File<IReplay>>(new DirectoryInfo(directory), SortOnXResult[directory]));
                         }
                     }
                     if (TotalSortResult.Children != null)
@@ -139,7 +139,7 @@ namespace ReplayParser.ReplaySorter
                     }
                     else
                     {
-                        TotalSortResult.Children = new List<DirectoryFileTree<IReplay>>();
+                        TotalSortResult.Children = new List<DirectoryFileTree<File<IReplay>>>();
                         TotalSortResult.Children.Add(FirstSort);
                     }
                     
@@ -197,7 +197,7 @@ namespace ReplayParser.ReplaySorter
 
         public override string ToString()
         {
-            return $"SortCriteria: {string.Join(" ", CriteriaStringOrder)} SortCriteriaParameters: {SortCriteriaParameters.ToString()} CustomReplayFormat: {CustomReplayFormat.ToString()}";
+            return $"SortCriteria: {string.Join(" ", CriteriaStringOrder)} SortCriteriaParameters: {SortCriteriaParameters.ToString()} CustomReplayFormat: {CustomReplayFormat?.ToString() ?? string.Empty}";
         }
 
         #endregion

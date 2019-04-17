@@ -1,6 +1,5 @@
 ﻿<Window x:Class="ReplayParser.ReplaySorter.UI.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:v4="http://schemas.microsoft.com/winfx/2009/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -200,7 +199,7 @@
                         <ProgressBar x:Name="progressBarSortingReplays" Minimum="0" Maximum="100" Margin="10 0"></ProgressBar>
                         <Label x:Name="progressBarSortingReplaysLabel" Content="{Binding ElementName=progressBarSortingReplays, Path=Value, StringFormat={}{0:0}%}" HorizontalAlignment="Center"></Label>
                     </Grid>
-                    <TreeView>
+                    <TreeView x:Name="sortOutputTreeView">
                         <TreeView.Resources>
                             <HierarchicalDataTemplate DataType="{x:Type sort:DirectoryFileTree}"  ItemsSource="{Binding Children}">
                                 <TextBlock Text="{Binding Path=Self.Name}"></TextBlock>

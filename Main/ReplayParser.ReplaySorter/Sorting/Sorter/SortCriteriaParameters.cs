@@ -51,12 +51,15 @@ namespace ReplayParser.ReplaySorter.Sorting
             if (string.IsNullOrEmpty(_cachedStringRepresentation))
             {
                 StringBuilder validGameTypesAsString = new StringBuilder();
-                foreach (var validGameType in ValidGameTypes)
+                if (ValidGameTypes != null)
                 {
-                    validGameTypesAsString.Append($"{validGameType.Key.ToString()} {validGameType.Value.ToString()} ");
+                    foreach (var validGameType in ValidGameTypes)
+                    {
+                        validGameTypesAsString.Append($"{validGameType.Key.ToString()} {validGameType.Value.ToString()} ");
+                    }
                 }
 
-                _cachedStringRepresentation = $"MakeFolderForWinner: {MakeFolderForWinner} MakeFolderForLoser: {MakeFolderForLoser} ValidGameTypes: {validGameTypesAsString}Durations: {string.Join(" ", Durations)}";
+                _cachedStringRepresentation = $"MakeFolderForWinner: {MakeFolderForWinner?.ToString() ?? string.Empty} MakeFolderForLoser: {MakeFolderForLoser?.ToString() ?? string.Empty} ValidGameTypes: {validGameTypesAsString.ToString()}Durations: {(Durations == null ? string.Empty : string.Join(" ", Durations))}";
             }
 
             return _cachedStringRepresentation;
