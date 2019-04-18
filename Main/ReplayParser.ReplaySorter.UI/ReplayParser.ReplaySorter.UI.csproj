@@ -109,6 +109,7 @@
     <Compile Include="Converters\FeedbackToColorConverter.cs" />
     <Compile Include="Converters\FramesToTimeSpanInSecondsConverter.cs" />
     <Compile Include="Converters\MapToFileNameConverter.cs" />
+    <Compile Include="Converters\PathToFilenameConverter.cs" />
     <Compile Include="Converters\PlayerRaceToImagePathConverter.cs" />
     <Compile Include="Converters\PlayerToVisibilityConverter.cs" />
     <Compile Include="Feedback.cs" />

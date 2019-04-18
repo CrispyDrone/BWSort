@@ -16,7 +16,7 @@ namespace ReplayParser.ReplaySorter
         {
             var sourceFilePath = replay.FilePath;
             var FileName = FileHandler.GetFileName(replay.FilePath);
-            var DestinationFilePath = sortDirectory + @"\" + FolderName + FileName;
+            var DestinationFilePath = sortDirectory + @"\" + FolderName + @"\" + FileName;
 
             if (!KeepOriginalReplayNames)
             {

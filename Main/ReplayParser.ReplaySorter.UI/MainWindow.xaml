@@ -18,6 +18,7 @@
         <cvt:MapToFileNameConverter x:Key="MTFConverter" />
         <cvt:PlayerRaceToImagePathConverter x:Key="RTIConverter" />
         <cvt:FeedbackToColorConverter x:Key="FTCConverter" />
+        <cvt:PathToFilenameConverter x:Key="PTFConverter" />
     </Window.Resources>
     <DockPanel>
         <Menu DockPanel.Dock="Top">
@@ -202,11 +203,25 @@
                     <TreeView x:Name="sortOutputTreeView">
                         <TreeView.Resources>
                             <HierarchicalDataTemplate DataType="{x:Type sort:DirectoryFileTree}"  ItemsSource="{Binding Children}">
-                                <TextBlock Text="{Binding Path=Self.Name}"></TextBlock>
+                                <StackPanel Orientation="Vertical">
+                                <Label Content="{Binding Path=Self.Name}" BorderBrush="Black" FontWeight="DemiBold" FontSize="14"/>
+                                <ItemsControl ItemsSource="{Binding Files}" Margin="20 0 0 0">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel Orientation="Vertical" /> 
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Path=FilePath, Converter={StaticResource PTFConverter}}"/>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                </StackPanel>
                             </HierarchicalDataTemplate>
-                            <DataTemplate DataType="{x:Type file:FileReplay}">
+                            <!--<DataTemplate DataType="{x:Type file:FileReplay}">
                                 <TextBlock Text="{Binding Path=FilePath}"></TextBlock>
-                            </DataTemplate>
+                            </DataTemplate>-->
                         </TreeView.Resources>
                     </TreeView>
                 </DockPanel>
