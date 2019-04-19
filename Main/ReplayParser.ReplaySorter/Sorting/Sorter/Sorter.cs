@@ -104,7 +104,7 @@ namespace ReplayParser.ReplaySorter
         {
             ReplayHandler.SaveReplayFilePaths(OriginalListReplays);
             // Sort Result ! 
-            DirectoryFileTree<File<IReplay>> TotalSortResult = new DirectoryFileTree<File<IReplay>>(new DirectoryInfo(OriginalDirectory));
+            // DirectoryFileTree<File<IReplay>> TotalSortResult = new DirectoryFileTree<File<IReplay>>(new DirectoryInfo(OriginalDirectory));
 
             // why do i need this silly string array with the original order...
             IDictionary<string, List<File<IReplay>>> SortOnXResult = new Dictionary<string, List<File<IReplay>>>();
@@ -120,28 +120,28 @@ namespace ReplayParser.ReplaySorter
                         return null;
                     }
                     // make separate functions for this
-                    DirectoryFileTree<File<IReplay>> FirstSort = new DirectoryFileTree<File<IReplay>>(new DirectoryInfo(CurrentDirectory + @"\" + SortCriteria.ToString()));
-                    foreach (var directory in SortOnXResult.Keys)
-                    {
-                        if (FirstSort.Children != null)
-                        {
-                            FirstSort.Children.Add(new DirectoryFileTree<File<IReplay>>(new DirectoryInfo(directory), SortOnXResult[directory]));
-                        }
-                        else
-                        {
-                            FirstSort.Children = new List<DirectoryFileTree<File<IReplay>>>();
-                            FirstSort.Children.Add(new DirectoryFileTree<File<IReplay>>(new DirectoryInfo(directory), SortOnXResult[directory]));
-                        }
-                    }
-                    if (TotalSortResult.Children != null)
-                    {
-                        TotalSortResult.Children.Add(FirstSort);
-                    }
-                    else
-                    {
-                        TotalSortResult.Children = new List<DirectoryFileTree<File<IReplay>>>();
-                        TotalSortResult.Children.Add(FirstSort);
-                    }
+                    // DirectoryFileTree<File<IReplay>> FirstSort = new DirectoryFileTree<File<IReplay>>(new DirectoryInfo(CurrentDirectory + @"\" + SortCriteria.ToString()));
+                    // foreach (var directory in SortOnXResult.Keys)
+                    // {
+                    //     if (FirstSort.Children != null)
+                    //     {
+                    //         FirstSort.Children.Add(new DirectoryFileTree<File<IReplay>>(new DirectoryInfo(directory), SortOnXResult[directory]));
+                    //     }
+                    //     else
+                    //     {
+                    //         FirstSort.Children = new List<DirectoryFileTree<File<IReplay>>>();
+                    //         FirstSort.Children.Add(new DirectoryFileTree<File<IReplay>>(new DirectoryInfo(directory), SortOnXResult[directory]));
+                    //     }
+                    // }
+                    // if (TotalSortResult.Children != null)
+                    // {
+                    //     TotalSortResult.Children.Add(FirstSort);
+                    // }
+                    // else
+                    // {
+                    //     TotalSortResult.Children = new List<DirectoryFileTree<File<IReplay>>>();
+                    //     TotalSortResult.Children.Add(FirstSort);
+                    // }
                     
                 }
                 else
@@ -159,7 +159,8 @@ namespace ReplayParser.ReplaySorter
 
             }
             ReplayHandler.ResetReplayFilePathsToBeforeSort(OriginalListReplays);
-            return TotalSortResult;
+            return BuildTree(OriginalListReplays);
+            // return TotalSortResult;
         }
 
         // not async yet
@@ -204,6 +205,71 @@ namespace ReplayParser.ReplaySorter
         #endregion
 
         #region private methods
+
+        private DirectoryFileTree<File<IReplay>> BuildTree(List<File<IReplay>> originalListReplays)
+        {
+            // var replayFilePaths = originalListReplays.Select(r => r.FilePath);
+            var directories = new Dictionary<string, DirectoryFileTree<File<IReplay>>();
+
+            foreach (var replay in originalListReplays)
+            {
+                var dirs = ExtractDirectoriesFromPath(replay.FilePath, OriginalDirectory);
+                int counter = 0;
+                string previousDir = string.Empty;
+                foreach (var dir in dirs)
+                {
+                    AddOrModify(directories, dir, dir == Path.GetDirectoryName(replay.FilePath) ? replay : null);
+                    if (counter != 0)
+                    {
+                        directories[previousDir].Children.Add(directories[dir]);
+                    }
+                    counter++;
+                    previousDir = dir;
+                }
+            }
+            return directories[OriginalDirectory];
+        }
+
+        /// <summary>
+        /// returns ordered enumerable of directories contained in a path
+        /// </summary>
+        /// <param name="replayFilePath"></param>
+        /// <param name="rootDirectory"></param>
+        /// <returns></returns>
+        private IEnumerable<string> ExtractDirectoriesFromPath(string replayFilePath, string rootDirectory)
+        {
+            if (string.IsNullOrWhiteSpace(replayFilePath) || string.IsNullOrWhiteSpace(rootDirectory)) yield break;
+
+            var path = replayFilePath.Substring(rootDirectory.Length + 1);
+            // return path.Split(Path.DirectorySeparatorChar);
+            
+           while (path != string.Empty)
+           {
+                int indexOfSeparator = path.IndexOf(Path.AltDirectorySeparatorChar);
+                yield return path.Substring(0, indexOfSeparator);
+                path = path.Substring(indexOfSeparator + 1);
+           }
+        }
+
+        private void AddOrModify(Dictionary<string, DirectoryFileTree<File<IReplay>>> directories, string directory, File<IReplay> replay)
+        {
+            if (directories.ContainsKey(directory))
+            {
+                if (replay != null)
+                    directories[directory].Files.Add(FileReplay.Create(replay.Content, replay.OriginalFilePath, replay.Hash));
+            }
+            else
+            {
+                if (replay != null)
+                {
+                    directories.Add(directory, new DirectoryFileTree<File<IReplay>>(new DirectoryInfo(directory), new List<File<IReplay>>() { File<IReplay>.Create(replay.Content, replay.OriginalFilePath, replay.Hash) }));
+                }
+                else
+                {
+                    directories.Add(directory, new DirectoryFileTree<File<IReplay>>(new DirectoryInfo(directory)));
+                }
+            }
+        }
 
         #endregion
     }
