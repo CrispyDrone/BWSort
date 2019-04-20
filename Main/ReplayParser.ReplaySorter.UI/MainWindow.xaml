@@ -202,22 +202,8 @@
                     </Grid>
                     <TreeView x:Name="sortOutputTreeView">
                         <TreeView.Resources>
-                            <HierarchicalDataTemplate DataType="{x:Type sort:DirectoryFileTree}"  ItemsSource="{Binding Children}">
-                                <StackPanel Orientation="Vertical">
-                                <Label Content="{Binding Path=Self.Name}" BorderBrush="Black" FontWeight="DemiBold" FontSize="14"/>
-                                <ItemsControl ItemsSource="{Binding Files}" Margin="20 0 0 0">
-                                    <ItemsControl.ItemsPanel>
-                                        <ItemsPanelTemplate>
-                                            <StackPanel Orientation="Vertical" /> 
-                                        </ItemsPanelTemplate>
-                                    </ItemsControl.ItemsPanel>
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate>
-                                                <TextBlock Text="{Binding Path=FilePath, Converter={StaticResource PTFConverter}}"/>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                                </StackPanel>
+                            <HierarchicalDataTemplate DataType="{x:Type sort:DirectoryFileTreeNode}"  ItemsSource="{Binding Path=Children}">
+                                <Label Content="{Binding Path=Name}" BorderBrush="Black" FontWeight="DemiBold" FontSize="14"/>
                             </HierarchicalDataTemplate>
                         </TreeView.Resources>
                     </TreeView>

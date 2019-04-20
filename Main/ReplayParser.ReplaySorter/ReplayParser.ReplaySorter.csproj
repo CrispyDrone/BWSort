@@ -136,6 +136,8 @@
     <Compile Include="Sorting\EqualityComparers\ReplayMapEqualityComparer.cs" />
     <Compile Include="Sorting\Sorter\Sorter.cs" />
     <Compile Include="Sorting\SortResult\DirectoryFileTree.cs" />
+    <Compile Include="Sorting\SortResult\DirectoryFileTreeNode.cs" />
+    <Compile Include="IO\IFile.cs" />
     <Compile Include="UserInput\Answer.cs" />
     <Compile Include="UserInput\BaseDirectory.cs" />
     <Compile Include="UserInput\OutputDirectory.cs" />

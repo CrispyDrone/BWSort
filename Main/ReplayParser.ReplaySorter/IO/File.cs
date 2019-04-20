@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace ReplayParser.ReplaySorter.IO
 {
-    public class File<T> where T : class
+    public class File<T> : IFile
     {
         #region private
 

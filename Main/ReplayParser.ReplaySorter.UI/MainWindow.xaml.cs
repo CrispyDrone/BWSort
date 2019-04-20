@@ -982,23 +982,9 @@ namespace ReplayParser.ReplaySorter.UI
                 MessageBox.Show(string.Format("Finished sorting replays! It took {0} to sort {1} replays. {2} replays encountered exceptions.", _swSort.Elapsed, _listReplays.Count, _replaysThrowingExceptions.Count()), "Finished Sorting", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);
                 ResetReplaySortingVariables();
                 _replaysThrowingExceptions.Clear();
-                var tree = MapTree(e.Result as DirectoryFileTree<File<IReplay>>);
-                sortOutputTreeView.ItemsSource = tree;
+                var root = (e.Result as DirectoryFileTree).Root;
+                sortOutputTreeView.ItemsSource = root;
             }
-        }
-
-        private DirectoryFileTree MapTree(DirectoryFileTree<File<IReplay>> tree)
-        {
-            if (tree == null)
-                return null;
-            // foreach (var child in tree)
-            // {
-            //     stackTrees.Push(MapTree(child, stackTrees));
-            // }
-            return new DirectoryFileTree(
-                tree.Self, 
-                tree.Files?.Select(f => FileReplay.Create(f.Content, f.OriginalFilePath, f.Hash)).ToList(), 
-                tree.Children?.Select(c => MapTree(c)).ToList());
         }
 
         private void ResetReplaySortingVariables()
