@@ -219,9 +219,6 @@
                                 </ItemsControl>
                                 </StackPanel>
                             </HierarchicalDataTemplate>
-                            <!--<DataTemplate DataType="{x:Type file:FileReplay}">
-                                <TextBlock Text="{Binding Path=FilePath}"></TextBlock>
-                            </DataTemplate>-->
                         </TreeView.Resources>
                     </TreeView>
                 </DockPanel>
