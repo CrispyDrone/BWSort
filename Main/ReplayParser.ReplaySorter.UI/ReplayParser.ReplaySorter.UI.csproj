@@ -112,6 +112,7 @@
     <Compile Include="Converters\PathToFilenameConverter.cs" />
     <Compile Include="Converters\PlayerRaceToImagePathConverter.cs" />
     <Compile Include="Converters\PlayerToVisibilityConverter.cs" />
+    <Compile Include="Customization\TreeViewItemDataTemplateSelector.cs" />
     <Compile Include="Feedback.cs" />
     <Compile Include="ReplayAction.cs" />
     <Compile Include="Sorting\SortAdorner.cs" />

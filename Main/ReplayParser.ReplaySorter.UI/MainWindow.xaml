@@ -8,6 +8,7 @@
         xmlns:scm="clr-namespace:System.ComponentModel;assembly=WindowsBase"
         xmlns:file="clr-namespace:ReplayParser.ReplaySorter.IO;assembly=ReplayParser.ReplaySorter"
         xmlns:sort="clr-namespace:ReplayParser.ReplaySorter.Sorting.SortResult;assembly=ReplayParser.ReplaySorter"
+        xmlns:custom="clr-namespace:ReplayParser.ReplaySorter.UI.Customization"
         mc:Ignorable="d"
         Title="BWSort" Height="500" Width="750"
         Closing="Window_Closing"
@@ -19,6 +20,18 @@
         <cvt:PlayerRaceToImagePathConverter x:Key="RTIConverter" />
         <cvt:FeedbackToColorConverter x:Key="FTCConverter" />
         <cvt:PathToFilenameConverter x:Key="PTFConverter" />
+        <HierarchicalDataTemplate x:Key="DirectoryTemplate" DataType="{x:Type sort:DirectoryFileTreeNode}"  ItemsSource="{Binding Path=Children}">
+            <Border BorderBrush="Black" BorderThickness="1" CornerRadius="5" Margin="3">
+                <Label Content="{Binding Path=Name}" FontWeight="DemiBold" FontSize="14"/>
+            </Border>
+        </HierarchicalDataTemplate>
+        <HierarchicalDataTemplate x:Key="FileTemplate" DataType="{x:Type sort:DirectoryFileTreeNode}"  ItemsSource="{Binding Path=Children}">
+            <Label Content="{Binding Path=Name}"/>
+        </HierarchicalDataTemplate>
+        <custom:TreeViewItemDataTemplateSelector x:Key="TreeViewDataTemplateSelector" DirectoryTemplate="{StaticResource DirectoryTemplate}" FileTemplate="{StaticResource FileTemplate}"/>
+        <Style x:Key="DirectoryStyle" TargetType="{x:Type TreeViewItem}">
+            <Setter Property="IsExpanded" Value="True"/>
+        </Style>
     </Window.Resources>
     <DockPanel>
         <Menu DockPanel.Dock="Top">
@@ -200,12 +213,7 @@
                         <ProgressBar x:Name="progressBarSortingReplays" Minimum="0" Maximum="100" Margin="10 0"></ProgressBar>
                         <Label x:Name="progressBarSortingReplaysLabel" Content="{Binding ElementName=progressBarSortingReplays, Path=Value, StringFormat={}{0:0}%}" HorizontalAlignment="Center"></Label>
                     </Grid>
-                    <TreeView x:Name="sortOutputTreeView">
-                        <TreeView.Resources>
-                            <HierarchicalDataTemplate DataType="{x:Type sort:DirectoryFileTreeNode}"  ItemsSource="{Binding Path=Children}">
-                                <Label Content="{Binding Path=Name}" BorderBrush="Black" FontWeight="DemiBold" FontSize="14"/>
-                            </HierarchicalDataTemplate>
-                        </TreeView.Resources>
+                    <TreeView x:Name="sortOutputTreeView" ItemTemplateSelector="{StaticResource TreeViewDataTemplateSelector}" ItemContainerStyle="{StaticResource DirectoryStyle}">
                     </TreeView>
                 </DockPanel>
             </TabItem>
