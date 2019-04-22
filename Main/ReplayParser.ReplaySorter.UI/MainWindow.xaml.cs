@@ -519,7 +519,6 @@ namespace ReplayParser.ReplaySorter.UI
                     cancelRenamingButton.IsEnabled = enable;
                     undoRenamingButton.IsEnabled = enable;
                     redoRenamingButton.IsEnabled = enable;
-                    cancelUndoRenamingButton.IsEnabled = enable;
                     // renameInPlaceCheckBox.IsEnabled = enable;
                     // restoreOriginalReplayNamesCheckBox.IsEnabled = enable;
                     return;
@@ -530,7 +529,6 @@ namespace ReplayParser.ReplaySorter.UI
                     cancelRenamingButton.IsEnabled = enable;
                     undoRenamingButton.IsEnabled = enable;
                     redoRenamingButton.IsEnabled = enable;
-                    cancelUndoRenamingButton.IsEnabled = enable;
                     // renameInPlaceCheckBox.IsEnabled = enable;
                     // restoreOriginalReplayNamesCheckBox.IsEnabled = enable;
                     return;
@@ -540,7 +538,6 @@ namespace ReplayParser.ReplaySorter.UI
                     executeSortButton.IsEnabled = enable;
                     cancelSortButton.IsEnabled = enable;
                     undoRenamingButton.IsEnabled = enable;
-                    cancelUndoRenamingButton.IsEnabled = enable;
                     // restoreOriginalReplayNamesCheckBox.IsEnabled = enable;
                     return;
                 default:

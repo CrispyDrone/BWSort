@@ -247,11 +247,11 @@
                         </Grid.ColumnDefinitions>
                         <!--<Button Grid.Column="0" x:Name="undoRenamingButton" Content="Undo" Click="undoRenamingButton_Click" HorizontalAlignment="Right" MinWidth="70">-->
                         <Button Grid.Column="0" x:Name="undoRenamingButton" Click="undoRenamingButton_Click" HorizontalAlignment="Right" MinWidth="70">
-                            <Path Stroke="Black" Data="m 10 20 a 10,10 0 1 0 -10,-10 m 0 0 l -6 0 l 6 6 l 6 -6 Z" />
+                            <Path Stroke="Black" Data="m 10 20 a 10,10 0 1 0 -10,-10 m 0 0 l -5 0 l 5 5 l 5 -5 Z" />
                         </Button>
                         <!--<Button Grid.Column="2" x:Name="redoRenamingButton" Content="Redo" Click="redoRenamingButton_Click" HorizontalAlignment="Left" MinWidth="70"></Button>-->
                         <Button Grid.Column="2" x:Name="redoRenamingButton" Click="redoRenamingButton_Click" HorizontalAlignment="Left" MinWidth="70">
-                            <Path Stroke="Black" Data="m 10 20 a 10,10 0 1 0 -10,-10 m 0 0 l -6 0 l 6 6 l 6 -6 Z" />
+                            <Path Stroke="Black" Data="m 10 20 a 10,10 0 1 1 10,-10 m 0 0 l -5 0 l 5 5 l 5 -5 Z" />
                         </Button>
                     </Grid>
                     <ListView Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="3" x:Name="renameTransformationResultListView">
