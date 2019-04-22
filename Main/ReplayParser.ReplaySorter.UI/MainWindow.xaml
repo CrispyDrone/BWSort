@@ -218,35 +218,55 @@
                 </DockPanel>
             </TabItem>
             <TabItem Header="Rename">
-                <DockPanel LastChildFill="False">
-                    <StackPanel DockPanel.Dock="Top" Orientation="Vertical" Margin="10 10 10 0">
-                        <CheckBox x:Name="renameInPlaceCheckBox" Content="Rename in place" Margin="10 10 0 0" IsChecked="False" Click="renameInPlaceCheckBox_Click"></CheckBox>
-                        <CheckBox x:Name="restoreOriginalReplayNamesCheckBox" Content="Restore original replay names" Margin="10 10 0 0" IsChecked="False" Click="RestoreOriginalReplayNamesCheckBox_Click"></CheckBox>
-                    </StackPanel>
-                    <StackPanel x:Name="replayRenamingOutputDirectoryStackPanel" DockPanel.Dock="Top" Orientation="Horizontal" Margin="10 10 10 0">
-                        <TextBox x:Name="replayRenamingOutputDirectoryTextBox" Text="" HorizontalAlignment="Stretch" MinWidth="300"></TextBox>
-                        <Button x:Name="replayRenamingOutputDirectoryButton" Content="Set directory" Click="replayRenamingOutputDirectoryButton_Click" Margin="10 0 10 0"></Button>
-                    </StackPanel>
-                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="10 10 10 0">
-                        <TextBox x:Name="replayRenamingSyntaxTextBox" Text="" HorizontalAlignment="Stretch" MinWidth="300"></TextBox>
-                        <Label x:Name="replayRenamingSyntaxLabel" Content="Renaming expression" HorizontalAlignment="Center" Margin="10 0"></Label>
-                    </StackPanel>
-                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Bottom" HorizontalAlignment="Center">
-                        <StackPanel Orientation="Vertical">
-                            <Button x:Name="undoRenamingButton" Content="Undo" Click="undoRenamingButton_Click" Margin ="10" Padding="10 0 10 0" MinWidth="70"></Button>
-                            <Button x:Name="redoRenamingButton" Content="Redo" Click="redoRenamingButton_Click" Margin ="10" Padding="10 0 10 0" MinWidth="70"></Button>
-                        </StackPanel>
-                        <Button x:Name="cancelUndoRenamingButton" Content="Cancel" Click="cancelUndoRenamingButton_Click" Margin ="10" Padding="10 0 10 0" MinWidth="70" VerticalAlignment="Center"></Button>
-                    </StackPanel>
-                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Bottom" HorizontalAlignment="Center">
-                        <Button x:Name="executeRenamingButton" Content="Rename" Click="executeRenamingButton_Click" Margin ="10" Padding="10 0 10 0" MinWidth="70"></Button>
-                        <Button x:Name="cancelRenamingButton" Content="Cancel" Click="cancelRenamingButton_Click" Margin ="10" Padding="10 0 10 0" MinWidth="70"></Button>
-                    </StackPanel>
-                    <Grid DockPanel.Dock="Bottom">
-                        <ProgressBar x:Name="progressBarRenamingOrRestoringReplays" Minimum="0" Maximum="100" Margin="10 0"></ProgressBar>
-                        <Label x:Name="progressBarRenamingReplaysLabel" Content="{Binding ElementName=progressBarRenamingOrRestoringReplays, Path=Value, StringFormat={}{0:0}%}" HorizontalAlignment="Center"></Label>
+                <Grid Margin="10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"></ColumnDefinition>
+                        <ColumnDefinition Width="*"></ColumnDefinition>
+                        <ColumnDefinition Width="Auto"></ColumnDefinition>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"></RowDefinition>
+                        <RowDefinition Height="Auto"></RowDefinition>
+                        <RowDefinition Height="Auto"></RowDefinition>
+                        <RowDefinition Height="Auto"></RowDefinition>
+                        <RowDefinition Height="Auto"></RowDefinition>
+                        <RowDefinition Height="*"></RowDefinition>
+                        <RowDefinition Height="Auto"></RowDefinition>
+                    </Grid.RowDefinitions>
+                    <Label Grid.Row="0" Grid.Column="0" Content="Rename replays into:" VerticalAlignment="Center"/>
+                    <TextBox Grid.Row="0" Grid.Column="1" x:Name="replayRenamingOutputDirectoryTextBox" Margin="10"></TextBox>
+                    <Button Grid.Row="0" Grid.Column="2" x:Name="replayRenamingOutputDirectoryButton" Content="Set directory" Click="replayRenamingOutputDirectoryButton_Click" Margin="10 10 0 10"></Button>
+                    <Label Grid.Row="1" Grid.Column="0" x:Name="replayRenamingSyntaxLabel" Content="Renaming expression" VerticalAlignment="Center"></Label>
+                    <TextBox Grid.Row="1" Grid.Column="1" x:Name="replayRenamingSyntaxTextBox" Margin="10"></TextBox>
+                    <CheckBox Grid.Row="2" x:Name="renameInPlaceCheckBox" Content="Rename in place" IsChecked="False" Click="renameInPlaceCheckBox_Click" Margin="0 10"></CheckBox>
+                    <CheckBox Grid.Row="3" x:Name="restoreOriginalReplayNamesCheckBox" Content="Restore original replay names" IsChecked="False" Click="RestoreOriginalReplayNamesCheckBox_Click" Margin="0 10"></CheckBox>
+                    <Grid Grid.Row="4" Grid.ColumnSpan="3" Margin="0 10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition></ColumnDefinition>
+                            <ColumnDefinition></ColumnDefinition>
+                            <ColumnDefinition></ColumnDefinition>
+                        </Grid.ColumnDefinitions>
+                        <Button Grid.Column="0" x:Name="undoRenamingButton" Content="Undo" Click="undoRenamingButton_Click" HorizontalAlignment="Left" MinWidth="70"></Button>
+                        <Button Grid.Column="1" x:Name="cancelUndoRenamingButton" Content="Cancel" Click="cancelUndoRenamingButton_Click" HorizontalAlignment="Center" MinWidth="70"></Button>
+                        <Button Grid.Column="2" x:Name="redoRenamingButton" Content="Redo" Click="redoRenamingButton_Click" HorizontalAlignment="Right" MinWidth="70"></Button>
                     </Grid>
-                </DockPanel>
+                    <ListView Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="3" x:Name="renameTransformationResultListView">
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn Header="Old" DisplayMemberBinding="{Binding Path=OldName}"/>
+                                <GridViewColumn Header="New" DisplayMemberBinding="{Binding Path=NewName}"/>
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+                    <DockPanel Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="3">
+                        <Button DockPanel.Dock="Right" x:Name="cancelRenamingButton" Content="Cancel" Click="cancelRenamingButton_Click" Margin="10 10 0 10" MinWidth="70"></Button>
+                        <Button DockPanel.Dock="Right" x:Name="executeRenamingButton" Content="Rename" Click="executeRenamingButton_Click" Margin="10" MinWidth="70"></Button>
+                        <Grid DockPanel.Dock="Left" Margin="0 10 10 10">
+                            <ProgressBar x:Name="progressBarRenamingOrRestoringReplays" Minimum="0" Maximum="100"></ProgressBar>
+                            <Label x:Name="progressBarRenamingReplaysLabel" Content="{Binding ElementName=progressBarRenamingOrRestoringReplays, Path=Value, StringFormat={}{0:0}%}" HorizontalAlignment="Center" VerticalAlignment="Center"></Label>
+                        </Grid>
+                    </DockPanel>
+                </Grid>
             </TabItem>
             <TabItem Header="Search">
                 <DockPanel>

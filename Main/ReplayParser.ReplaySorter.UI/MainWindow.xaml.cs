@@ -23,6 +23,7 @@ using System.Windows.Data;
 using System.Text;
 using ReplayParser.ReplaySorter.Ignoring;
 using ReplayParser.ReplaySorter.Sorting.SortResult;
+using ReplayParser.ReplaySorter.ReplayRenamer.RenameResult;
 
 namespace ReplayParser.ReplaySorter.UI
 {
@@ -62,6 +63,7 @@ namespace ReplayParser.ReplaySorter.UI
         // renaming
         private BackgroundWorker _worker_ReplayRenamer = null;
         private bool _renamingReplays = false;
+        private bool _renamingToOutputDirectory = false;
 
         // undoing
         private BackgroundWorker _worker_Undoer = null;
@@ -1056,49 +1058,7 @@ namespace ReplayParser.ReplaySorter.UI
 
         private void renameInPlaceCheckBox_Click(object sender, RoutedEventArgs e)
         {
-            disableSiblingCheckBoxAndRenamingStackPanel(sender as CheckBox, "restoreOriginalReplayNamesCheckBox");
-        }
-
-        private void disableSiblingCheckBoxAndRenamingStackPanel(CheckBox checkBox, string siblingName)
-        {
-            if (checkBox == null)
-                return;
-
-            if (!checkBox.IsChecked.HasValue)
-                return;
-
-            var siblingCheckBox = GetSiblingRenameCheckBox(checkBox, siblingName);
-            if (siblingCheckBox == null)
-                return;
-
-            var replayRenamingOutputDirectoryStackPanel = GetRenamingStackPanel(checkBox);
-            if (replayRenamingOutputDirectoryStackPanel == null)
-                return;
-
-            siblingCheckBox.IsEnabled = !checkBox.IsChecked.Value;
-            replayRenamingOutputDirectoryStackPanel.IsEnabled = !checkBox.IsChecked.Value;
-        }
-
-        private CheckBox GetSiblingRenameCheckBox(CheckBox renameCheckBox, string name)
-        {
-            var stackPanel = renameCheckBox.Parent as StackPanel;
-            if (stackPanel == null)
-                return null;
-
-            return stackPanel.Children.OfType<CheckBox>().SingleOrDefault(c => c.Name == name);
-        }
-
-        private StackPanel GetRenamingStackPanel(CheckBox renameCheckBox)
-        {
-            var stackPanel = renameCheckBox.Parent as StackPanel;
-            if (stackPanel == null)
-                return null;
-
-            var dockPanel = (stackPanel.Parent as DockPanel);
-            if (dockPanel == null)
-                return null;
-
-            return dockPanel.Children.OfType<StackPanel>().SingleOrDefault(s => s.Name == "replayRenamingOutputDirectoryStackPanel");
+            restoreOriginalReplayNamesCheckBox.IsEnabled = !(renameInPlaceCheckBox.IsChecked.HasValue && renameInPlaceCheckBox.IsChecked.Value);
         }
 
         private void replayRenamingOutputDirectoryButton_Click(object sender, RoutedEventArgs e)
@@ -1208,6 +1168,7 @@ namespace ReplayParser.ReplaySorter.UI
             else
             {
                 // renaming into another directory
+                _renamingToOutputDirectory = true;
                 response = replayRenamer.RenameToDirectoryAsync(sender as BackgroundWorker);
             }
 
@@ -1238,11 +1199,19 @@ namespace ReplayParser.ReplaySorter.UI
 
         private void worker_RenamingReplaysCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            _renamingReplays = false;
-            var response = e.Result as ServiceResult<ServiceResultSummary<List<File<IReplay>>>>;
+            var response = e.Result as ServiceResult<ServiceResultSummary<IEnumerable<File<IReplay>>>>;
             progressBarSortingReplays.Value = 0;
 
             AddUndoable(response.Result.Result);
+            renameTransformationResultListView.ItemsSource = RenderRenaming(response.Result.Result);
+            if (_renamingToOutputDirectory)
+            {
+                foreach (var replay in response.Result.Result)
+                {
+                    replay.Rewind();
+                    replay.RemoveAfterCurrent();
+                }
+            }
 
             if (e.Cancelled == true)
             {
@@ -1262,6 +1231,7 @@ namespace ReplayParser.ReplaySorter.UI
                     MessageBox.Show(response.Result.Message, "Finished renaming", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);
                 }
             }
+            _renamingReplays = false;
             listViewReplays.Items.Refresh();
         }
 
@@ -1292,6 +1262,22 @@ namespace ReplayParser.ReplaySorter.UI
             {
                 _renamedReplaysList.RemoveFirst();
             }
+        }
+
+        private List<Renaming> RenderRenaming(IEnumerable<File<IReplay>> result)
+        {
+            var renamings = new List<Renaming>();
+
+            foreach (var replay in result)
+            {
+                var newName = replay.FilePath;
+                replay.Rewind();
+                var oldName = replay.FilePath;
+                replay.Forward();
+                renamings.Add(new Renaming(replay, oldName, newName));
+            }
+
+            return renamings;
         }
 
         private void cancelRenamingButton_Click(object sender, RoutedEventArgs e)
@@ -1433,8 +1419,11 @@ namespace ReplayParser.ReplaySorter.UI
 
         private void RestoreOriginalReplayNamesCheckBox_Click(object sender, RoutedEventArgs e)
         {
-            disableSiblingCheckBoxAndRenamingStackPanel(sender as CheckBox, "renameInPlaceCheckBox");
-            replayRenamingSyntaxTextBox.IsEnabled = !replayRenamingSyntaxTextBox.IsEnabled;
+            var restoreIsChecked = (restoreOriginalReplayNamesCheckBox.IsChecked.HasValue && restoreOriginalReplayNamesCheckBox.IsChecked.Value);
+            renameInPlaceCheckBox.IsEnabled = !restoreIsChecked;
+            replayRenamingSyntaxTextBox.IsEnabled = !restoreIsChecked;
+            replayRenamingOutputDirectoryButton.IsEnabled = !restoreIsChecked;
+            replayRenamingOutputDirectoryTextBox.IsEnabled = !restoreIsChecked;
         }
 
         #endregion

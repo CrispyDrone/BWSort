@@ -143,8 +143,11 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
                         ReplayHandler.CopyReplay(replay, forward);
                         // don't want this to show up in history
                         //TODO eh this doesn't take into account forward, but i guess copying only occurs when renaming to an output directory which is always forward??
-                        replay.Rewind();
-                        replay.RemoveAfterCurrent();
+
+                        // support for listview renaming action result requires history to be recorded...
+                        // replay.Rewind();
+                        // replay.RemoveAfterCurrent();
+
                         // File.Copy(replay.OriginalFilePath, replay.FilePath);
                     }
                     else

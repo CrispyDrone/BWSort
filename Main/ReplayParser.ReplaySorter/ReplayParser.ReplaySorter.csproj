@@ -96,6 +96,7 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
+    <Compile Include="ReplayRenamer\RenameResult\Renaming.cs" />
     <Compile Include="ReplayRenamer\Renamer\RenamingParameters.cs" />
     <Compile Include="ReplayRenamer\Renamer\Renamer.cs" />
     <Compile Include="Replays.Designer.cs">

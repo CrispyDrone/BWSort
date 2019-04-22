@@ -40,13 +40,13 @@ namespace ReplayParser.ReplaySorter.Sorting.SortResult
         //             return false;
 
         //         var head = _nodeQueue.Dequeue();
-        //         if (head.Children == null)
-        //             return false;
-
-        //         foreach (var child in head.Children)
+        //         if (head.Children != null)
         //         {
-        //             if (child != null)
-        //                 _nodeQueue.Enqueue(child);
+        //             foreach (var child in head.Children)
+        //             {
+        //                 if (child != null)
+        //                     _nodeQueue.Enqueue(child);
+        //             }
         //         }
 
         //         return true;
