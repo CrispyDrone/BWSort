@@ -99,7 +99,7 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
                 );
         }
 
-        private ServiceResult<ServiceResultSummary<IEnumerable<File<IReplay>>>> ExecuteRenaming(BackgroundWorker worker_ReplayRenamer, bool shouldCopy, bool forward = true, int steps = 2)
+        private ServiceResult<ServiceResultSummary<IEnumerable<File<IReplay>>>> ExecuteRenaming(BackgroundWorker worker_ReplayRenamer, IEnumerable<File<IReplay>> replays, bool shouldCopy, bool forward = true, int steps = 2)
         {
             worker_ReplayRenamer.ReportProgress(50, "Writing replays...");
             // report progress... with "Copying replays with newly generated names..."
@@ -111,7 +111,7 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
             int replaysThrowingExceptions = 0;
             var renamedReplays = new List<File<IReplay>>();
 
-            foreach (var replay in _listReplays)
+            foreach (var replay in replays)
             {
                 if (worker_ReplayRenamer.CancellationPending == true)
                 {
@@ -121,7 +121,7 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
                             new ServiceResultSummary<IEnumerable<File<IReplay>>>
                             (
                                 renamedReplays, 
-                                $"Renaming cancelled by user... It took {sw.Elapsed} to write {renamedReplays.Count()} of {_listReplays.Count()} replays. {replaysThrowingExceptions} replays encountered exceptions.", 
+                                $"Renaming cancelled by user... It took {sw.Elapsed} to write {renamedReplays.Count()} of {replays.Count()} replays. {replaysThrowingExceptions} replays encountered exceptions.", 
                                 sw.Elapsed, 
                                 currentPosition, 
                                 replaysThrowingExceptions
@@ -132,7 +132,7 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
                 }
 
                 currentPosition++;
-                progressPercentage = 50 + Convert.ToInt32(((double)currentPosition / (_listReplays.Count() * steps)) * 100);
+                progressPercentage = 50 + Convert.ToInt32(((double)currentPosition / (replays.Count() * steps)) * 100);
                 worker_ReplayRenamer.ReportProgress(progressPercentage);
                 try
                 {
@@ -173,7 +173,7 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
                     new ServiceResultSummary<IEnumerable<File<IReplay>>>
                     (
                         renamedReplays,
-                        $"Finished writing replays! It took {sw.Elapsed} to write {_listReplays.Count()} replays. {replaysThrowingExceptions} replays encountered exceptions.",
+                        $"Finished writing replays! It took {sw.Elapsed} to write {replays.Count()} replays. {replaysThrowingExceptions} replays encountered exceptions.",
                         sw.Elapsed,
                         currentPosition,
                         replaysThrowingExceptions
@@ -193,7 +193,7 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
                 return new ServiceResult<ServiceResultSummary<IEnumerable<File<IReplay>>>>(ServiceResultSummary<IEnumerable<File<IReplay>>>.Default, false, new List<string>(computationResponse.Errors));
             }
 
-            var executionResponse = ExecuteRenaming(worker_ReplayRenamer, !string.IsNullOrWhiteSpace(outputDirectory));
+            var executionResponse = ExecuteRenaming(worker_ReplayRenamer, computationResponse.Result.Result, !string.IsNullOrWhiteSpace(outputDirectory));
 
             if (!executionResponse.Success)
             {
@@ -212,16 +212,16 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
                 (
                     executionResponse.Errors == null ? computationResponse.Errors : computationResponse.Errors.Concat(executionResponse.Errors)
                 );
-            // union of both replay sets
-            IEnumerable<File<IReplay>> combinedReplays = computationResponse.Result.Result.Union(executionResponse.Result.Result);
+            // union of both replay sets => wrong you only need those replays that have successfully passed both steps
+            // IEnumerable<File<IReplay>> combinedReplays = computationResponse.Result.Result.Union(executionResponse.Result.Result);
 
 
             return new ServiceResult<ServiceResultSummary<IEnumerable<File<IReplay>>>>
                 (
                     new ServiceResultSummary<IEnumerable<File<IReplay>>>
                     (
-                        combinedReplays,
-                        $"Finished renaming replays! It took {combinedDuration} to rename and write replays. {combinedErrorCount} exceptions occurred.",
+                        executionResponse.Result.Result,
+                        $"Finished renaming replays! It took {combinedDuration} to rename and write {executionResponse.Result.Result.Count()} replays. {combinedErrorCount} exceptions occurred.",
                         combinedDuration,
                         executionResponse.Result.OperationCount,
                         combinedErrorCount
@@ -283,12 +283,12 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
 
         public ServiceResult<ServiceResultSummary<IEnumerable<File<IReplay>>>> UndoRename(BackgroundWorker worker_RenameUndoer)
         {
-            return ExecuteRenaming(worker_RenameUndoer, false, false, 1);
+            return ExecuteRenaming(worker_RenameUndoer, _listReplays, false, false, 1);
         }
 
         public ServiceResult<ServiceResultSummary<IEnumerable<File<IReplay>>>> RedoRename(BackgroundWorker worker_RenameUndoer)
         {
-            return ExecuteRenaming(worker_RenameUndoer, false, true, 1);
+            return ExecuteRenaming(worker_RenameUndoer, _listReplays, false, true, 1);
         }
 
         public override string ToString()

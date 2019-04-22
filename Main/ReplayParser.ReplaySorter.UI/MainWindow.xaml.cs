@@ -24,6 +24,7 @@ using System.Text;
 using ReplayParser.ReplaySorter.Ignoring;
 using ReplayParser.ReplaySorter.Sorting.SortResult;
 using ReplayParser.ReplaySorter.ReplayRenamer.RenameResult;
+using System.Collections;
 
 namespace ReplayParser.ReplaySorter.UI
 {
@@ -1058,7 +1059,10 @@ namespace ReplayParser.ReplaySorter.UI
 
         private void renameInPlaceCheckBox_Click(object sender, RoutedEventArgs e)
         {
-            restoreOriginalReplayNamesCheckBox.IsEnabled = !(renameInPlaceCheckBox.IsChecked.HasValue && renameInPlaceCheckBox.IsChecked.Value);
+            var renameInPlaceCheckBoxIsEnabled = renameInPlaceCheckBox.IsChecked.HasValue && renameInPlaceCheckBox.IsChecked.Value;
+            restoreOriginalReplayNamesCheckBox.IsEnabled = !renameInPlaceCheckBoxIsEnabled;
+            replayRenamingOutputDirectoryButton.IsEnabled = !(renameInPlaceCheckBoxIsEnabled);
+            replayRenamingOutputDirectoryTextBox.IsEnabled = !(renameInPlaceCheckBoxIsEnabled);
         }
 
         private void replayRenamingOutputDirectoryButton_Click(object sender, RoutedEventArgs e)
@@ -1271,7 +1275,7 @@ namespace ReplayParser.ReplaySorter.UI
             }
         }
 
-        private List<Renaming> RenderRenaming(IEnumerable<File<IReplay>> result)
+        private IEnumerable<Renaming> RenderRenaming(IEnumerable<File<IReplay>> result)
         {
             var renamings = new List<Renaming>();
 
@@ -1396,7 +1400,10 @@ namespace ReplayParser.ReplaySorter.UI
             _activeWorker = null;
             var response = e.Result as ServiceResult<ServiceResultSummary<IEnumerable<File<IReplay>>>>;
             progressBarRenamingOrRestoringReplays.Value = 0;
-            renameTransformationResultListView.ItemsSource = RenderRenaming(response.Result.Result);
+
+            //TODO doesn't work
+            // renameTransformationResultListView.ItemsSource = RenderRenaming(response.Result.Result);
+            renameTransformationResultListView.ItemsSource = RenderUndoOrRedo(response.Result.Result, _undoingRename);
 
             if (e.Cancelled)
             {
@@ -1418,6 +1425,35 @@ namespace ReplayParser.ReplaySorter.UI
             }
             _undoingRename = false;
             listViewReplays.Items.Refresh();
+        }
+
+        private IEnumerable<Renaming> RenderUndoOrRedo(IEnumerable<File<IReplay>> replays, bool isUndo)
+        {
+            var renamings = new List<Renaming>();
+
+            if (isUndo)
+            {
+                foreach (var replay in replays)
+                {
+                    var newName = replay.FilePath;
+                    replay.Forward();
+                    var oldName = replay.FilePath;
+                    replay.Rewind();
+                    renamings.Add(new Renaming(replay, oldName, newName));
+                }
+            }
+            else
+            {
+                foreach (var replay in replays)
+                {
+                    var newName = replay.FilePath;
+                    replay.Rewind();
+                    var oldName = replay.FilePath;
+                    replay.Forward();
+                    renamings.Add(new Renaming(replay, oldName, newName));
+                }
+            }
+            return renamings.AsEnumerable();
         }
 
         private void RestoreOriginalReplayNamesCheckBox_Click(object sender, RoutedEventArgs e)
