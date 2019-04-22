@@ -69,6 +69,9 @@ namespace ReplayParser.ReplaySorter.UI
         private BackgroundWorker _worker_Undoer = null;
         private bool _undoingRename = false;
 
+        // renaming + undoing
+        private BackgroundWorker _activeWorker = null;
+
         // renaming and undoing
         private LinkedList<IEnumerable<File<IReplay>>> _renamedReplaysList = new LinkedList<IEnumerable<File<IReplay>>>();
         private LinkedListNode<IEnumerable<File<IReplay>>> _renamedReplayListHead;
@@ -1146,6 +1149,7 @@ namespace ReplayParser.ReplaySorter.UI
                 _worker_ReplayRenamer.ProgressChanged += worker_ProgressChangedRenamingReplays;
                 _worker_ReplayRenamer.RunWorkerCompleted += worker_RenamingReplaysCompleted;
             }
+            _activeWorker = _worker_ReplayRenamer;
             _worker_ReplayRenamer.RunWorkerAsync(replayRenamer);
         }
 
@@ -1199,18 +1203,23 @@ namespace ReplayParser.ReplaySorter.UI
 
         private void worker_RenamingReplaysCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
+            _activeWorker = null;
             var response = e.Result as ServiceResult<ServiceResultSummary<IEnumerable<File<IReplay>>>>;
             progressBarSortingReplays.Value = 0;
 
-            AddUndoable(response.Result.Result);
             renameTransformationResultListView.ItemsSource = RenderRenaming(response.Result.Result);
             if (_renamingToOutputDirectory)
             {
+                // remove history
                 foreach (var replay in response.Result.Result)
                 {
                     replay.Rewind();
                     replay.RemoveAfterCurrent();
                 }
+            }
+            else
+            {
+                AddUndoable(response.Result.Result);
             }
 
             if (e.Cancelled == true)
@@ -1231,6 +1240,7 @@ namespace ReplayParser.ReplaySorter.UI
                     MessageBox.Show(response.Result.Message, "Finished renaming", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);
                 }
             }
+            _renamingToOutputDirectory = false;
             _renamingReplays = false;
             listViewReplays.Items.Refresh();
         }
@@ -1282,9 +1292,9 @@ namespace ReplayParser.ReplaySorter.UI
 
         private void cancelRenamingButton_Click(object sender, RoutedEventArgs e)
         {
-            if (_worker_ReplayRenamer != null && _worker_ReplayRenamer.IsBusy)
+            if (_activeWorker != null && _activeWorker.IsBusy)
             {
-                _worker_ReplayRenamer.CancelAsync();
+                _activeWorker.CancelAsync();
             }
         }
 
@@ -1308,6 +1318,7 @@ namespace ReplayParser.ReplaySorter.UI
                 _worker_Undoer.ProgressChanged += worker_ProgressChangedUndoRename;
                 _worker_Undoer.RunWorkerCompleted += worker_UndoRenamingCompleted;
             }
+            _activeWorker = _worker_Undoer;
             _worker_Undoer.RunWorkerAsync(true);
         }
 
@@ -1332,6 +1343,7 @@ namespace ReplayParser.ReplaySorter.UI
                 _worker_Undoer.ProgressChanged += worker_ProgressChangedUndoRename;
                 _worker_Undoer.RunWorkerCompleted += worker_UndoRenamingCompleted;
             }
+            _activeWorker = _worker_Undoer;
             _worker_Undoer.RunWorkerAsync(false);
         }
 
@@ -1384,8 +1396,10 @@ namespace ReplayParser.ReplaySorter.UI
 
         private void worker_UndoRenamingCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
+            _activeWorker = null;
             var response = e.Result as ServiceResult<ServiceResultSummary<IEnumerable<File<IReplay>>>>;
             progressBarRenamingOrRestoringReplays.Value = 0;
+            renameTransformationResultListView.ItemsSource = RenderRenaming(response.Result.Result);
 
             if (e.Cancelled)
             {
@@ -1407,14 +1421,6 @@ namespace ReplayParser.ReplaySorter.UI
             }
             _undoingRename = false;
             listViewReplays.Items.Refresh();
-        }
-
-        private void cancelUndoRenamingButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (_worker_Undoer != null && _worker_Undoer.IsBusy)
-            {
-                _worker_Undoer.CancelAsync();
-            }
         }
 
         private void RestoreOriginalReplayNamesCheckBox_Click(object sender, RoutedEventArgs e)
