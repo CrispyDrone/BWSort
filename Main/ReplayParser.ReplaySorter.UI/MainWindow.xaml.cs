@@ -25,6 +25,7 @@ using ReplayParser.ReplaySorter.Ignoring;
 using ReplayParser.ReplaySorter.Sorting.SortResult;
 using ReplayParser.ReplaySorter.ReplayRenamer.RenameResult;
 using System.Collections;
+using System.Windows.Input;
 
 namespace ReplayParser.ReplaySorter.UI
 {
@@ -58,8 +59,6 @@ namespace ReplayParser.ReplaySorter.UI
         private bool _keepOriginalReplayNames = true;
         private BoolAnswer _boolAnswer = null;
         private Stopwatch _swSort = new Stopwatch();
-        private List<string> SortCriteria = new List<string> { "none", "playername", "matchup", "map", "duration", "gametype" };
-        private Dictionary<ComboBox, List<string>> ComboBoxSortCriteriaDictionary = new Dictionary<ComboBox, List<string>>();
 
         // renaming
         private BackgroundWorker _worker_ReplayRenamer = null;
@@ -87,7 +86,6 @@ namespace ReplayParser.ReplaySorter.UI
         public MainWindow()
         {
             InitializeComponent();
-            InitializeSortCriteriaComboBoxes();
             EnableSortingAndRenamingButtons(ReplayAction.Parse, false);
             _replaySorterConfiguration = new ReplaySorterAppConfiguration();
             IntializeErrorLogger(_replaySorterConfiguration);
@@ -134,28 +132,6 @@ namespace ReplayParser.ReplaySorter.UI
             if (ErrorLogger.GetInstance(replaySorterConfiguration) == null)
             {
                 MessageBox.Show("Issue intializing logger. Logging will be disabled.", "Logger failure", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
-            }
-        }
-
-        private void InitializeSortCriteriaComboBoxes()
-        {
-            foreach (var gridchild in gridContainingSortCriteriaComboBoxes.Children)
-            {
-                if (gridchild is StackPanel)
-                {
-                    foreach (var child in (gridchild as StackPanel).Children)
-                    {
-                        if (child is ComboBox)
-                        {
-                            var ComboBox = child as ComboBox;
-                            var ItemsSource = new List<string>(SortCriteria);
-                            ComboBox.ItemsSource = ItemsSource;
-                            ComboBox.SelectedIndex = 0;
-                            ComboBox.SelectionChanged += ComboBox_SelectionChanged;
-                            ComboBoxSortCriteriaDictionary.Add(ComboBox, ItemsSource);
-                        }
-                    }
-                }
             }
         }
 
@@ -560,52 +536,46 @@ namespace ReplayParser.ReplaySorter.UI
 
         #region sorting
 
-        private void ComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void sortCriteriaListBoxItem_PreviewMouseMove(object sender, MouseEventArgs e)
         {
-            var ChangedComboBox = sender as ComboBox;
-            var SelectedItem = (string)ChangedComboBox.SelectedItem;
-
-            foreach (var combobox in ComboBoxSortCriteriaDictionary.Keys.ToList())
+            if (e.LeftButton == MouseButtonState.Pressed)
             {
-                if (ChangedComboBox != combobox)
+                if (sender is ListBoxItem)
                 {
-                    var nonChangedComboBoxSelectedItem = (string)combobox.SelectedItem;
-                    if (SelectedItem != "none")
-                    {
-                        ComboBoxSortCriteriaDictionary[combobox] = ComboBoxSortCriteriaDictionary[combobox].Where(x => x != SelectedItem).ToList();
-                    }
-                    if ((string)e.RemovedItems[0] != "none")
-                    {
-                        ComboBoxSortCriteriaDictionary[combobox].Add((string)e.RemovedItems[0]);
-                    }
-                    combobox.SelectionChanged -= ComboBox_SelectionChanged;
-                    combobox.ItemsSource = null;
-                    combobox.ItemsSource = ComboBoxSortCriteriaDictionary[combobox].OrderBy(x => KeepDefinedOrdering(x));
-                    combobox.SelectedIndex = combobox.Items.IndexOf(nonChangedComboBoxSelectedItem);
-                    combobox.SelectionChanged += ComboBox_SelectionChanged;
+                    var draggedItem = sender as ListBoxItem;
+                    if (draggedItem == null)
+                        return;
+
+                    DragDrop.DoDragDrop(draggedItem, new Tuple<ListBoxItem, bool>(draggedItem, !draggedItem.IsSelected), DragDropEffects.Move);
                 }
             }
-            UpdateSortCriteriaParametersControls(SelectedItem, (string)e.RemovedItems[0]);
         }
 
-        private static int KeepDefinedOrdering(string item)
+        private void sortCriteriaListBoxItem_Drop(object sender, DragEventArgs e)
         {
-            switch (item)
+            var source = e.Data.GetData(typeof(Tuple<ListBoxItem, bool>)) as Tuple<ListBoxItem, bool>;
+            var target = sender as ListBoxItem;
+
+            if (source == null || target == null)
+                return;
+
+            var targetIndex = sortCriteriaListBox.ItemContainerGenerator.IndexFromContainer(target);
+
+            if (targetIndex < 0)
+                return;
+
+            sortCriteriaListBox.Items.Remove(source.Item1);
+            sortCriteriaListBox.Items.Insert(targetIndex, source.Item1);
+            (sortCriteriaListBox.Items.GetItemAt(targetIndex) as ListBoxItem).IsSelected = source.Item2;
+            sortCriteriaListBox.Items.Refresh();
+        }
+
+        private void SortCriteriaListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (sender is ListBox)
             {
-                case "none":
-                    return 1;
-                case "playername":
-                    return 2;
-                case "matchup":
-                    return 3;
-                case "map":
-                    return 4;
-                case "duration":
-                    return 5;
-                case "gametype":
-                    return 6;
-                default:
-                    return 7;
+                var listBox = sender as ListBox;
+                UpdateSortCriteriaParametersControls(e.AddedItems.Cast<ListBoxItem>().FirstOrDefault()?.Content as string, e.RemovedItems.Cast<ListBoxItem>().FirstOrDefault()?.Content as string);
             }
         }
 
@@ -616,7 +586,7 @@ namespace ReplayParser.ReplaySorter.UI
             {
                 sortCriteriaParameters.Children.Add(PanelToAdd);
             }
-            var PanelToRemove = GetPanelWithName(sortCriteriaParameters, unselectedItem.ToUpper());
+            var PanelToRemove = GetPanelWithName(sortCriteriaParameters, unselectedItem);
             if (PanelToRemove != null)
             {
                 sortCriteriaParameters.Children.Remove(PanelToRemove);
@@ -627,7 +597,7 @@ namespace ReplayParser.ReplaySorter.UI
         {
             switch (selectedItem)
             {
-                case "playername":
+                case "PLAYERNAME":
                     StackPanel playername = new StackPanel();
                     playername.Name = "PLAYERNAME";
                     playername.Orientation = Orientation.Vertical;
@@ -652,7 +622,7 @@ namespace ReplayParser.ReplaySorter.UI
                     playername.Children.Add(both);
                     playername.Children.Add(none);
                     return playername;
-                case "duration":
+                case "DURATION":
                     StackPanel duration = new StackPanel();
                     duration.Name = "DURATION";
                     duration.Orientation = Orientation.Horizontal;
@@ -663,7 +633,7 @@ namespace ReplayParser.ReplaySorter.UI
                     duration.Children.Add(DurationIntervalsLabel);
                     duration.Children.Add(DurationIntervalsTextBox);
                     return duration;
-                case "matchup":
+                case "MATCHUP":
                     StackPanel gametypesPanel = new StackPanel();
                     gametypesPanel.Name = "MATCHUP";
                     gametypesPanel.Orientation = Orientation.Vertical;
@@ -711,13 +681,16 @@ namespace ReplayParser.ReplaySorter.UI
 
         private static Panel GetPanelWithName(Panel parent, string name)
         {
-            foreach (var child in parent.Children)
+            if (parent != null)
             {
-                if ((child is Panel))
+                foreach (var child in parent.Children)
                 {
-                    if ((child as Panel).Name == name)
+                    if ((child is Panel))
                     {
-                        return child as Panel;
+                        if ((child as Panel).Name == name)
+                        {
+                            return child as Panel;
+                        }
                     }
                 }
             }
@@ -729,15 +702,7 @@ namespace ReplayParser.ReplaySorter.UI
             if (_worker_ReplaySorter != null && _worker_ReplaySorter.IsBusy)
                 return;
 
-            // get textboxes value, you could also take them from your dictionary keys, add a tag with a number, and sort on this number so it's not as hardcoded?
-            string[] CriteriaStringOrder = new string[5];
-            CriteriaStringOrder[0] = sortCriteriaOneComboBox.Text;
-            CriteriaStringOrder[1] = sortCriteriaTwoComboBox.Text;
-            CriteriaStringOrder[2] = sortCriteriaThreeComboBox.Text;
-            CriteriaStringOrder[3] = sortCriteriaFourComboBox.Text;
-            CriteriaStringOrder[4] = sortCriteriaFiveComboBox.Text;
-
-            CriteriaStringOrder = CriteriaStringOrder.Where(x => x != "none").Select(x => x.ToUpper()).ToArray();
+            string[] CriteriaStringOrder = GetSortCriteria();
 
             if (CriteriaStringOrder.Length == 0)
             {
@@ -909,6 +874,11 @@ namespace ReplayParser.ReplaySorter.UI
             }
             _swSort.Start();
             _worker_ReplaySorter.RunWorkerAsync();
+        }
+
+        private string[] GetSortCriteria()
+        {
+            return sortCriteriaListBox.SelectedItems.Cast<ListBoxItem>().OrderBy(l => sortCriteriaListBox.Items.IndexOf(l)).Select(l => l.Content.ToString().ToUpper()).ToArray();
         }
 
         private void worker_SortReplays(object sender, DoWorkEventArgs e)

@@ -174,13 +174,75 @@
                         <RowDefinition Height="Auto"></RowDefinition>
                         <RowDefinition Height="Auto"></RowDefinition>
                         <RowDefinition Height="Auto"></RowDefinition>
+                        <RowDefinition Height="Auto"></RowDefinition>
                         <RowDefinition Height="*"></RowDefinition>
                         <RowDefinition Height="Auto"></RowDefinition>
                     </Grid.RowDefinitions>
                     <Label Grid.Row="0" Grid.Column="0" Content="Sort replays into:" VerticalAlignment="Center"/>
-                    <TextBox Grid.Row="0" Grid.Column="1"  x:Name="sortOutputDirectoryTextBox" Margin="10"></TextBox>
+                    <TextBox Grid.Row="0" Grid.Column="1" x:Name="sortOutputDirectoryTextBox" Margin="0 10"></TextBox>
                     <Button  Grid.Row="0" Grid.Column="2" x:Name="sortOutputDirectoryButton" Content="Set directory" Click="sortOutputDirectoryButton_Click" Margin="10 10 0 10"></Button>
-                    <Grid Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" x:Name="gridContainingSortCriteriaComboBoxes" Margin="0 0 0 10">
+                    <Label Grid.Row="1" Grid.Column="0" Content="Sort criteria:" VerticalAlignment="Top" Margin="3"/>
+                    <ListBox Grid.Row="1" Grid.Column="1" x:Name="sortCriteriaListBox" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" SelectionMode="Multiple" SelectionChanged="SortCriteriaListBox_SelectionChanged">
+                        <ListBox.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel></StackPanel>
+                            </ItemsPanelTemplate>
+                        </ListBox.ItemsPanel>
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="{x:Type ListBoxItem}">
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="ListBoxItem">
+                                            <Border Name="Border" SnapsToDevicePixels="true" BorderBrush="Black" BorderThickness="1" Margin="3" Padding="3">
+                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsSelected" Value="true">
+                                                    <Setter TargetName="Border" Property="Background" Value="LightBlue"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                                <Setter Property="MinWidth" Value="140"/>
+                                <Setter Property="MaxWidth" Value="280"/>
+                                <Setter Property="AllowDrop" Value="True"/>
+                                <EventSetter Event="PreviewMouseMove" Handler="sortCriteriaListBoxItem_PreviewMouseMove"/>
+                                <EventSetter Event="Drop" Handler="sortCriteriaListBoxItem_Drop"/>
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+                        <!--<ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem">
+                                <Style.Triggers>
+                                    <Trigger Property="IsSelected" Value="true">
+                                        <Setter Property="Background" Value="Black"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                                <Setter Property="BorderBrush" Value="Black"/>
+                                <Setter Property="BorderThickness" Value="1"/>
+                                <Setter Property="Margin" Value="3"/>
+                                <Setter Property="Padding" Value="3"/>
+
+                                <Setter Property="MinWidth" Value="140"/>
+                                <Setter Property="MaxWidth" Value="280"/>
+                                <Setter Property="AllowDrop" Value="True"/>
+                                <EventSetter Event="PreviewMouseMove" Handler="sortCriteriaListBoxItem_PreviewMouseMove"/>
+                                <EventSetter Event="Drop" Handler="sortCriteriaListBoxItem_Drop"/>
+                            </Style>
+                        </ListBox.ItemContainerStyle>-->
+                        <ListBox.Style>
+                            <Style TargetType="ListBox">
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Setter Property="BorderBrush" Value="Transparent"/>
+                            </Style>
+                        </ListBox.Style>
+                        <ListBoxItem Content="PLAYERNAME"></ListBoxItem>
+                        <ListBoxItem Content="MAP"></ListBoxItem>
+                        <ListBoxItem Content="DURATION"></ListBoxItem>
+                        <ListBoxItem Content="MATCHUP"></ListBoxItem>
+                        <ListBoxItem Content="GAMETYPE"></ListBoxItem>
+                    </ListBox>
+                    <!--<Grid Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3" x:Name="gridContainingSortCriteriaComboBoxes" Margin="0 0 0 10">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition></ColumnDefinition>
                             <ColumnDefinition></ColumnDefinition>
@@ -208,20 +270,20 @@
                             <Label>5.</Label>
                             <ComboBox x:Name="sortCriteriaFiveComboBox"></ComboBox>
                         </StackPanel>
-                    </Grid>
-                    <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3" x:Name="sortCriteriaParameters" Orientation="Horizontal"></StackPanel>
-                    <StackPanel Grid.Row="3" Grid.Column="0" x:Name="keepOriginalReplayNamesPanel" Orientation="Vertical">
+                    </Grid>-->
+                    <StackPanel Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="4" x:Name="sortCriteriaParameters" Orientation="Horizontal"></StackPanel>
+                    <StackPanel Grid.Row="4" Grid.Column="0" x:Name="keepOriginalReplayNamesPanel" Orientation="Vertical">
                         <CheckBox x:Name="keepOriginalReplayNamesCheckBox" Content="Keep original replay names" Click="keepOriginalReplayNamesCheckBox_Click" IsChecked="True"></CheckBox>
                     </StackPanel>
-                    <CheckBox Grid.Row="4" Grid.Column="0" x:Name="sortInPlaceCheckBox" Content="Sort in place" IsEnabled="False" IsChecked="False"></CheckBox>
-                    <CheckBox Grid.Row="5" Grid.Column="0" x:Name="sortIsPreview" Content="Preview" IsEnabled="False" IsChecked="False"></CheckBox>
+                    <CheckBox Grid.Row="5" Grid.Column="0" x:Name="sortInPlaceCheckBox" Content="Sort in place" IsEnabled="False" IsChecked="False"></CheckBox>
+                    <CheckBox Grid.Row="6" Grid.Column="0" x:Name="sortIsPreview" Content="Preview" IsEnabled="False" IsChecked="False"></CheckBox>
                     <!--<StackPanel Grid.Row="3" Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Center">
                         <Button IsEnabled="false" x:Name="previewSortButton" Content="Preview sort" Margin="10" HorizontalAlignment="Center" Padding="10 0 10 0"></Button>
                         <Button IsEnabled="false" x:Name="cancelPreviewSortButton" Content="cancel" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="10 0 10 0"></Button>
                     </StackPanel>-->
-                    <TreeView Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="3" x:Name="sortOutputTreeView" ItemTemplateSelector="{StaticResource TreeViewDataTemplateSelector}" ItemContainerStyle="{StaticResource DirectoryStyle}" Margin="0 10 0 0">
+                    <TreeView Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="4" x:Name="sortOutputTreeView" ItemTemplateSelector="{StaticResource TreeViewDataTemplateSelector}" ItemContainerStyle="{StaticResource DirectoryStyle}" Margin="0 10 0 0">
                     </TreeView>
-                    <DockPanel Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="3">
+                    <DockPanel Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="4">
                         <Button DockPanel.Dock="Right" x:Name="cancelSortButton" Content="Cancel" Click="cancelSortButton_Click" MinWidth="70" Margin="10 10 0 10"></Button>
                         <Button DockPanel.Dock="Right" x:Name="executeSortButton"  Content="Sort" Click="executeSortButton_Click" MinWidth="70" Margin="10"></Button>
                         <Grid DockPanel.Dock="Left" Margin="0 10 10 10">
