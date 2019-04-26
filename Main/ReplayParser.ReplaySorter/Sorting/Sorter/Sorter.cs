@@ -102,7 +102,6 @@ namespace ReplayParser.ReplaySorter
                     {
                         return null;
                     }
-                    
                 }
                 else
                 {
@@ -155,10 +154,38 @@ namespace ReplayParser.ReplaySorter
 
         public DirectoryFileTree ExecuteSortAsync(DirectoryFileTree previewTree, BackgroundWorker worker_ReplaySorter, List<string> replaysThrowingExceptions)
         {
-            foreach (var node in previewTree)
-            {
+            var resultingTree = new DirectoryFileTree(previewTree.Root.Name);
+            Queue<DirectoryFileTreeNode> nodeQueue = new Queue<DirectoryFileTreeNode>();
+            nodeQueue.Enqueue(previewTree.Root);
 
+            while (nodeQueue.Count != 0)
+            {
+                var node = nodeQueue.Dequeue();
+                if (node == null)
+                    continue;
+
+                if (node.IsDirectory)
+                {
+                    foreach (var child in node)
+                    {
+                        nodeQueue.Enqueue(child);
+                        if (child.IsDirectory)
+                        {
+                            //TODO I just noticed this CreateDirectory function actually can send messageboxes to the user lol...
+                            var dirName = FileHandler.CreateDirectory(child.Name, true);
+                            resultingTree.AddToNode(node, dirName);
+                        }
+                        else
+                        {
+                            var fileReplay = FileReplay.Create(node.Value.Content, node.Value.OriginalFilePath, node.Value.Hash);
+                            fileReplay.AddAfterCurrent(node.Name);
+                            ReplayHandler.CopyReplay(fileReplay, true);
+                            resultingTree.AddToNode(node, fileReplay);
+                        }
+                    }
+                }
             }
+            return resultingTree;
         }
 
 

@@ -109,31 +109,10 @@ namespace ReplayParser.ReplaySorter.Sorting.SortResult
         #endregion
 
         #endregion
-        // public DirectoryFileTree(DirectoryInfo self, List<T> files = null, List<DirectoryFileTree<T>> children = null)
-        // {
-        //     Self = self;
-        //     Files = files;
-        //     Children = children;
-        // }
-
-        // public DirectoryInfo Self { get; set; }
-        // public List<T> Files { get; set; }
-        // public List<DirectoryFileTree<T>> Children { get; set; }
-
-        // public IEnumerator<DirectoryFileTreeNode<T>> GetEnumerator()
-        // {
-        //     return Children.GetEnumerator();
-        // }
-
-        // IEnumerator IEnumerable.GetEnumerator()
-        // {
-        //     return GetEnumerator();
-        // }
     }
 
     public class DirectoryFileTree : IEnumerable<DirectoryFileTreeNode>
     {
-        // public DirectoryFileTree(DirectoryInfo self, List<FileReplay> files = null, List<DirectoryFileTree> children = null) : base(self, files, children?.Cast<DirectoryFileTree<FileReplay>>().ToList()) { }
         #region private
 
         #region fields
@@ -238,6 +217,11 @@ namespace ReplayParser.ReplaySorter.Sorting.SortResult
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+        public IEnumerator<DirectoryFileTreeNode> GetBreadthFirstEnumerator()
+        {
+            return _root.GetBreadthFirstEnumerator();
         }
 
         #endregion

@@ -255,6 +255,58 @@ namespace ReplayParser.ReplaySorter.Sorting.SortResult
 
         #endregion
 
+        #region breadth first enumerator
+
+        public class BreadthFirstEnumerator : IEnumerator<DirectoryFileTreeNode>
+        {
+            private DirectoryFileTreeNode _node;
+            private Queue<DirectoryFileTreeNode> _nodeQueue;
+
+            public BreadthFirstEnumerator(DirectoryFileTreeNode node)
+            {
+                _node = node;
+                _nodeQueue = new Queue<DirectoryFileTreeNode>();
+                _nodeQueue.Enqueue(node);
+            }
+
+            public DirectoryFileTreeNode Current => _nodeQueue.First();
+
+            object IEnumerator.Current => Current;
+
+            public void Dispose()
+            {
+                // No resources used...
+            }
+
+            public bool MoveNext()
+            {
+                if (_nodeQueue.Count == 0)
+                    return false;
+
+                var head = _nodeQueue.Dequeue();
+                if (head.Children != null)
+                {
+                    foreach (var child in head.Children)
+                    {
+                        if (child != null)
+                            _nodeQueue.Enqueue(child);
+                    }
+                }
+
+                return true;
+            }
+
+            public void Reset()
+            {
+                _nodeQueue.Clear();
+                _nodeQueue.Enqueue(_node);
+            }
+        }
+
+        #endregion
+
+        #region public
+
         #region constructors
 
         public DirectoryFileTreeNode(FileReplay value)
@@ -281,11 +333,8 @@ namespace ReplayParser.ReplaySorter.Sorting.SortResult
 
         #endregion
 
-        #endregion
-
-        #region public
-
         #region enumerator
+
         public IEnumerator<DirectoryFileTreeNode> GetEnumerator()
         {
             if (IsDirectory)
@@ -297,6 +346,11 @@ namespace ReplayParser.ReplaySorter.Sorting.SortResult
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+        public IEnumerator<DirectoryFileTreeNode> GetBreadthFirstEnumerator()
+        {
+            return new BreadthFirstEnumerator(this);
         }
 
         #endregion

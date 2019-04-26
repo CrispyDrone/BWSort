@@ -42,7 +42,7 @@ namespace ReplayParser.ReplaySorter
         }
 
         //TODO accept 2 filepaths
-        public static void MoveReplay(File<IReplay> replay, bool forward = true)
+        public static void MoveReplay(File<IReplay> replay, bool forward = true/*, bool isPreview = false*/)
         {
             var filePath = replay.FilePath;
 
@@ -67,7 +67,10 @@ namespace ReplayParser.ReplaySorter
             //TODO this should belong in the File(history) class when accepting a new file, not possible because you can't verify whether there are doubles
             // instead sorting/renaming should be virtual with virtual directories that are aware of other replays in the directory...
 
-            File.Move(filePath, destinationFilePath);
+            //if (!isPreview)
+            //{
+                File.Move(filePath, destinationFilePath);
+            //}
         }
 
         public static void CopyReplay(File<IReplay> replay, string sortDirectory, string FolderName, bool KeepOriginalReplayNames, CustomReplayFormat CustomReplayFormat, bool isPreview = false)
@@ -99,7 +102,7 @@ namespace ReplayParser.ReplaySorter
         }
 
         //TODO accept 2 filepaths
-        public static void CopyReplay(File<IReplay> replay, bool forward = true)
+        public static void CopyReplay(File<IReplay> replay, bool forward = true/*, bool isPreview = false*/)
         {
             var filePath = replay.FilePath;
 
@@ -119,7 +122,10 @@ namespace ReplayParser.ReplaySorter
             destinationFilePath = FileHandler.AdjustName(destinationFilePath, false);
             replay.CorrectCurrent(destinationFilePath);
 
-            File.Copy(filePath, destinationFilePath);
+            //if (!isPreview)
+            //{
+                File.Copy(filePath, destinationFilePath);
+            //}
         }
 
         public static void RemoveBadReplay(string filepath, string abadreplay)
