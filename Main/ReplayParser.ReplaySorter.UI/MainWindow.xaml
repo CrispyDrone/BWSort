@@ -209,6 +209,9 @@
                                 <Setter Property="AllowDrop" Value="True"/>
                                 <EventSetter Event="PreviewMouseMove" Handler="sortCriteriaListBoxItem_PreviewMouseMove"/>
                                 <EventSetter Event="Drop" Handler="sortCriteriaListBoxItem_Drop"/>
+                                <EventSetter Event="MouseLeftButtonDown" Handler="ListBoxItem_MouseLeftButtonDown"/>
+                                <EventSetter Event="PreviewMouseLeftButtonDown" Handler="ListBoxItem_MouseLeftButtonDown"/>
+                                <EventSetter Event="PreviewMouseUp" Handler="ListBoxItem_PreviewMouseUp"/>
                             </Style>
                         </ListBox.ItemContainerStyle>
                         <!--<ListBox.ItemContainerStyle>

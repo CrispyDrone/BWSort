@@ -59,6 +59,7 @@ namespace ReplayParser.ReplaySorter.UI
         private bool _keepOriginalReplayNames = true;
         private BoolAnswer _boolAnswer = null;
         private Stopwatch _swSort = new Stopwatch();
+        private bool _isDragging = false;
 
         // renaming
         private BackgroundWorker _worker_ReplayRenamer = null;
@@ -546,7 +547,8 @@ namespace ReplayParser.ReplaySorter.UI
                     if (draggedItem == null)
                         return;
 
-                    DragDrop.DoDragDrop(draggedItem, new Tuple<ListBoxItem, bool>(draggedItem, !draggedItem.IsSelected), DragDropEffects.Move);
+                    _isDragging = true;
+                    DragDrop.DoDragDrop(draggedItem, new Tuple<ListBoxItem, bool>(draggedItem, draggedItem.IsSelected), DragDropEffects.Move);
                 }
             }
         }
@@ -568,11 +570,12 @@ namespace ReplayParser.ReplaySorter.UI
             sortCriteriaListBox.Items.Insert(targetIndex, source.Item1);
             (sortCriteriaListBox.Items.GetItemAt(targetIndex) as ListBoxItem).IsSelected = source.Item2;
             sortCriteriaListBox.Items.Refresh();
+            _isDragging = false;
         }
 
         private void SortCriteriaListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (sender is ListBox)
+            if (!_isDragging && sender is ListBox)
             {
                 var listBox = sender as ListBox;
                 UpdateSortCriteriaParametersControls(e.AddedItems.Cast<ListBoxItem>().FirstOrDefault()?.Content as string, e.RemovedItems.Cast<ListBoxItem>().FirstOrDefault()?.Content as string);
@@ -1703,6 +1706,20 @@ namespace ReplayParser.ReplaySorter.UI
         }
 
         #endregion
+
+        private void ListBoxItem_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            e.Handled = true;
+        }
+
+        private void ListBoxItem_PreviewMouseUp(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is ListBoxItem listBoxItem)
+            {
+                var listBox = listBoxItem.Parent as ListBox;
+                ListBox.SetIsSelected(listBoxItem, !listBoxItem.IsSelected);
+            }
+        }
     }
 }
 
