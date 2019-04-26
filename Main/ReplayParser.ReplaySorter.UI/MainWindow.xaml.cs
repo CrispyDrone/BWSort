@@ -60,6 +60,8 @@ namespace ReplayParser.ReplaySorter.UI
         private BoolAnswer _boolAnswer = null;
         private Stopwatch _swSort = new Stopwatch();
         private bool _isDragging = false;
+        private Tuple<string[], SortCriteriaParameters, CustomReplayFormat> _previewSortArguments = null;
+        private DirectoryFileTree _previewTree = null;
 
         // renaming
         private BackgroundWorker _worker_ReplayRenamer = null;
@@ -705,9 +707,9 @@ namespace ReplayParser.ReplaySorter.UI
             if (_worker_ReplaySorter != null && _worker_ReplaySorter.IsBusy)
                 return;
 
-            string[] CriteriaStringOrder = GetSortCriteria();
+            string[] criteriaStringOrder = GetSortCriteria();
 
-            if (CriteriaStringOrder.Length == 0)
+            if (criteriaStringOrder.Length == 0)
             {
                 MessageBox.Show("Please make a selection of sort criteria. Not all of them can be none!", "No sort criteria selected!", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
                 return;
@@ -743,7 +745,7 @@ namespace ReplayParser.ReplaySorter.UI
             }
             IDictionary<Entities.GameType, bool> validgametypes = null;
             int[] durations = null;
-            foreach (var chosencriteria in CriteriaStringOrder)
+            foreach (var chosencriteria in criteriaStringOrder)
             {
                 var chosenCriteriaPanel = GetPanelWithName(sortCriteriaParameters, chosencriteria);
 
@@ -854,17 +856,23 @@ namespace ReplayParser.ReplaySorter.UI
                 _sorter.ListReplays = _listReplays;
             }
 
-            if (CriteriaStringOrder.Length > 1)
+            if (criteriaStringOrder.Length > 1)
             {
-                _sorter.SortCriteria = (Criteria)Enum.Parse(typeof(Criteria), string.Join(",", CriteriaStringOrder));
+                _sorter.SortCriteria = (Criteria)Enum.Parse(typeof(Criteria), string.Join(",", criteriaStringOrder));
             }
             else
             {
-                _sorter.SortCriteria = (Criteria)Enum.Parse(typeof(Criteria), CriteriaStringOrder[0]);
+                _sorter.SortCriteria = (Criteria)Enum.Parse(typeof(Criteria), criteriaStringOrder[0]);
             }
-            _sorter.CriteriaStringOrder = CriteriaStringOrder;
+            _sorter.CriteriaStringOrder = criteriaStringOrder;
             if (customReplayFormat != null)
                 _sorter.CustomReplayFormat = customReplayFormat;
+
+            var isPreview = sortIsPreview.IsChecked.HasValue && sortIsPreview.IsChecked.Value;
+            if (isPreview)
+            {
+                _previewSortArguments = new Tuple<string[], SortCriteriaParameters, CustomReplayFormat>(criteriaStringOrder, SortCriteriaParameters, customReplayFormat);
+            }
 
             if (_worker_ReplaySorter == null)
             {
@@ -876,7 +884,7 @@ namespace ReplayParser.ReplaySorter.UI
                 _worker_ReplaySorter.RunWorkerCompleted += worker_SortingReplaysCompleted;
             }
             _swSort.Start();
-            _worker_ReplaySorter.RunWorkerAsync();
+            _worker_ReplaySorter.RunWorkerAsync(isPreview);
         }
 
         private string[] GetSortCriteria()
@@ -891,8 +899,26 @@ namespace ReplayParser.ReplaySorter.UI
             if (SorterConditions.GoodToGo == true)
             {
                 _sortingReplays = true;
-                e.Result = _sorter.ExecuteSortAsync(_keepOriginalReplayNames, _worker_ReplaySorter, _replaysThrowingExceptions);
-                ReplayHandler.LogBadReplays(_replaysThrowingExceptions, _replaySorterConfiguration.LogDirectory, $"{DateTime.Now} - Error while sorting replay: {{0}} with arguments {_sorter.ToString()}");
+                var isPreview = (bool)e.Argument;
+                if (isPreview)
+                {
+                    var tree = _sorter.PreviewSort(_keepOriginalReplayNames, _worker_ReplaySorter, _replaysThrowingExceptions);
+                    _previewTree = tree;
+                    e.Result = tree;
+                }
+                else
+                {
+                    if (_previewTree != null)
+                    {
+                        e.Result = _sorter.ExecuteSortAsync(_previewTree, _worker_ReplaySorter, _replaysThrowingExceptions);
+                    }
+                    else
+                    {
+                        e.Result = _sorter.ExecuteSortAsync(_keepOriginalReplayNames, _worker_ReplaySorter, _replaysThrowingExceptions);
+                    }
+                    _previewSortArguments = null;
+                }
+                ReplayHandler.LogBadReplays(_replaysThrowingExceptions, _replaySorterConfiguration.LogDirectory, $"{DateTime.Now} - Error while {(isPreview ? "previewing " : string.Empty)}sorting replay: {{0}} with arguments {_sorter.ToString()}");
 
                 if (_worker_ReplaySorter.CancellationPending == true)
                 {

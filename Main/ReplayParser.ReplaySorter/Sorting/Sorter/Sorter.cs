@@ -83,24 +83,6 @@ namespace ReplayParser.ReplaySorter
             ReplayHandler.ResetReplayFilePathsToBeforeSort(OriginalListReplays);
         }
 
-        public IDictionary<string, List<File<IReplay>>> NestedSort(ISortCommand SortOnX, IDictionary<string, List<File<IReplay>>> SortOnXResult, List<string> replaysThrowingExceptions)
-        {
-            // Dictionary<directory, Files>
-            IDictionary<string, List<File<IReplay>>> DirectoryFileReplay = new Dictionary<string, List<File<IReplay>>>();
-
-            SortOnX.Sorter.SortCriteria = SortOnX.SortCriteria;
-            foreach (var directory in SortOnXResult.Keys)
-            {
-                var FileReplays = SortOnXResult[directory];
-                SortOnX.Sorter.CurrentDirectory = directory;
-                SortOnX.Sorter.ListReplays = FileReplays;
-                var result = SortOnX.Sort(replaysThrowingExceptions);
-                DirectoryFileReplay = DirectoryFileReplay.Concat(result).ToDictionary(k => k.Key, k => k.Value);
-            }
-            // not implemented yet
-            return DirectoryFileReplay;
-        }
-
         public DirectoryFileTree ExecuteSortAsync(bool keeporiginalreplaynames, BackgroundWorker worker_ReplaySorter, List<string> replaysThrowingExceptions)
         {
             ReplayHandler.SaveReplayFilePaths(OriginalListReplays);
@@ -120,29 +102,6 @@ namespace ReplayParser.ReplaySorter
                     {
                         return null;
                     }
-                    // make separate functions for this
-                    // DirectoryFileTree<File<IReplay>> FirstSort = new DirectoryFileTree<File<IReplay>>(new DirectoryInfo(CurrentDirectory + @"\" + SortCriteria.ToString()));
-                    // foreach (var directory in SortOnXResult.Keys)
-                    // {
-                    //     if (FirstSort.Children != null)
-                    //     {
-                    //         FirstSort.Children.Add(new DirectoryFileTree<File<IReplay>>(new DirectoryInfo(directory), SortOnXResult[directory]));
-                    //     }
-                    //     else
-                    //     {
-                    //         FirstSort.Children = new List<DirectoryFileTree<File<IReplay>>>();
-                    //         FirstSort.Children.Add(new DirectoryFileTree<File<IReplay>>(new DirectoryInfo(directory), SortOnXResult[directory]));
-                    //     }
-                    // }
-                    // if (TotalSortResult.Children != null)
-                    // {
-                    //     TotalSortResult.Children.Add(FirstSort);
-                    // }
-                    // else
-                    // {
-                    //     TotalSortResult.Children = new List<DirectoryFileTree<File<IReplay>>>();
-                    //     TotalSortResult.Children.Add(FirstSort);
-                    // }
                     
                 }
                 else
@@ -154,19 +113,84 @@ namespace ReplayParser.ReplaySorter
                     {
                         return null;
                     }
-                    // make separate functions for this 
-                    // adjust the FirstSort... for each child you need to make the changes... inside the actual NestedSort function....
                 }
 
             }
             var tree = BuildTree();
             ReplayHandler.ResetReplayFilePathsToBeforeSort(OriginalListReplays);
             return tree;
-            // return TotalSortResult;
+        }
+
+        public DirectoryFileTree PreviewSort(bool keepOriginalReplayNames, BackgroundWorker worker_ReplaySorter, List<string> replaysThrowingExceptions)
+        {
+            ReplayHandler.SaveReplayFilePaths(OriginalListReplays);
+
+            IDictionary<string, List<File<IReplay>>> SortOnXResult = new Dictionary<string, List<File<IReplay>>>();
+            for (int i = 0; i < CriteriaStringOrder.Length; i++)
+            {
+                var SortOnX = Factory.GetSortCommand((Criteria)Enum.Parse(typeof(Criteria), CriteriaStringOrder[i]), SortCriteriaParameters, keepOriginalReplayNames, this);
+                if (i == 0)
+                {
+                    SortOnXResult = SortOnX.PreviewSort(replaysThrowingExceptions, worker_ReplaySorter, i + 1, CriteriaStringOrder.Count());
+                    if (worker_ReplaySorter.CancellationPending == true)
+                    {
+                        return null;
+                    }
+                }
+                else
+                {
+                    SortOnX.IsNested = true;
+                    SortOnXResult = PreviewNestedSort(replaysThrowingExceptions, SortOnX, SortOnXResult, worker_ReplaySorter, i + 1, CriteriaStringOrder.Count());
+                    if (worker_ReplaySorter.CancellationPending == true)
+                    {
+                        return null;
+                    }
+                }
+
+            }
+            var tree = BuildTree();
+            ReplayHandler.ResetReplayFilePathsToBeforeSort(OriginalListReplays);
+            return tree;
+        }
+
+        public DirectoryFileTree ExecuteSortAsync(DirectoryFileTree previewTree, BackgroundWorker worker_ReplaySorter, List<string> replaysThrowingExceptions)
+        {
+            foreach (var node in previewTree)
+            {
+
+            }
+        }
+
+
+        public override string ToString()
+        {
+            return $"SortCriteria: {string.Join(" ", CriteriaStringOrder)} SortCriteriaParameters: {SortCriteriaParameters.ToString()} CustomReplayFormat: {CustomReplayFormat?.ToString() ?? string.Empty}";
+        }
+
+        #endregion
+        #endregion
+
+        #region private methods
+
+        public IDictionary<string, List<File<IReplay>>> NestedSort(ISortCommand SortOnX, IDictionary<string, List<File<IReplay>>> SortOnXResult, List<string> replaysThrowingExceptions)
+        {
+            // Dictionary<directory, Files>
+            IDictionary<string, List<File<IReplay>>> DirectoryFileReplay = new Dictionary<string, List<File<IReplay>>>();
+
+            SortOnX.Sorter.SortCriteria = SortOnX.SortCriteria;
+            foreach (var directory in SortOnXResult.Keys)
+            {
+                var FileReplays = SortOnXResult[directory];
+                SortOnX.Sorter.CurrentDirectory = directory;
+                SortOnX.Sorter.ListReplays = FileReplays;
+                var result = SortOnX.Sort(replaysThrowingExceptions);
+                DirectoryFileReplay = DirectoryFileReplay.Concat(result).ToDictionary(k => k.Key, k => k.Value);
+            }
+            return DirectoryFileReplay;
         }
 
         // not async yet
-        public IDictionary<string, List<File<IReplay>>> NestedSortAsync(List<string> replaysThrowingExceptions, ISortCommand SortOnX, IDictionary<string, List<File<IReplay>>> SortOnXResult, BackgroundWorker worker_ReplaySorter, int currentCriteria, int numberOfCriteria)
+        private IDictionary<string, List<File<IReplay>>> NestedSortAsync(List<string> replaysThrowingExceptions, ISortCommand SortOnX, IDictionary<string, List<File<IReplay>>> SortOnXResult, BackgroundWorker worker_ReplaySorter, int currentCriteria, int numberOfCriteria)
         {
             // Dictionary<directory, dictionary<file, replay>>
             IDictionary<string, List<File<IReplay>>> DirectoryFileReplay = new Dictionary<string, List<File<IReplay>>>();
@@ -194,19 +218,32 @@ namespace ReplayParser.ReplaySorter
 
                 DirectoryFileReplay = DirectoryFileReplay.Concat(result).ToDictionary(k => k.Key, k => k.Value);
             }
-            // not implemented yet
             return DirectoryFileReplay;
         }
 
-        public override string ToString()
+        private IDictionary<string, List<File<IReplay>>> PreviewNestedSort(List<string> replaysThrowingExceptions, ISortCommand SortOnX, IDictionary<string, List<File<IReplay>>> SortOnXResult, BackgroundWorker worker_ReplaySorter, int currentCriteria, int numberOfCriteria)
         {
-            return $"SortCriteria: {string.Join(" ", CriteriaStringOrder)} SortCriteriaParameters: {SortCriteriaParameters.ToString()} CustomReplayFormat: {CustomReplayFormat?.ToString() ?? string.Empty}";
+            IDictionary<string, List<File<IReplay>>> DirectoryFileReplay = new Dictionary<string, List<File<IReplay>>>();
+
+            SortOnX.Sorter.SortCriteria = SortOnX.SortCriteria;
+            int currentPostion = 0;
+            int numberOfPositions = SortOnXResult.Keys.Count();
+            foreach (var directory in SortOnXResult.Keys)
+            {
+                currentPostion++;
+                var FileReplays = SortOnXResult[directory];
+                SortOnX.Sorter.CurrentDirectory = directory;
+                SortOnX.Sorter.ListReplays = FileReplays;
+                var result = SortOnX.PreviewSort(replaysThrowingExceptions, worker_ReplaySorter, currentCriteria, numberOfCriteria, currentPostion, numberOfPositions);
+                if (worker_ReplaySorter.CancellationPending == true)
+                {
+                    return null;
+                }
+
+                DirectoryFileReplay = DirectoryFileReplay.Concat(result).ToDictionary(k => k.Key, k => k.Value);
+            }
+            return DirectoryFileReplay;
         }
-
-        #endregion
-        #endregion
-
-        #region private methods
 
         private DirectoryFileTree BuildTree()
         {

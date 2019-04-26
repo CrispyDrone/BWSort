@@ -11,6 +11,8 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
 
         IDictionary<string, List<File<IReplay>>> SortAsync(List<string> replaysThrowingExceptions, BackgroundWorker worker_ReplaySorter, int currentCriteria, int numberOfCriteria, int currentPositionNested = 0, int numberOfPositions = 0);
 
+        IDictionary<string, List<File<IReplay>>> PreviewSort(List<string> replaysThrowingExceptions, BackgroundWorker worker_ReplaySorter, int currentCriteria, int numberOfCriteria, int currentPositionNested = 0, int numberOfPositions = 0);
+
         SortCriteriaParameters SortCriteriaParameters { get; set; }
 
         Criteria SortCriteria { get; }

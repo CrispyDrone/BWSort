@@ -280,10 +280,6 @@
                     </StackPanel>
                     <CheckBox Grid.Row="5" Grid.Column="0" x:Name="sortInPlaceCheckBox" Content="Sort in place" IsEnabled="False" IsChecked="False"></CheckBox>
                     <CheckBox Grid.Row="6" Grid.Column="0" x:Name="sortIsPreview" Content="Preview" IsEnabled="False" IsChecked="False"></CheckBox>
-                    <!--<StackPanel Grid.Row="3" Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Center">
-                        <Button IsEnabled="false" x:Name="previewSortButton" Content="Preview sort" Margin="10" HorizontalAlignment="Center" Padding="10 0 10 0"></Button>
-                        <Button IsEnabled="false" x:Name="cancelPreviewSortButton" Content="cancel" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="10 0 10 0"></Button>
-                    </StackPanel>-->
                     <TreeView Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="4" x:Name="sortOutputTreeView" ItemTemplateSelector="{StaticResource TreeViewDataTemplateSelector}" ItemContainerStyle="{StaticResource DirectoryStyle}" Margin="0 10 0 0">
                     </TreeView>
                     <DockPanel Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="4">
@@ -295,61 +291,6 @@
                         </Grid>
                     </DockPanel>
                 </Grid>
-                <!--<DockPanel>
-                    <Grid x:Name="gridContainingSortCriteriaComboBoxes" DockPanel.Dock="Top">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition></ColumnDefinition>
-                            <ColumnDefinition></ColumnDefinition>
-                            <ColumnDefinition></ColumnDefinition>
-                            <ColumnDefinition></ColumnDefinition>
-                            <ColumnDefinition></ColumnDefinition>
-                        </Grid.ColumnDefinitions>
-                        <StackPanel Orientation="Horizontal" Grid.Column="0" Margin="10">
-                            <Label>1.</Label>
-                            <ComboBox x:Name="sortCriteriaOneComboBox"></ComboBox>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" Grid.Column="1" Margin="10">
-                            <Label>2.</Label>
-                            <ComboBox x:Name="sortCriteriaTwoComboBox"></ComboBox>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" Grid.Column="2" Margin="10">
-                            <Label>3.</Label>
-                            <ComboBox x:Name="sortCriteriaThreeComboBox"></ComboBox>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" Grid.Column="3" Margin="10">
-                            <Label>4.</Label>
-                            <ComboBox x:Name="sortCriteriaFourComboBox"></ComboBox>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" Grid.Column="4" Margin="10">
-                            <Label>5.</Label>
-                            <ComboBox x:Name="sortCriteriaFiveComboBox"></ComboBox>
-                        </StackPanel>
-                    </Grid>
-                    <StackPanel DockPanel.Dock="Top">
-                        <StackPanel x:Name="sortCriteriaParameters" Orientation="Horizontal"></StackPanel>
-                        <StackPanel x:Name="keepOriginalReplayNamesPanel" Orientation="Vertical">
-                            <CheckBox x:Name="keepOriginalReplayNamesCheckBox" Content="Keep original replay names" Margin="10 10 0 0" IsChecked="True" Click="keepOriginalReplayNamesCheckBox_Click"></CheckBox>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="10 10 10 0">
-                            <TextBox x:Name="sortOutputDirectoryTextBox" Text="" HorizontalAlignment="Stretch" MinWidth="200"></TextBox>
-                            <Button x:Name="sortOutputDirectoryButton" Content="Set directory" Click="sortOutputDirectoryButton_Click" Margin="10 0 10 0"></Button>
-                        </StackPanel>
-                    </StackPanel>
-                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Bottom" HorizontalAlignment="Center">
-                        <Button x:Name="executeSortButton"  Content="Sort" Margin="10" HorizontalAlignment="Center" Padding="10 0 10 0" MinWidth="70"  Click="executeSortButton_Click"></Button>
-                        <Button x:Name="cancelSortButton" Content="Cancel" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="10 0 10 0" MinWidth="70" Click="cancelSortButton_Click"></Button>
-                    </StackPanel>
-                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Bottom" HorizontalAlignment="Center">
-                        <Button IsEnabled="false" x:Name="previewSortButton" Content="Preview sort" Margin="10" HorizontalAlignment="Center" Padding="10 0 10 0"></Button>
-                        <Button IsEnabled="false" x:Name="cancelPreviewSortButton" Content="cancel" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="10 0 10 0"></Button>
-                    </StackPanel>
-                    <Grid DockPanel.Dock="Bottom">
-                        <ProgressBar x:Name="progressBarSortingReplays" Minimum="0" Maximum="100" Margin="10 0"></ProgressBar>
-                        <Label x:Name="progressBarSortingReplaysLabel" Content="{Binding ElementName=progressBarSortingReplays, Path=Value, StringFormat={}{0:0}%}" HorizontalAlignment="Center"></Label>
-                    </Grid>
-                    <TreeView x:Name="sortOutputTreeView" ItemTemplateSelector="{StaticResource TreeViewDataTemplateSelector}" ItemContainerStyle="{StaticResource DirectoryStyle}">
-                    </TreeView>
-                </DockPanel>-->
             </TabItem>
             <TabItem Header="Rename">
                 <Grid Margin="10">

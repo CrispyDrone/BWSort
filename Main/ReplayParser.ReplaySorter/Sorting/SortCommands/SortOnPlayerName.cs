@@ -11,6 +11,214 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
 {
     public class SortOnPlayerName : ISortCommand
     {
+        #region private
+
+        #region methods
+
+        private IEnumerable<string> ExtractPlayers(IEnumerable<IReplay> replays, PlayerType playerType)
+        {
+            var playerList = new HashSet<string>();
+
+            foreach (var replay in replays)
+            {
+                foreach (var player in replay.Players)
+                {
+                    if (playerList.Contains(player.Name))
+                        continue;
+
+                    foreach (PlayerType type in Enum.GetValues(typeof(PlayerType)))
+                    {
+                        if ((playerType & type) != 0)
+                        {
+                            var playerPool = GetPlayers(type, replay);
+
+                            if (playerPool.Contains(player))
+                                playerList.Add(player.Name);
+
+                            break;
+                        }
+                    }
+                }
+            }
+            return playerList.AsEnumerable();
+        }
+
+        private IEnumerable<IPlayer> GetPlayers(PlayerType type, IReplay replay)
+        {
+            switch (type)
+            {
+                case PlayerType.Winner:
+                    return replay.Winners;
+                case PlayerType.Loser:
+                    return replay.Players.Except(replay.Winners ?? Enumerable.Empty<IPlayer>());
+                case PlayerType.All:
+                    return replay.Players;
+                case PlayerType.Player:
+                    return replay.Players.Except(replay.Observers ?? Enumerable.Empty<IPlayer>());
+                case PlayerType.None:
+                    return Enumerable.Empty<IPlayer>();
+                default:
+                    throw new Exception();
+            }
+        }
+
+        private PlayerType GetPlayerType(bool makeFolderForWinner, bool makeFolderForLoser)
+        {
+            if (makeFolderForWinner && makeFolderForLoser)
+                return PlayerType.All;
+
+            if (makeFolderForWinner)
+                return PlayerType.Winner;
+
+            if (makeFolderForLoser)
+                return PlayerType.Loser;
+
+            return PlayerType.None;
+        }
+
+        private bool MoveOrCopyReplayToPlayerFolders(File<IReplay> replay, IEnumerable<IPlayer> players, IDictionary<string, List<File<IReplay>>> directoryFileReplay)
+        {
+            bool threwException = false;
+
+            foreach (var player in players)
+            {
+                if (!MoveAndRenameReplay(
+                        replay,
+                        Sorter.CurrentDirectory + @"\" + SortCriteria.ToString(),
+                        player.Name,
+                        !(IsNested == true && player == players.Last()),
+                        KeepOriginalReplayNames,
+                        Sorter.CustomReplayFormat,
+                        directoryFileReplay))
+                {
+                    threwException = true;
+                }
+            }
+
+            return threwException;
+        }
+
+        [Obsolete("Use other ExtractPlayers method")]
+        private List<string> ExtractPlayers(PlayerType playertype, List<string> players)
+        {
+            if (playertype.HasFlag(PlayerType.Winner))
+            {
+                foreach (var replay in Sorter.ListReplays)
+                {
+                    var parseplayers = replay.Content.Players.ToList();
+                    foreach (var aplayer in parseplayers)
+                    {
+                        // checking a list for each replay is slow... maybe define a Dictionary instead??
+                        // I really think I need a player class with match history, wins/losses/...
+                        if (!players.Contains(aplayer.Name))
+                        {
+                            try
+                            {
+                                if (replay.Content.Winners.Contains(aplayer))
+                                {
+                                    players.Add(aplayer.Name);
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - ExtractPlayers Winner", ex: ex);
+                            }
+                        }
+                    }
+                }
+            }
+            if (playertype.HasFlag(PlayerType.Loser))
+            {
+                foreach (var replay in Sorter.ListReplays)
+                {
+                    var parseplayers = replay.Content.Players.ToList();
+                    foreach (var aplayer in parseplayers)
+                    {
+                        // checking a list for each replay is slow... maybe define a Dictionary instead??
+                        // I really think I need a player class with match history, wins/losses/...
+                        if (!players.Contains(aplayer.Name))
+                        {
+                            try
+                            {
+                                if (!replay.Content.Winners.Contains(aplayer))
+                                {
+                                    players.Add(aplayer.Name);
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                players.Add(aplayer.Name);
+                                ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - ExtractPlayers Loser", ex: ex);
+                            }
+                        }
+                    }
+                }
+            }
+            if (playertype.HasFlag(PlayerType.Player))
+            {
+                // without observers..
+            }
+            if (playertype.HasFlag(PlayerType.All))
+            {
+                foreach (var replay in Sorter.ListReplays)
+                {
+                    var parseplayers = replay.Content.Players.ToList();
+                    foreach (var aplayer in parseplayers)
+                    {
+                        // checking a list for each replay is slow... maybe define a Dictionary instead??
+                        // I really think I need a player class with match history, wins/losses/...
+                        if (!players.Contains(aplayer.Name))
+                        {
+                            players.Add(aplayer.Name);
+                        }
+                    }
+                }
+            }
+            return players;
+        }
+
+        private bool MoveAndRenameReplay(File<IReplay> replay, string sortDirectory, string FolderName, bool shouldCopy, bool KeepOriginalReplayNames, CustomReplayFormat CustomReplayFormat, IDictionary<string, List<File<IReplay>>> directoryFileReplay)
+        {
+            bool threwException = false;
+            FolderName = ReplayHandler.RemoveInvalidChars(FolderName);
+
+            try
+            {
+                if (shouldCopy)
+                {
+                    ReplayHandler.CopyReplay(replay, sortDirectory, FolderName, KeepOriginalReplayNames, Sorter.CustomReplayFormat);
+                    var additionalReplayCreated = File<IReplay>.Create(replay.Content, replay.FilePath);
+                    replay.Rewind();
+                    directoryFileReplay[sortDirectory + @"\" + FolderName].Add(additionalReplayCreated);
+                }
+                else
+                {
+                    ReplayHandler.MoveReplay(replay, sortDirectory, FolderName, KeepOriginalReplayNames, Sorter.CustomReplayFormat);
+                }
+                directoryFileReplay[sortDirectory + @"\" + FolderName].Add(replay);
+            }
+            catch (IOException IOex)
+            {
+                threwException = true;
+                ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - SortOnPlayerName IOException: {replay.OriginalFilePath}", ex: IOex);
+            }
+            catch (NotSupportedException NSE)
+            {
+                threwException = true;
+                ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - SortOnPlayerName NotSupportedException: {replay.OriginalFilePath}", ex: NSE);
+            }
+            return !threwException;
+        }
+
+
+        #endregion
+
+        #endregion
+
+        #region public
+
+        #region constructor
+
         public SortOnPlayerName(SortCriteriaParameters sortcriteriaparameters, bool keeporiginalreplaynames, Sorter sorter)
         {
             SortCriteriaParameters = sortcriteriaparameters;
@@ -18,11 +226,19 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
             Sorter = sorter;
         }
 
+        #endregion
+
+        #region properties
+
         public bool KeepOriginalReplayNames { get; set; }
         public SortCriteriaParameters SortCriteriaParameters { get; set; }
         public Sorter Sorter { get; set; }
         public Criteria SortCriteria { get { return Criteria.PLAYERNAME; } }
         public bool IsNested { get; set; }
+
+        #endregion
+
+        #region methods
 
         public IDictionary<string, List<File<IReplay>>> Sort(List<string> replaysThrowingExceptions)
         {
@@ -208,84 +424,6 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
             }
             // not implemented yet
             return DirectoryFileReplay;
-        }
-
-        private List<string> ExtractPlayers(PlayerType playertype, List<string> players)
-        {
-            if (playertype.HasFlag(PlayerType.Winner))
-            {
-                foreach (var replay in Sorter.ListReplays)
-                {
-                    var parseplayers = replay.Content.Players.ToList();
-                    foreach (var aplayer in parseplayers)
-                    {
-                        // checking a list for each replay is slow... maybe define a Dictionary instead??
-                        // I really think I need a player class with match history, wins/losses/...
-                        if (!players.Contains(aplayer.Name))
-                        {
-                            try
-                            {
-                                if (replay.Content.Winners.Contains(aplayer))
-                                {
-                                    players.Add(aplayer.Name);
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - ExtractPlayers Winner", ex: ex);
-                            }
-                        }
-                    }
-                }
-            }
-            if (playertype.HasFlag(PlayerType.Loser))
-            {
-                foreach (var replay in Sorter.ListReplays)
-                {
-                    var parseplayers = replay.Content.Players.ToList();
-                    foreach (var aplayer in parseplayers)
-                    {
-                        // checking a list for each replay is slow... maybe define a Dictionary instead??
-                        // I really think I need a player class with match history, wins/losses/...
-                        if (!players.Contains(aplayer.Name))
-                        {
-                            try
-                            {
-                                if (!replay.Content.Winners.Contains(aplayer))
-                                {
-                                    players.Add(aplayer.Name);
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                players.Add(aplayer.Name);
-                                ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - ExtractPlayers Loser", ex: ex);
-                            }
-                        }
-                    }
-                }
-            }
-            if (playertype.HasFlag(PlayerType.Player))
-            {
-                // without observers..
-            }
-            if (playertype.HasFlag(PlayerType.All))
-            {
-                foreach (var replay in Sorter.ListReplays)
-                {
-                    var parseplayers = replay.Content.Players.ToList();
-                    foreach (var aplayer in parseplayers)
-                    {
-                        // checking a list for each replay is slow... maybe define a Dictionary instead??
-                        // I really think I need a player class with match history, wins/losses/...
-                        if (!players.Contains(aplayer.Name))
-                        {
-                            players.Add(aplayer.Name);
-                        }
-                    }
-                }
-            }
-            return players;
         }
 
         public IDictionary<string, List<File<IReplay>>> SortAsync(List<string> replaysThrowingExceptions, BackgroundWorker worker_ReplaySorter, int currentCriteria, int numberOfCriteria, int currentPositionNested, int numberOfPositions)
@@ -488,37 +626,72 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
             return DirectoryFileReplay;
         }
 
-        private bool MoveAndRenameReplay(File<IReplay> replay, string sortDirectory, string FolderName, bool shouldCopy, bool KeepOriginalReplayNames, CustomReplayFormat CustomReplayFormat, IDictionary<string, List<File<IReplay>>> directoryFileReplay)
+        public IDictionary<string, List<File<IReplay>>> PreviewSort(List<string> replaysThrowingExceptions, BackgroundWorker worker_ReplaySorter, int currentCriteria, int numberOfCriteria, int currentPositionNested = 0, int numberOfPositions = 0)
         {
-            bool threwException = false;
-            FolderName = ReplayHandler.RemoveInvalidChars(FolderName);
+            IDictionary<string, List<File<IReplay>>> DirectoryFileReplay = new Dictionary<string, List<File<IReplay>>>();
 
-            try
+            List<string> PlayerNames = new List<string>();
+            bool MakeFolderForWinner = (bool)SortCriteriaParameters.MakeFolderForWinner;
+            bool MakeFolderForLoser = (bool)SortCriteriaParameters.MakeFolderForLoser;
+            string CurrentDirectory = Sorter.CurrentDirectory;
+            Criteria SortCriteria = Sorter.SortCriteria;
+
+            PlayerNames.AddRange(ExtractPlayers(Sorter.ListReplays.Select(f => f.Content).AsEnumerable(), GetPlayerType(MakeFolderForWinner, MakeFolderForLoser)));
+
+            string sortDirectory = CurrentDirectory + @"\" + SortCriteria.ToString();
+            sortDirectory = FileHandler.AdjustName(sortDirectory, true);
+
+            foreach (var player in PlayerNames)
             {
-                if (shouldCopy)
+                var PlayerName = player;
+                PlayerName = ReplayHandler.RemoveInvalidChars(PlayerName);
+                DirectoryFileReplay.Add(new KeyValuePair<string, List<File<IReplay>>>(sortDirectory + @"\" + PlayerName, new List<File<IReplay>>()));
+            }
+
+            int currentPosition = 0;
+            int progressPercentage = 0;
+
+            foreach (var replay in Sorter.ListReplays)
+            {
+                bool threwException = false;
+                if (worker_ReplaySorter.CancellationPending == true)
+                    return null;
+
+                currentPosition++;
+                if (IsNested == false)
                 {
-                    ReplayHandler.CopyReplay(replay, sortDirectory, FolderName, KeepOriginalReplayNames, Sorter.CustomReplayFormat);
-                    var additionalReplayCreated = File<IReplay>.Create(replay.Content, replay.FilePath);
-                    replay.Rewind();
-                    directoryFileReplay[sortDirectory + @"\" + FolderName].Add(additionalReplayCreated);
+                    progressPercentage = Convert.ToInt32(((double)currentPosition / Sorter.ListReplays.Count) * 1 / numberOfCriteria * 100);
                 }
                 else
                 {
-                    ReplayHandler.MoveReplay(replay, sortDirectory, FolderName, KeepOriginalReplayNames, Sorter.CustomReplayFormat);
+                    progressPercentage = Convert.ToInt32((((double)currentPosition / Sorter.ListReplays.Count) * 1 / numberOfPositions * 100 + ((currentPositionNested - 1) * 100 / numberOfPositions)) * ((double)1 / numberOfCriteria));
+                    progressPercentage += (currentCriteria - 1) * 100 / numberOfCriteria;
                 }
-                directoryFileReplay[sortDirectory + @"\" + FolderName].Add(replay);
+                worker_ReplaySorter.ReportProgress(progressPercentage, "sorting on playername...");
+
+                threwException = MoveOrCopyReplayToPlayerFolders(
+                    replay,
+                    GetPlayers(
+                        GetPlayerType(MakeFolderForWinner, MakeFolderForLoser),
+                        replay.Content
+                    ),
+                    DirectoryFileReplay
+                );
+
+                if (!(MakeFolderForWinner || MakeFolderForLoser))
+                {
+                    threwException = !MoveAndRenameReplay(replay, sortDirectory, string.Empty, !IsNested, KeepOriginalReplayNames, Sorter.CustomReplayFormat, DirectoryFileReplay);
+                }
+
+                if (threwException)
+                    replaysThrowingExceptions.Add(replay.OriginalFilePath);
             }
-            catch (IOException IOex)
-            {
-                threwException = true;
-                ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - SortOnPlayerName IOException: {replay.OriginalFilePath}", ex: IOex);
-            }
-            catch (NotSupportedException NSE)
-            {
-                threwException = true;
-                ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - SortOnPlayerName NotSupportedException: {replay.OriginalFilePath}", ex: NSE);
-            }
-            return !threwException;
+            return DirectoryFileReplay;
         }
+
+        #endregion
+
+        #endregion
+
     }
 }

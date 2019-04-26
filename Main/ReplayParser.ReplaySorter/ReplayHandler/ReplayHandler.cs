@@ -12,7 +12,7 @@ namespace ReplayParser.ReplaySorter
 {
     public static class ReplayHandler
     {
-        public static void MoveReplay(File<IReplay> replay, string sortDirectory, string FolderName, bool KeepOriginalReplayNames, CustomReplayFormat CustomReplayFormat)
+        public static void MoveReplay(File<IReplay> replay, string sortDirectory, string FolderName, bool KeepOriginalReplayNames, CustomReplayFormat CustomReplayFormat, bool isPreview = false)
         {
             var sourceFilePath = replay.FilePath;
             var FileName = FileHandler.GetFileName(replay.FilePath);
@@ -32,7 +32,11 @@ namespace ReplayParser.ReplaySorter
 
             DestinationFilePath = FileHandler.AdjustName(DestinationFilePath, false);
 
-            File.Move(sourceFilePath, DestinationFilePath);
+            if (!isPreview)
+            {
+                File.Move(sourceFilePath, DestinationFilePath);
+            }
+
             replay.AddAfterCurrent(DestinationFilePath);
             replay.Forward();
         }
@@ -66,7 +70,7 @@ namespace ReplayParser.ReplaySorter
             File.Move(filePath, destinationFilePath);
         }
 
-        public static void CopyReplay(File<IReplay> replay, string sortDirectory, string FolderName, bool KeepOriginalReplayNames, CustomReplayFormat CustomReplayFormat)
+        public static void CopyReplay(File<IReplay> replay, string sortDirectory, string FolderName, bool KeepOriginalReplayNames, CustomReplayFormat CustomReplayFormat, bool isPreview = false)
         {
             var sourceFilePath = replay.FilePath;
             var FileName = FileHandler.GetFileName(replay.FilePath);
@@ -86,7 +90,10 @@ namespace ReplayParser.ReplaySorter
 
             DestinationFilePath = FileHandler.AdjustName(DestinationFilePath, false);
 
-            File.Copy(sourceFilePath, DestinationFilePath);
+            if (!isPreview)
+            {
+                File.Copy(sourceFilePath, DestinationFilePath);
+            }
             replay.AddAfterCurrent(DestinationFilePath);
             replay.Forward();
         }
@@ -238,6 +245,7 @@ namespace ReplayParser.ReplaySorter
         public static char[] InvalidPathChars = Path.GetInvalidPathChars();
         //public static char[] InvalidFileCharsAdditional = new char[] { '*', ':' };
 
+        //TODO use StringBuilder instead??
         public static string RemoveInvalidChars(string name)
         {
             foreach (var InvalidChar in InvalidPathChars)
