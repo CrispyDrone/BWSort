@@ -279,7 +279,7 @@
                         <CheckBox x:Name="keepOriginalReplayNamesCheckBox" Content="Keep original replay names" Click="keepOriginalReplayNamesCheckBox_Click" IsChecked="True"></CheckBox>
                     </StackPanel>
                     <CheckBox Grid.Row="5" Grid.Column="0" x:Name="sortInPlaceCheckBox" Content="Sort in place" IsEnabled="False" IsChecked="False"></CheckBox>
-                    <CheckBox Grid.Row="6" Grid.Column="0" x:Name="sortIsPreview" Content="Preview" IsEnabled="False" IsChecked="False"></CheckBox>
+                    <CheckBox Grid.Row="6" Grid.Column="0" x:Name="sortIsPreview" Content="Preview" IsChecked="False"></CheckBox>
                     <TreeView Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="4" x:Name="sortOutputTreeView" ItemTemplateSelector="{StaticResource TreeViewDataTemplateSelector}" ItemContainerStyle="{StaticResource DirectoryStyle}" Margin="0 10 0 0">
                     </TreeView>
                     <DockPanel Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="4">

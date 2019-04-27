@@ -166,7 +166,7 @@ namespace ReplayParser.ReplaySorter.Filtering
             IQueryable<File<IReplay>> filteredList = new List<File<IReplay>>(list).AsQueryable();
 
             var totalNumberOfReplays = list.Count;
-            filteredList = filteredList.Where((r, i) => ReportProgress(i, totalNumberOfReplays, worker_ReplayFilterer));
+            filteredList = filteredList.Where((r, i) => ReportProgress(i + 1, totalNumberOfReplays, worker_ReplayFilterer));
             for (int i = 0; i < queries.Length; i++)
             {
                 int index = i;

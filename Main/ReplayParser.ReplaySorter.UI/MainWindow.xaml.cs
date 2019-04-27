@@ -60,7 +60,7 @@ namespace ReplayParser.ReplaySorter.UI
         private BoolAnswer _boolAnswer = null;
         private Stopwatch _swSort = new Stopwatch();
         private bool _isDragging = false;
-        private Tuple<string[], SortCriteriaParameters, CustomReplayFormat> _previewSortArguments = null;
+        private Tuple<string[], SortCriteriaParameters, CustomReplayFormat, List<File<IReplay>>> _previewSortArguments = null;
         private DirectoryFileTree _previewTree = null;
 
         // renaming
@@ -373,7 +373,7 @@ namespace ReplayParser.ReplaySorter.UI
             {
                 replay.Feedback = FeedBack.FAILED;
                 _replaysThrowingExceptions.Add(replay.Path);
-                _errorMessage = string.Format("Error with replay {0}", replay.ToString());
+                _errorMessage = string.Format("Error with replay {0}", replay.Path);
             }
         }
 
@@ -395,14 +395,11 @@ namespace ReplayParser.ReplaySorter.UI
         {
             progressBarParsingReplays.Value = e.ProgressPercentage;
 
-            if (e.UserState == null)
+            if (_errorMessage != string.Empty)
             {
-                if (_errorMessage != string.Empty)
-                {
-                    statusBarErrors.Content = _errorMessage;
-                }
+                statusBarErrors.Content = _errorMessage;
             }
-            else
+            if (e.UserState != null)
             {
                 statusBarAction.Content = e.UserState as string;
             }
@@ -539,6 +536,20 @@ namespace ReplayParser.ReplaySorter.UI
 
         #region sorting
 
+        private void ListBoxItem_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            e.Handled = true;
+        }
+
+        private void ListBoxItem_PreviewMouseUp(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is ListBoxItem listBoxItem)
+            {
+                var listBox = listBoxItem.Parent as ListBox;
+                ListBox.SetIsSelected(listBoxItem, !listBoxItem.IsSelected);
+            }
+        }
+
         private void sortCriteriaListBoxItem_PreviewMouseMove(object sender, MouseEventArgs e)
         {
             if (e.LeftButton == MouseButtonState.Pressed)
@@ -550,13 +561,15 @@ namespace ReplayParser.ReplaySorter.UI
                         return;
 
                     _isDragging = true;
-                    DragDrop.DoDragDrop(draggedItem, new Tuple<ListBoxItem, bool>(draggedItem, draggedItem.IsSelected), DragDropEffects.Move);
+                    if (DragDrop.DoDragDrop(draggedItem, new Tuple<ListBoxItem, bool>(draggedItem, draggedItem.IsSelected), DragDropEffects.Move) == DragDropEffects.None)
+                        _isDragging = false;
                 }
             }
         }
 
         private void sortCriteriaListBoxItem_Drop(object sender, DragEventArgs e)
         {
+            _isDragging = false;
             var source = e.Data.GetData(typeof(Tuple<ListBoxItem, bool>)) as Tuple<ListBoxItem, bool>;
             var target = sender as ListBoxItem;
 
@@ -572,7 +585,6 @@ namespace ReplayParser.ReplaySorter.UI
             sortCriteriaListBox.Items.Insert(targetIndex, source.Item1);
             (sortCriteriaListBox.Items.GetItemAt(targetIndex) as ListBoxItem).IsSelected = source.Item2;
             sortCriteriaListBox.Items.Refresh();
-            _isDragging = false;
         }
 
         private void SortCriteriaListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -827,11 +839,26 @@ namespace ReplayParser.ReplaySorter.UI
                     durations = durations.OrderBy(x => x).ToArray();
                 }
             }
+
             // only if directory exists
             if (Directory.Exists(sortOutputDirectoryTextBox.Text))
             {
-                _sorter = new Sorter(sortOutputDirectoryTextBox.Text, _listReplays);
-                _sorter.CurrentDirectory = sortOutputDirectoryTextBox.Text;
+                var filterReplays = filterReplaysCheckBox.IsChecked.HasValue && filterReplaysCheckBox.IsChecked.Value;
+
+                if (filterReplays)
+                {
+                    if (_filteredListReplays == null)
+                    {
+                        MessageBox.Show("Can not execute sort since filter did not return any replays!", "Failed to start sort: invalid filter", MessageBoxButton.OK, MessageBoxImage.Warning, MessageBoxResult.OK);
+                        return;
+                    }
+
+                    _sorter = new Sorter(sortOutputDirectoryTextBox.Text, _filteredListReplays);
+                }
+                else
+                {
+                    _sorter = new Sorter(sortOutputDirectoryTextBox.Text, _listReplays);
+                }
             }
             else
             {
@@ -841,20 +868,6 @@ namespace ReplayParser.ReplaySorter.UI
 
             SortCriteriaParameters = new SortCriteriaParameters(makefolderforwinner, makefolderforloser, validgametypes, durations);
             _sorter.SortCriteriaParameters = SortCriteriaParameters;
-
-            var filterReplays = filterReplaysCheckBox.IsChecked.HasValue && filterReplaysCheckBox.IsChecked.Value;
-
-            if (filterReplays)
-            {
-                if (_filteredListReplays == null)
-                    MessageBox.Show("Can not execute sort since filter did not return any replays!", "Failed to start sort: invalid filter", MessageBoxButton.OK, MessageBoxImage.Warning, MessageBoxResult.OK);
-
-                _sorter.ListReplays = _filteredListReplays;
-            }
-            else
-            {
-                _sorter.ListReplays = _listReplays;
-            }
 
             if (criteriaStringOrder.Length > 1)
             {
@@ -871,7 +884,7 @@ namespace ReplayParser.ReplaySorter.UI
             var isPreview = sortIsPreview.IsChecked.HasValue && sortIsPreview.IsChecked.Value;
             if (isPreview)
             {
-                _previewSortArguments = new Tuple<string[], SortCriteriaParameters, CustomReplayFormat>(criteriaStringOrder, SortCriteriaParameters, customReplayFormat);
+                _previewSortArguments = Tuple.Create(criteriaStringOrder, SortCriteriaParameters, customReplayFormat, _sorter.ListReplays);
             }
 
             if (_worker_ReplaySorter == null)
@@ -908,9 +921,11 @@ namespace ReplayParser.ReplaySorter.UI
                 }
                 else
                 {
-                    if (_previewTree != null)
+                    // TODO you need to verify the sort criteria parameters of preview are the exact same as those used now ( sortcriteria, sortcriteriaparameters, replays )
+                    if (_previewTree != null && _sorter.MatchesInput(_previewTree, _previewSortArguments))
                     {
                         e.Result = _sorter.ExecuteSortAsync(_previewTree, _worker_ReplaySorter, _replaysThrowingExceptions);
+                        _previewTree = null;
                     }
                     else
                     {
@@ -1475,7 +1490,6 @@ namespace ReplayParser.ReplaySorter.UI
 
         private void FilterReplaysTextBox_KeyUp(object sender, System.Windows.Input.KeyEventArgs e)
         {
-            // TODO show message is busy ?
             if (e.Key == System.Windows.Input.Key.Enter)
             {
                 if (string.IsNullOrWhiteSpace(filterReplaysTextBox.Text))
@@ -1733,19 +1747,6 @@ namespace ReplayParser.ReplaySorter.UI
 
         #endregion
 
-        private void ListBoxItem_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            e.Handled = true;
-        }
-
-        private void ListBoxItem_PreviewMouseUp(object sender, MouseButtonEventArgs e)
-        {
-            if (sender is ListBoxItem listBoxItem)
-            {
-                var listBox = listBoxItem.Parent as ListBox;
-                ListBox.SetIsSelected(listBoxItem, !listBoxItem.IsSelected);
-            }
-        }
     }
 }
 

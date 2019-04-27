@@ -260,6 +260,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortResult
         public class BreadthFirstEnumerator : IEnumerator<DirectoryFileTreeNode>
         {
             private DirectoryFileTreeNode _node;
+            private DirectoryFileTreeNode _currentNode;
             private Queue<DirectoryFileTreeNode> _nodeQueue;
 
             public BreadthFirstEnumerator(DirectoryFileTreeNode node)
@@ -269,7 +270,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortResult
                 _nodeQueue.Enqueue(node);
             }
 
-            public DirectoryFileTreeNode Current => _nodeQueue.First();
+            public DirectoryFileTreeNode Current => _currentNode;
 
             object IEnumerator.Current => Current;
 
@@ -284,6 +285,11 @@ namespace ReplayParser.ReplaySorter.Sorting.SortResult
                     return false;
 
                 var head = _nodeQueue.Dequeue();
+                if (head == null)
+                    return false;
+
+                _currentNode = head;
+
                 if (head.Children != null)
                 {
                     foreach (var child in head.Children)
@@ -302,6 +308,8 @@ namespace ReplayParser.ReplaySorter.Sorting.SortResult
                 _nodeQueue.Enqueue(_node);
             }
         }
+
+        #endregion
 
         #endregion
 
@@ -373,6 +381,10 @@ namespace ReplayParser.ReplaySorter.Sorting.SortResult
 
         public bool IsDirectory { get; }
 
+        // public DirectoryFileTree Tree { get; }
+
+        // public DirectoryFileTreeNode Parent { get; }
+
         public IEnumerable<DirectoryFileTreeNode> Children
         {
             get
@@ -383,6 +395,8 @@ namespace ReplayParser.ReplaySorter.Sorting.SortResult
                 return null;
             }
         }
+
+        // public int Depth { get; }
 
         #endregion
 

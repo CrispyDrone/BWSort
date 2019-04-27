@@ -16,190 +16,17 @@ namespace ReplayParser.ReplaySorter
 {
     public class Sorter
     {
-        #region private fields
+        #region private
+
+        #region fields
 
         private SortCommandFactory Factory = new SortCommandFactory();
 
         #endregion
 
-        #region constructors
+        #region methods
 
-        public Sorter() { }
-
-        public Sorter(string originalDirectory, List<File<IReplay>> listreplays)
-        {
-            this.ListReplays = listreplays;
-            this.OriginalListReplays = new List<File<IReplay>>(listreplays);
-            this.CurrentDirectory = originalDirectory;
-            this.OriginalDirectory = originalDirectory;
-        }
-
-        #endregion
-
-        #region public
-        #region public properties
-
-        public Criteria SortCriteria { get; set; }
-
-        public string[] CriteriaStringOrder { get; set; }
-
-        public List<File<IReplay>> ListReplays { get; set; }
-
-        public string CurrentDirectory { get; set; }
-
-        public CustomReplayFormat CustomReplayFormat { get; set; }
-
-        public SortCriteriaParameters SortCriteriaParameters { get; set; }
-
-        public string OriginalDirectory { get; }
-
-        public List<File<IReplay>> OriginalListReplays { get; }
-
-        #endregion
-
-        #region public methods
-
-        //TODO sorting needs to start with the original names, and then progressively work with the filename....??
-        public void ExecuteSort(SortCriteriaParameters sortcriteriaparameters, bool keeporiginalreplaynames, List<string> replaysThrowingExceptions)
-        {
-            ReplayHandler.SaveReplayFilePaths(OriginalListReplays);
-            // why do i need this silly string array with the original order...
-            IDictionary<string, List<File<IReplay>>> SortOnXResult = null;
-            for (int i = 0; i < CriteriaStringOrder.Length; i++)
-            {
-                // should I pass a new sorter instead of this?? Then I don't have to make separate property OriginalDirectory
-                var SortOnX = Factory.GetSortCommand((Criteria)Enum.Parse(typeof(Criteria), CriteriaStringOrder[i]), sortcriteriaparameters, keeporiginalreplaynames, this);
-                if (i == 0)
-                {
-                    SortOnXResult = SortOnX.Sort(replaysThrowingExceptions);
-                }
-                else
-                {
-                    // nested sort
-                    SortOnX.IsNested = true;
-                    SortOnXResult = NestedSort(SortOnX, SortOnXResult, replaysThrowingExceptions);
-                }
-            }
-            ReplayHandler.ResetReplayFilePathsToBeforeSort(OriginalListReplays);
-        }
-
-        public DirectoryFileTree ExecuteSortAsync(bool keeporiginalreplaynames, BackgroundWorker worker_ReplaySorter, List<string> replaysThrowingExceptions)
-        {
-            ReplayHandler.SaveReplayFilePaths(OriginalListReplays);
-            // Sort Result ! 
-            // DirectoryFileTree<File<IReplay>> TotalSortResult = new DirectoryFileTree<File<IReplay>>(new DirectoryInfo(OriginalDirectory));
-
-            // why do i need this silly string array with the original order...
-            IDictionary<string, List<File<IReplay>>> SortOnXResult = new Dictionary<string, List<File<IReplay>>>();
-            for (int i = 0; i < CriteriaStringOrder.Length; i++)
-            {
-                // should I pass a new sorter instead of this?? Then I don't have to make separate property OriginalDirectory
-                var SortOnX = Factory.GetSortCommand((Criteria)Enum.Parse(typeof(Criteria), CriteriaStringOrder[i]), SortCriteriaParameters, keeporiginalreplaynames, this);
-                if (i == 0)
-                {
-                    SortOnXResult = SortOnX.SortAsync(replaysThrowingExceptions, worker_ReplaySorter, i + 1, CriteriaStringOrder.Count());
-                    if (worker_ReplaySorter.CancellationPending == true)
-                    {
-                        return null;
-                    }
-                }
-                else
-                {
-                    // nested sort
-                    SortOnX.IsNested = true;
-                    SortOnXResult = NestedSortAsync(replaysThrowingExceptions, SortOnX, SortOnXResult, worker_ReplaySorter, i + 1, CriteriaStringOrder.Count());
-                    if (worker_ReplaySorter.CancellationPending == true)
-                    {
-                        return null;
-                    }
-                }
-
-            }
-            var tree = BuildTree();
-            ReplayHandler.ResetReplayFilePathsToBeforeSort(OriginalListReplays);
-            return tree;
-        }
-
-        public DirectoryFileTree PreviewSort(bool keepOriginalReplayNames, BackgroundWorker worker_ReplaySorter, List<string> replaysThrowingExceptions)
-        {
-            ReplayHandler.SaveReplayFilePaths(OriginalListReplays);
-
-            IDictionary<string, List<File<IReplay>>> SortOnXResult = new Dictionary<string, List<File<IReplay>>>();
-            for (int i = 0; i < CriteriaStringOrder.Length; i++)
-            {
-                var SortOnX = Factory.GetSortCommand((Criteria)Enum.Parse(typeof(Criteria), CriteriaStringOrder[i]), SortCriteriaParameters, keepOriginalReplayNames, this);
-                if (i == 0)
-                {
-                    SortOnXResult = SortOnX.PreviewSort(replaysThrowingExceptions, worker_ReplaySorter, i + 1, CriteriaStringOrder.Count());
-                    if (worker_ReplaySorter.CancellationPending == true)
-                    {
-                        return null;
-                    }
-                }
-                else
-                {
-                    SortOnX.IsNested = true;
-                    SortOnXResult = PreviewNestedSort(replaysThrowingExceptions, SortOnX, SortOnXResult, worker_ReplaySorter, i + 1, CriteriaStringOrder.Count());
-                    if (worker_ReplaySorter.CancellationPending == true)
-                    {
-                        return null;
-                    }
-                }
-
-            }
-            var tree = BuildTree();
-            ReplayHandler.ResetReplayFilePathsToBeforeSort(OriginalListReplays);
-            return tree;
-        }
-
-        public DirectoryFileTree ExecuteSortAsync(DirectoryFileTree previewTree, BackgroundWorker worker_ReplaySorter, List<string> replaysThrowingExceptions)
-        {
-            var resultingTree = new DirectoryFileTree(previewTree.Root.Name);
-            Queue<DirectoryFileTreeNode> nodeQueue = new Queue<DirectoryFileTreeNode>();
-            nodeQueue.Enqueue(previewTree.Root);
-
-            while (nodeQueue.Count != 0)
-            {
-                var node = nodeQueue.Dequeue();
-                if (node == null)
-                    continue;
-
-                if (node.IsDirectory)
-                {
-                    foreach (var child in node)
-                    {
-                        nodeQueue.Enqueue(child);
-                        if (child.IsDirectory)
-                        {
-                            //TODO I just noticed this CreateDirectory function actually can send messageboxes to the user lol...
-                            var dirName = FileHandler.CreateDirectory(child.Name, true);
-                            resultingTree.AddToNode(node, dirName);
-                        }
-                        else
-                        {
-                            var fileReplay = FileReplay.Create(node.Value.Content, node.Value.OriginalFilePath, node.Value.Hash);
-                            fileReplay.AddAfterCurrent(node.Name);
-                            ReplayHandler.CopyReplay(fileReplay, true);
-                            resultingTree.AddToNode(node, fileReplay);
-                        }
-                    }
-                }
-            }
-            return resultingTree;
-        }
-
-
-        public override string ToString()
-        {
-            return $"SortCriteria: {string.Join(" ", CriteriaStringOrder)} SortCriteriaParameters: {SortCriteriaParameters.ToString()} CustomReplayFormat: {CustomReplayFormat?.ToString() ?? string.Empty}";
-        }
-
-        #endregion
-        #endregion
-
-        #region private methods
-
-        public IDictionary<string, List<File<IReplay>>> NestedSort(ISortCommand SortOnX, IDictionary<string, List<File<IReplay>>> SortOnXResult, List<string> replaysThrowingExceptions)
+        private IDictionary<string, List<File<IReplay>>> NestedSort(ISortCommand SortOnX, IDictionary<string, List<File<IReplay>>> SortOnXResult, List<string> replaysThrowingExceptions)
         {
             // Dictionary<directory, Files>
             IDictionary<string, List<File<IReplay>>> DirectoryFileReplay = new Dictionary<string, List<File<IReplay>>>();
@@ -363,6 +190,243 @@ namespace ReplayParser.ReplaySorter
             }
         }
 
+        private bool ReplayNamesHaveNotChanged(DirectoryFileTree previewTree)
+        {
+            var replayNamesHaveNotChanged = true;
+            var enumerator = previewTree.GetBreadthFirstEnumerator();
+            while (enumerator.MoveNext() && replayNamesHaveNotChanged)
+            {
+                if (enumerator.Current.IsDirectory)
+                    continue;
+
+                replayNamesHaveNotChanged = enumerator.Current.Name == Path.GetFileName(enumerator.Current.Value.FilePath);
+            }
+            return replayNamesHaveNotChanged;
+        }
+
         #endregion
+
+        #endregion
+
+        #region constructors
+
+        public Sorter() { }
+
+        public Sorter(string originalDirectory, List<File<IReplay>> listreplays)
+        {
+            this.ListReplays = listreplays;
+            this.OriginalListReplays = new List<File<IReplay>>(listreplays);
+            this.CurrentDirectory = originalDirectory;
+            this.OriginalDirectory = originalDirectory;
+        }
+
+        #endregion
+
+        #region public
+        #region public properties
+
+        public Criteria SortCriteria { get; set; }
+
+        public string[] CriteriaStringOrder { get; set; }
+
+        public List<File<IReplay>> ListReplays { get; set; }
+
+        public string CurrentDirectory { get; set; }
+
+        public CustomReplayFormat CustomReplayFormat { get; set; }
+
+        public SortCriteriaParameters SortCriteriaParameters { get; set; }
+
+        public string OriginalDirectory { get; }
+
+        public List<File<IReplay>> OriginalListReplays { get; }
+
+        #endregion
+
+        #region public methods
+
+        //TODO sorting needs to start with the original names, and then progressively work with the filename....??
+        public void ExecuteSort(SortCriteriaParameters sortcriteriaparameters, bool keeporiginalreplaynames, List<string> replaysThrowingExceptions)
+        {
+            ReplayHandler.SaveReplayFilePaths(OriginalListReplays);
+            // why do i need this silly string array with the original order...
+            IDictionary<string, List<File<IReplay>>> SortOnXResult = null;
+            for (int i = 0; i < CriteriaStringOrder.Length; i++)
+            {
+                // should I pass a new sorter instead of this?? Then I don't have to make separate property OriginalDirectory
+                var SortOnX = Factory.GetSortCommand((Criteria)Enum.Parse(typeof(Criteria), CriteriaStringOrder[i]), sortcriteriaparameters, keeporiginalreplaynames, this);
+                if (i == 0)
+                {
+                    SortOnXResult = SortOnX.Sort(replaysThrowingExceptions);
+                }
+                else
+                {
+                    // nested sort
+                    SortOnX.IsNested = true;
+                    SortOnXResult = NestedSort(SortOnX, SortOnXResult, replaysThrowingExceptions);
+                }
+            }
+            ReplayHandler.ResetReplayFilePathsToBeforeSort(OriginalListReplays);
+        }
+
+        public DirectoryFileTree ExecuteSortAsync(bool keeporiginalreplaynames, BackgroundWorker worker_ReplaySorter, List<string> replaysThrowingExceptions)
+        {
+            ReplayHandler.SaveReplayFilePaths(OriginalListReplays);
+            // Sort Result ! 
+            // DirectoryFileTree<File<IReplay>> TotalSortResult = new DirectoryFileTree<File<IReplay>>(new DirectoryInfo(OriginalDirectory));
+
+            // why do i need this silly string array with the original order...
+            IDictionary<string, List<File<IReplay>>> SortOnXResult = new Dictionary<string, List<File<IReplay>>>();
+            for (int i = 0; i < CriteriaStringOrder.Length; i++)
+            {
+                // should I pass a new sorter instead of this?? Then I don't have to make separate property OriginalDirectory
+                var SortOnX = Factory.GetSortCommand((Criteria)Enum.Parse(typeof(Criteria), CriteriaStringOrder[i]), SortCriteriaParameters, keeporiginalreplaynames, this);
+                if (i == 0)
+                {
+                    SortOnXResult = SortOnX.SortAsync(replaysThrowingExceptions, worker_ReplaySorter, i + 1, CriteriaStringOrder.Count());
+                    if (worker_ReplaySorter.CancellationPending == true)
+                    {
+                        return null;
+                    }
+                }
+                else
+                {
+                    // nested sort
+                    SortOnX.IsNested = true;
+                    SortOnXResult = NestedSortAsync(replaysThrowingExceptions, SortOnX, SortOnXResult, worker_ReplaySorter, i + 1, CriteriaStringOrder.Count());
+                    if (worker_ReplaySorter.CancellationPending == true)
+                    {
+                        return null;
+                    }
+                }
+
+            }
+            var tree = BuildTree();
+            ReplayHandler.ResetReplayFilePathsToBeforeSort(OriginalListReplays);
+            return tree;
+        }
+
+        public DirectoryFileTree PreviewSort(bool keepOriginalReplayNames, BackgroundWorker worker_ReplaySorter, List<string> replaysThrowingExceptions)
+        {
+            ReplayHandler.SaveReplayFilePaths(OriginalListReplays);
+
+            IDictionary<string, List<File<IReplay>>> SortOnXResult = new Dictionary<string, List<File<IReplay>>>();
+            for (int i = 0; i < CriteriaStringOrder.Length; i++)
+            {
+                var SortOnX = Factory.GetSortCommand((Criteria)Enum.Parse(typeof(Criteria), CriteriaStringOrder[i]), SortCriteriaParameters, keepOriginalReplayNames, this);
+                if (i == 0)
+                {
+                    SortOnXResult = SortOnX.PreviewSort(replaysThrowingExceptions, worker_ReplaySorter, i + 1, CriteriaStringOrder.Count());
+                    if (worker_ReplaySorter.CancellationPending == true)
+                    {
+                        return null;
+                    }
+                }
+                else
+                {
+                    SortOnX.IsNested = true;
+                    SortOnXResult = PreviewNestedSort(replaysThrowingExceptions, SortOnX, SortOnXResult, worker_ReplaySorter, i + 1, CriteriaStringOrder.Count());
+                    if (worker_ReplaySorter.CancellationPending == true)
+                    {
+                        return null;
+                    }
+                }
+
+            }
+            var tree = BuildTree();
+            ReplayHandler.ResetReplayFilePathsToBeforeSort(OriginalListReplays);
+            return tree;
+        }
+
+        /// <summary>
+        /// Executes the sort contained in a preview tree.
+        /// </summary>
+        /// <param name="previewTree"></param>
+        /// <param name="worker_ReplaySorter"></param>
+        /// <param name="replaysThrowingExceptions"></param>
+        /// <returns></returns>
+        public DirectoryFileTree ExecuteSortAsync(DirectoryFileTree previewTree, BackgroundWorker worker_ReplaySorter, List<string> replaysThrowingExceptions)
+        {
+            var resultingTree = new DirectoryFileTree(previewTree.Root.Name);
+            var previewToResultingTreeNodesMapping = new Dictionary<DirectoryFileTreeNode, DirectoryFileTreeNode>();
+            previewToResultingTreeNodesMapping.Add(previewTree.Root, resultingTree.Root);
+
+            var nodeQueue = new Queue<DirectoryFileTreeNode>();
+            nodeQueue.Enqueue(previewTree.Root);
+
+
+            var previewTreeNodeDirectories = new Dictionary<DirectoryFileTreeNode, string>();
+            previewTreeNodeDirectories.Add(previewTree.Root, previewTree.Root.Name + @"\");
+
+            while (nodeQueue.Count != 0)
+            {
+                var previewNode = nodeQueue.Dequeue();
+                if (previewNode == null)
+                    continue;
+
+                if (previewNode.IsDirectory)
+                {
+                    foreach (var previewChild in previewNode.Children.ToList())
+                    {
+                        nodeQueue.Enqueue(previewChild);
+                        if (previewChild.IsDirectory)
+                        {
+                            if (!previewTreeNodeDirectories.ContainsKey(previewChild))
+                            {
+                                previewTreeNodeDirectories.Add(previewChild, previewTreeNodeDirectories[previewNode] + previewChild.Name + @"\");
+                            }
+                            //TODO I just noticed this CreateDirectory function actually can send messageboxes to the user lol...
+                            var dirName = FileHandler.CreateDirectory(previewTreeNodeDirectories[previewChild], true);
+                            previewToResultingTreeNodesMapping.Add(previewChild, resultingTree.AddToNode(previewToResultingTreeNodesMapping[previewNode], ExtractDirectoriesFromPath(dirName, resultingTree.Root.Name).Last()));
+                        }
+                        else
+                        {
+                            var fileReplay = FileReplay.Create(previewChild.Value.Content, previewChild.Value.OriginalFilePath, previewChild.Value.Hash);
+                            var filePath = previewTreeNodeDirectories[previewNode] + previewChild.Name;
+                            fileReplay.AddAfterCurrent(filePath);
+                            ReplayHandler.CopyReplay(fileReplay, true);
+                            previewToResultingTreeNodesMapping.Add(previewChild, resultingTree.AddToNode(previewToResultingTreeNodesMapping[previewNode], fileReplay));
+                        }
+                    }
+                }
+            }
+            return resultingTree;
+        }
+
+        public override string ToString()
+        {
+            return $"SortCriteria: {string.Join(" ", CriteriaStringOrder)} SortCriteriaParameters: {SortCriteriaParameters.ToString()} CustomReplayFormat: {CustomReplayFormat?.ToString() ?? string.Empty}";
+        }
+
+        public bool MatchesInput(DirectoryFileTree previewTree, Tuple<string[], SortCriteriaParameters, CustomReplayFormat, List<File<IReplay>>> previewSortArguments)
+        {
+            // criteria string order needs to be identical
+            // sortcriteriaparameters need to be identical
+            // customreplayformat needs to be identical
+            // replay set needs to be identical
+            // replays in the preview tree need to still have the same name as they currently do, if keeporiginalnames was true
+            if (previewSortArguments.Item3 == null)
+            {
+                return
+                    CriteriaStringOrder.SequenceEqual(previewSortArguments.Item1) &&
+                    SortCriteriaParameters == previewSortArguments.Item2 &&
+                    CustomReplayFormat == previewSortArguments.Item3 &&
+                    ListReplays.SequenceEqual(previewSortArguments.Item4) &&
+                    ReplayNamesHaveNotChanged(previewTree);
+            }
+            else
+            {
+                return
+                    CriteriaStringOrder.SequenceEqual(previewSortArguments.Item1) &&
+                    SortCriteriaParameters == previewSortArguments.Item2 &&
+                    CustomReplayFormat == previewSortArguments.Item3 &&
+                    ListReplays.SequenceEqual(previewSortArguments.Item4);
+            }
+        }
+
+        #endregion
+
+        #endregion
+
     }
 }
