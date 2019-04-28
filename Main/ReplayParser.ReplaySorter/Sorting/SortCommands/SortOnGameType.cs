@@ -55,16 +55,19 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                                      group replay by replay.Content.GameType;
 
             // make sortdirectory
-            string sortDirectory = string.Empty;
-            if (IsNested)
+            string sortDirectory = Sorter.CurrentDirectory;
+            if (!(IsNested && !Sorter.GenerateIntermediateFolders))
             {
-                sortDirectory = Sorter.CurrentDirectory + @"\" + SortCriteria;
+                if (IsNested)
+                {
+                    sortDirectory = Sorter.CurrentDirectory + @"\" + SortCriteria;
+                }
+                else
+                {
+                    sortDirectory = Sorter.CurrentDirectory + @"\" + string.Join(",", Sorter.CriteriaStringOrder);
+                }
+                sortDirectory = FileHandler.CreateDirectory(sortDirectory);
             }
-            else
-            {
-                sortDirectory = Sorter.CurrentDirectory + @"\" + string.Join(",", Sorter.CriteriaStringOrder);
-            }
-            sortDirectory = FileHandler.CreateDirectory(sortDirectory);
 
             // make subdirectory per gametype, and put all associated replays into it
 
@@ -129,16 +132,19 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                                      group replay by replay.Content.GameType;
 
             // make sortdirectory
-            string sortDirectory = string.Empty;
-            if (IsNested)
+            string sortDirectory = Sorter.CurrentDirectory;
+            if (!(IsNested && !Sorter.GenerateIntermediateFolders))
             {
-                sortDirectory = Sorter.CurrentDirectory + @"\" + SortCriteria;
+                if (IsNested)
+                {
+                    sortDirectory = Sorter.CurrentDirectory + @"\" + SortCriteria;
+                }
+                else
+                {
+                    sortDirectory = Sorter.CurrentDirectory + @"\" + string.Join(",", Sorter.CriteriaStringOrder);
+                }
+                sortDirectory = FileHandler.CreateDirectory(sortDirectory, true);
             }
-            else
-            {
-                sortDirectory = Sorter.CurrentDirectory + @"\" + string.Join(",", Sorter.CriteriaStringOrder);
-            }
-            sortDirectory = FileHandler.CreateDirectory(sortDirectory, true);
 
             // make subdirectory per gametype, and put all associated replays into it
 
@@ -219,16 +225,19 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
             var ReplaysByGameTypes = from replay in Sorter.ListReplays
                                      group replay by replay.Content.GameType;
 
-            string sortDirectory = string.Empty;
-            if (IsNested)
+            string sortDirectory = Sorter.CurrentDirectory;
+            if (!(IsNested && !Sorter.GenerateIntermediateFolders))
             {
-                sortDirectory = Sorter.CurrentDirectory + @"\" + SortCriteria;
+                if (IsNested)
+                {
+                    sortDirectory = Sorter.CurrentDirectory + @"\" + SortCriteria;
+                }
+                else
+                {
+                    sortDirectory = Sorter.CurrentDirectory + @"\" + string.Join(",", Sorter.CriteriaStringOrder);
+                }
+                sortDirectory = FileHandler.AdjustName(sortDirectory, true);
             }
-            else
-            {
-                sortDirectory = Sorter.CurrentDirectory + @"\" + string.Join(",", Sorter.CriteriaStringOrder);
-            }
-            sortDirectory = FileHandler.AdjustName(sortDirectory, true);
 
             int currentPosition = 0;
             int progressPercentage = 0;

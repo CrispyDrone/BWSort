@@ -270,17 +270,19 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
             }
 
             // create sort directory, and directories for each player, depending on arguments
-            string sortDirectory = string.Empty;
-            if (IsNested)
+            string sortDirectory = Sorter.CurrentDirectory;
+            if (!(IsNested && !Sorter.GenerateIntermediateFolders))
             {
-                sortDirectory = Sorter.CurrentDirectory + @"\" + SortCriteria;
+                if (IsNested)
+                {
+                    sortDirectory = Sorter.CurrentDirectory + @"\" + SortCriteria;
+                }
+                else
+                {
+                    sortDirectory = Sorter.CurrentDirectory + @"\" + string.Join(",", Sorter.CriteriaStringOrder);
+                }
+                sortDirectory = FileHandler.CreateDirectory(sortDirectory);
             }
-            else
-            {
-                sortDirectory = Sorter.CurrentDirectory + @"\" + string.Join(",", Sorter.CriteriaStringOrder);
-            }
-
-            sortDirectory = FileHandler.CreateDirectory(sortDirectory);
 
             foreach (var player in PlayerNames/*.Distinct()*/)
             {
@@ -465,16 +467,19 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
             }
 
             // create sort directory, and directories for each player, depending on arguments
-            string sortDirectory = string.Empty;
-            if (IsNested)
+            string sortDirectory = Sorter.CurrentDirectory;
+            if (!(IsNested && !Sorter.GenerateIntermediateFolders))
             {
-                sortDirectory = Sorter.CurrentDirectory + @"\" + SortCriteria;
+                if (IsNested)
+                {
+                    sortDirectory = Sorter.CurrentDirectory + @"\" + SortCriteria;
+                }
+                else
+                {
+                    sortDirectory = Sorter.CurrentDirectory + @"\" + string.Join(",", Sorter.CriteriaStringOrder);
+                }
+                sortDirectory = FileHandler.CreateDirectory(sortDirectory, true);
             }
-            else
-            {
-                sortDirectory = Sorter.CurrentDirectory + @"\" + string.Join(",", Sorter.CriteriaStringOrder);
-            }
-            sortDirectory = FileHandler.CreateDirectory(sortDirectory, true);
 
             foreach (var player in PlayerNames/*.Distinct()*/)
             {
@@ -655,16 +660,19 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
 
             PlayerNames.AddRange(ExtractPlayers(Sorter.ListReplays.Select(f => f.Content).AsEnumerable(), GetPlayerType(MakeFolderForWinner, MakeFolderForLoser)));
 
-            string sortDirectory = string.Empty;
-            if (IsNested)
+            string sortDirectory = Sorter.CurrentDirectory;
+            if (!(IsNested && !Sorter.GenerateIntermediateFolders))
             {
-                sortDirectory = Sorter.CurrentDirectory + @"\" + SortCriteria;
+                if (IsNested)
+                {
+                    sortDirectory = Sorter.CurrentDirectory + @"\" + SortCriteria;
+                }
+                else
+                {
+                    sortDirectory = Sorter.CurrentDirectory + @"\" + string.Join(",", Sorter.CriteriaStringOrder);
+                }
+                sortDirectory = FileHandler.AdjustName(sortDirectory, true);
             }
-            else
-            {
-                sortDirectory = Sorter.CurrentDirectory + @"\" + string.Join(",", Sorter.CriteriaStringOrder);
-            }
-            sortDirectory = FileHandler.AdjustName(sortDirectory, true);
 
             foreach (var player in PlayerNames)
             {

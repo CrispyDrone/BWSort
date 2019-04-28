@@ -124,17 +124,19 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
 
             }
 
-            string sortDirectory = string.Empty;
-            if (IsNested)
+            string sortDirectory = Sorter.CurrentDirectory;
+            if (!(IsNested && !Sorter.GenerateIntermediateFolders))
             {
-                sortDirectory = Sorter.CurrentDirectory + @"\" + SortCriteria;
+                if (IsNested)
+                {
+                    sortDirectory = Sorter.CurrentDirectory + @"\" + SortCriteria;
+                }
+                else
+                {
+                    sortDirectory = Sorter.CurrentDirectory + @"\" + string.Join(",", Sorter.CriteriaStringOrder);
+                }
+                sortDirectory = FileHandler.CreateDirectory(sortDirectory);
             }
-            else
-            {
-                sortDirectory = Sorter.CurrentDirectory + @"\" + string.Join(",", Sorter.CriteriaStringOrder);
-            }
-            sortDirectory = FileHandler.CreateDirectory(sortDirectory);
-
             
             foreach (var matchup in /*MatchUps.Distinct(MatchUpEq)*/ReplayMatchUps.Keys)
             {
@@ -243,16 +245,20 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
 
             }
 
-            string sortDirectory = string.Empty;
-            if (IsNested)
+            string sortDirectory = Sorter.CurrentDirectory;
+            if (!(IsNested && !Sorter.GenerateIntermediateFolders))
             {
-                sortDirectory = Sorter.CurrentDirectory + @"\" + SortCriteria;
+                if (IsNested)
+                {
+                    sortDirectory = Sorter.CurrentDirectory + @"\" + SortCriteria;
+                }
+                else
+                {
+                    sortDirectory = Sorter.CurrentDirectory + @"\" + string.Join(",", Sorter.CriteriaStringOrder);
+                }
+                sortDirectory = FileHandler.CreateDirectory(sortDirectory);
             }
-            else
-            {
-                sortDirectory = Sorter.CurrentDirectory + @"\" + string.Join(",", Sorter.CriteriaStringOrder);
-            }
-            sortDirectory = FileHandler.CreateDirectory(sortDirectory, true);
+
             int currentPosition = 0;
             int progressPercentage = 0;
 
@@ -375,16 +381,20 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
 
             }
 
-            string sortDirectory = string.Empty;
-            if (IsNested)
+            string sortDirectory = Sorter.CurrentDirectory;
+            if (!(IsNested && !Sorter.GenerateIntermediateFolders))
             {
-                sortDirectory = Sorter.CurrentDirectory + @"\" + SortCriteria;
+                if (IsNested)
+                {
+                    sortDirectory = Sorter.CurrentDirectory + @"\" + SortCriteria;
+                }
+                else
+                {
+                    sortDirectory = Sorter.CurrentDirectory + @"\" + string.Join(",", Sorter.CriteriaStringOrder);
+                }
+                sortDirectory = FileHandler.AdjustName(sortDirectory, true);
             }
-            else
-            {
-                sortDirectory = Sorter.CurrentDirectory + @"\" + string.Join(",", Sorter.CriteriaStringOrder);
-            }
-            sortDirectory = FileHandler.AdjustName(sortDirectory, true);
+
             int currentPosition = 0;
             int progressPercentage = 0;
 
