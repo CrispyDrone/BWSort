@@ -19,6 +19,7 @@ namespace ReplayParser.ReplaySorter.Configuration
         private bool _loadReplaysOnStartup;
         private bool _checkForDuplicatesOnCumulativeParsing;
         private string _ignoreFilePath;
+        private bool _generateIntermediateFoldersDuringSorting;
 
         private bool _logDirectoryChanged = true;
         private bool _maxUndoLevelChanged = true;
@@ -29,6 +30,7 @@ namespace ReplayParser.ReplaySorter.Configuration
         private bool _loadReplaysOnStartupChanged = true;
         private bool _checkForDuplicatesOnCumulativeParsingChanged = true;
         private bool _ignoreFilePathChanged = true;
+        private bool _generateIntermediateFoldersDuringSortingChanged = true;
 
         #endregion
 
@@ -253,6 +255,24 @@ namespace ReplayParser.ReplaySorter.Configuration
             }
         }
 
+        public bool GenerateIntermediateFoldersDuringSorting
+        {
+            get
+            {
+                if (_generateIntermediateFoldersDuringSortingChanged)
+                {
+                    _generateIntermediateFoldersDuringSorting = Properties.Settings.Default.GENERATEINTERMEDIATESORTFOLDERS;
+                    _generateIntermediateFoldersDuringSortingChanged = false;
+                }
+                return _generateIntermediateFoldersDuringSorting;
+            }
+            set
+            {
+                _generateIntermediateFoldersDuringSortingChanged = true;
+                Properties.Settings.Default.GENERATEINTERMEDIATESORTFOLDERS = value;
+                Save();
+            }
+        }
         #endregion
 
         #endregion

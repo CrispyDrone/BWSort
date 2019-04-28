@@ -78,6 +78,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Backup\BWContext.cs" />
+    <Compile Include="Backup\Models\ReplayBackup.cs" />
+    <Compile Include="Backup\Repository.cs" />
     <Compile Include="Configuration\IReplaySorterConfiguration.cs" />
     <Compile Include="Configuration\ReplaySorterAppConfiguration.cs" />
     <Compile Include="Diagnostics\ErrorLogger.cs" />

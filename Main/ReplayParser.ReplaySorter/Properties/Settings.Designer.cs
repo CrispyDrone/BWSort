@@ -130,5 +130,17 @@ namespace ReplayParser.ReplaySorter.Properties {
                 this["IGNOREFILEPATH"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool GENERATEINTERMEDIATESORTFOLDERS {
+            get {
+                return ((bool)(this["GENERATEINTERMEDIATESORTFOLDERS"]));
+            }
+            set {
+                this["GENERATEINTERMEDIATESORTFOLDERS"] = value;
+            }
+        }
     }
 }

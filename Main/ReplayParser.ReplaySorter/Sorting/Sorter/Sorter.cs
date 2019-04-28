@@ -4,10 +4,8 @@ using System.Linq;
 using System.IO;
 using ReplayParser.ReplaySorter.Sorting;
 using ReplayParser.Interfaces;
-using ReplayParser.ReplaySorter.UserInput;
 using ReplayParser.ReplaySorter.Sorting.SortCommands;
 using System.ComponentModel;
-using System.Windows;
 using ReplayParser.ReplaySorter.Sorting.SortResult;
 using ReplayParser.ReplaySorter.IO;
 using System.Text;
@@ -227,6 +225,7 @@ namespace ReplayParser.ReplaySorter
 
         public Criteria SortCriteria { get; set; }
 
+        //TODO should be readonly property
         public string[] CriteriaStringOrder { get; set; }
 
         public List<File<IReplay>> ListReplays { get; set; }
@@ -240,6 +239,8 @@ namespace ReplayParser.ReplaySorter
         public string OriginalDirectory { get; }
 
         public List<File<IReplay>> OriginalListReplays { get; }
+
+        public bool GenerateIntermediateFolders { get; set; }
 
         #endregion
 

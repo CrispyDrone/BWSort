@@ -26,6 +26,7 @@
                     <RowDefinition Height="*"></RowDefinition>
                     <RowDefinition Height="*"></RowDefinition>
                     <RowDefinition Height="*"></RowDefinition>
+                    <RowDefinition Height="*"></RowDefinition>
                 </Grid.RowDefinitions>
                 <Label x:Name="MaxUndoLevelLabel" Grid.Column="1" Grid.Row="0">Max undo level:</Label>
                 <ComboBox x:Name="MaxUndoLevelCombobox" Grid.Column="2" Grid.Row="0" Margin="10 0"></ComboBox>
@@ -53,6 +54,12 @@
                 <Label Grid.Column="1" Grid.Row="7" VerticalAlignment="Center">Logging directory:</Label>
                 <TextBox x:Name="LoggingDirectoryTextbox" Grid.Column="2" Grid.Row="7" Grid.ColumnSpan="2" Margin="10"></TextBox>
                 <Button x:Name="SetLoggingDirectoryButton" Grid.Column="4" Grid.Row="7" Margin="10" Click="SetLoggingDirectoryButton_Click" >Set directory</Button>
+                <Label x:Name="GenerateIntermeidateFoldersDuringSortingLabel" Grid.Column="1" Grid.Row="8">
+                    <Label.Content>
+                        <AccessText TextWrapping="Wrap" Text="Generate intermediate folders during sorting"/>
+                    </Label.Content>
+                </Label>
+                <CheckBox x:Name="GenerateIntermediateFoldersDuringSortingCheckBox" Grid.Column="2" Grid.Row="8" IsChecked="True" VerticalAlignment="Center" Margin="10 0"></CheckBox>
             </Grid>
             <Button x:Name="saveSettingsButton" DockPanel.Dock="Bottom" HorizontalAlignment="Center" Margin="20" Padding="10 0" Click="SaveSettingsButton_Click">Save settings</Button>
         </DockPanel>

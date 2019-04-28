@@ -270,7 +270,16 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
             }
 
             // create sort directory, and directories for each player, depending on arguments
-            string sortDirectory = CurrentDirectory + @"\" + SortCriteria.ToString();
+            string sortDirectory = string.Empty;
+            if (IsNested)
+            {
+                sortDirectory = Sorter.CurrentDirectory + @"\" + SortCriteria;
+            }
+            else
+            {
+                sortDirectory = Sorter.CurrentDirectory + @"\" + string.Join(",", Sorter.CriteriaStringOrder);
+            }
+
             sortDirectory = FileHandler.CreateDirectory(sortDirectory);
 
             foreach (var player in PlayerNames/*.Distinct()*/)
@@ -456,7 +465,15 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
             }
 
             // create sort directory, and directories for each player, depending on arguments
-            string sortDirectory = CurrentDirectory + @"\" + SortCriteria.ToString();
+            string sortDirectory = string.Empty;
+            if (IsNested)
+            {
+                sortDirectory = Sorter.CurrentDirectory + @"\" + SortCriteria;
+            }
+            else
+            {
+                sortDirectory = Sorter.CurrentDirectory + @"\" + string.Join(",", Sorter.CriteriaStringOrder);
+            }
             sortDirectory = FileHandler.CreateDirectory(sortDirectory, true);
 
             foreach (var player in PlayerNames/*.Distinct()*/)
@@ -638,7 +655,15 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
 
             PlayerNames.AddRange(ExtractPlayers(Sorter.ListReplays.Select(f => f.Content).AsEnumerable(), GetPlayerType(MakeFolderForWinner, MakeFolderForLoser)));
 
-            string sortDirectory = CurrentDirectory + @"\" + SortCriteria.ToString();
+            string sortDirectory = string.Empty;
+            if (IsNested)
+            {
+                sortDirectory = Sorter.CurrentDirectory + @"\" + SortCriteria;
+            }
+            else
+            {
+                sortDirectory = Sorter.CurrentDirectory + @"\" + string.Join(",", Sorter.CriteriaStringOrder);
+            }
             sortDirectory = FileHandler.AdjustName(sortDirectory, true);
 
             foreach (var player in PlayerNames)

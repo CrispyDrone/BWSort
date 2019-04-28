@@ -31,6 +31,7 @@ namespace ReplayParser.ReplaySorter.UI.Windows
             _replaySorterConfiguration.CheckForDuplicatesOnCumulativeParsing = CheckForDuplicatesCheckbox.IsChecked.HasValue && CheckForDuplicatesCheckbox.IsChecked.Value;
             _replaySorterConfiguration.IgnoreFilePath = IgnoreFileTextbox.Text;
             _replaySorterConfiguration.LogDirectory = LoggingDirectoryTextbox.Text;
+            _replaySorterConfiguration.GenerateIntermediateFoldersDuringSorting = GenerateIntermediateFoldersDuringSortingCheckBox.IsChecked.HasValue && GenerateIntermediateFoldersDuringSortingCheckBox.IsChecked.Value;
             this.Close();
         }
 
@@ -55,6 +56,7 @@ namespace ReplayParser.ReplaySorter.UI.Windows
             CheckForDuplicatesCheckbox.IsChecked = _replaySorterConfiguration.CheckForDuplicatesOnCumulativeParsing;
             IgnoreFileTextbox.Text = _replaySorterConfiguration.IgnoreFilePath;
             LoggingDirectoryTextbox.Text = _replaySorterConfiguration.LogDirectory;
+            GenerateIntermediateFoldersDuringSortingCheckBox.IsChecked = _replaySorterConfiguration.GenerateIntermediateFoldersDuringSorting;
         }
 
         private void SetIgnoreFileButton_Click(object sender, RoutedEventArgs e)

@@ -878,7 +878,10 @@ namespace ReplayParser.ReplaySorter.UI
             {
                 _sorter.SortCriteria = (Criteria)Enum.Parse(typeof(Criteria), criteriaStringOrder[0]);
             }
+            //TODO rewrite this crap so you instantiate the sorter in the end with all parameters. Then you can make OriginalCriteriaStringOrder readonly
             _sorter.CriteriaStringOrder = criteriaStringOrder;
+            _sorter.CriteriaStringOrder = criteriaStringOrder;
+
             if (customReplayFormat != null)
                 _sorter.CustomReplayFormat = customReplayFormat;
 
@@ -887,6 +890,8 @@ namespace ReplayParser.ReplaySorter.UI
             {
                 _previewSortArguments = Tuple.Create(criteriaStringOrder, SortCriteriaParameters, customReplayFormat, _sorter.ListReplays);
             }
+
+            _sorter.GenerateIntermediateFolders = _replaySorterConfiguration.GenerateIntermediateFoldersDuringSorting;
 
             if (_worker_ReplaySorter == null)
             {
