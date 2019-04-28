@@ -116,9 +116,9 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                         }
                     }
                 }
-                catch (NullReferenceException nullex)
+                catch (Exception ex)
                 {
-                    ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - SortOnMatchUp NullReferenceException: Encoding matchups, file: {replay.OriginalFilePath}", ex: nullex);
+                    ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - SortOnMatchUp exception: Encoding matchups, file: {replay.OriginalFilePath}", ex: ex);
                     //Console.WriteLine(nullex.Message);
                 }
 
@@ -228,9 +228,9 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                         }
                     }
                 }
-                catch (NullReferenceException nullex)
+                catch (Exception ex)
                 {
-                    ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - SortOnMatchUp NullReferenceException: Encoding matchups, file: {replay.OriginalFilePath}", ex: nullex);
+                    ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - SortOnMatchUp exception: Encoding matchups, file: {replay.OriginalFilePath}", ex: ex);
                 }
 
             }
@@ -352,9 +352,9 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                         }
                     }
                 }
-                catch (NullReferenceException nullex)
+                catch (Exception ex)
                 {
-                    ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - SortOnMatchUp NullReferenceException: Encoding matchups, file: {replay.OriginalFilePath}", ex: nullex);
+                    ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - SortOnMatchUp exception: Encoding matchups, file: {replay.OriginalFilePath}", ex: ex);
                 }
 
             }

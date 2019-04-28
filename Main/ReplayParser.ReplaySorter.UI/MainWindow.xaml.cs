@@ -205,6 +205,7 @@ namespace ReplayParser.ReplaySorter.UI
 
             replayFilesFoundListBox.ItemsSource = _files;
             replayFilesFoundListBox.Items.Refresh();
+            statusBarAction.Content = $"Discovered {_files.Count} replays!";
         }
 
         private void ClearFoundReplayFilesButton_Click(object sender, RoutedEventArgs e)
@@ -999,6 +1000,12 @@ namespace ReplayParser.ReplaySorter.UI
                 MessageBox.Show(string.Format("Finished sorting replays! It took {0} to sort {1} replays. {2} replays encountered exceptions.", _swSort.Elapsed, _listReplays.Count, _replaysThrowingExceptions.Count()), "Finished Sorting", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);
                 ResetReplaySortingVariables();
                 _replaysThrowingExceptions.Clear();
+                if (e.Error != null)
+                {
+                    MessageBox.Show("Something went wrong during sorting.", "Failed to sort!", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
+                    ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - Failed to execute sort: {e.Error.Message}", ex: e.Error.InnerException);
+                    return;
+                }
                 var root = (e.Result as DirectoryFileTree).Root;
                 sortOutputTreeView.ItemsSource = root;
             }

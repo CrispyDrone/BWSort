@@ -252,6 +252,7 @@ namespace ReplayParser.ReplaySorter
         //public static char[] InvalidFileCharsAdditional = new char[] { '*', ':' };
 
         //TODO use StringBuilder instead??
+        //TODO use remove instead of replace
         public static string RemoveInvalidChars(string name)
         {
             foreach (var InvalidChar in InvalidPathChars)

@@ -82,7 +82,22 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
 
                 try
                 {
-                    var MapFolder = FileHandler.CreateDirectory(sortDirectory + @"\" + MapName);
+                    //TODO use stringbuilder ? 
+                    string MapFolder = sortDirectory + @"\" + MapName;
+
+                    // key already exists... how/why?? "Untitled Scenario"... different maps, same "internal" name
+                    // maps with same name but different dimensions...
+
+                    int count = 1;
+                    while (DirectoryFileReplay.ContainsKey(MapFolder) || Directory.Exists(MapFolder))
+                    {
+                        MapFolder = FileHandler.IncrementName(MapName, string.Empty, sortDirectory, ref count);
+                    }
+
+                    DirectoryFileReplay.Add(new KeyValuePair<string, List<File<IReplay>>>(MapFolder, FileReplays));
+
+                    Directory.CreateDirectory(MapFolder);
+
                     var MapReplays = Maps[map.Key];
                     foreach (var replay in MapReplays)
                     {
@@ -128,9 +143,6 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                         if (threwException)
                             replaysThrowingExceptions.Add(replay.OriginalFilePath);
                     }
-                    // key already exists... how/why?? "Untitled Scenario"... different maps, same "internal" name
-
-                    DirectoryFileReplay.Add(new KeyValuePair<string, List<File<IReplay>>>(MapFolder, FileReplays));
                 }
                 catch (Exception ex)
                 {
@@ -176,7 +188,22 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
 
                 try
                 {
-                    var MapFolder = FileHandler.CreateDirectory(sortDirectory + @"\" + MapName);
+                    //TODO use stringbuilder ? 
+                    string MapFolder = sortDirectory + @"\" + MapName;
+
+                    // key already exists... how/why?? "Untitled Scenario"... different maps, same "internal" name
+                    // maps with same name but different dimensions...
+
+                    int count = 1;
+                    while (DirectoryFileReplay.ContainsKey(MapFolder) || Directory.Exists(MapFolder))
+                    {
+                        MapFolder = FileHandler.IncrementName(MapName, string.Empty, sortDirectory, ref count);
+                    }
+
+                    DirectoryFileReplay.Add(new KeyValuePair<string, List<File<IReplay>>>(MapFolder, FileReplays));
+
+                    Directory.CreateDirectory(MapFolder);
+
                     var MapReplays = Maps[map.Key];
                     foreach (var replay in MapReplays)
                     {
@@ -238,9 +265,6 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                         if (threwException)
                             replaysThrowingExceptions.Add(replay.OriginalFilePath);
                     }
-                    // key already exists... how/why?? "Untitled Scenario"... different maps, same "internal" name
-
-                    DirectoryFileReplay.Add(new KeyValuePair<string, List<File<IReplay>>>(MapFolder, FileReplays));
                 }
                 catch (Exception ex)
                 {
@@ -283,7 +307,19 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
 
                 try
                 {
-                    string MapFolder = FileHandler.AdjustName(sortDirectory + @"\" + MapName, true);
+                    //TODO use stringbuilder ? 
+                    string MapFolder = sortDirectory + @"\" + MapName;
+
+                    // key already exists... how/why?? "Untitled Scenario"... different maps, same "internal" name
+                    // maps with same name but different dimensions...
+
+                    int count = 1;
+                    while (DirectoryFileReplay.ContainsKey(MapFolder) || Directory.Exists(MapFolder))
+                    {
+                        MapFolder = FileHandler.IncrementName(MapName, string.Empty, sortDirectory, ref count);
+                    }
+
+                    DirectoryFileReplay.Add(new KeyValuePair<string, List<File<IReplay>>>(MapFolder, FileReplays));
 
                     var MapReplays = Maps[map.Key];
                     foreach (var replay in MapReplays)
@@ -346,9 +382,6 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                         if (threwException)
                             replaysThrowingExceptions.Add(replay.OriginalFilePath);
                     }
-                    // key already exists... how/why?? "Untitled Scenario"... different maps, same "internal" name
-
-                    DirectoryFileReplay.Add(new KeyValuePair<string, List<File<IReplay>>>(MapFolder, FileReplays));
                 }
                 catch (Exception ex)
                 {

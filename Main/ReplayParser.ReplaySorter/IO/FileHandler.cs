@@ -119,7 +119,7 @@ namespace ReplayParser.ReplaySorter.IO
 
         //TODO ref count, makes sense? 
         //TODO should loop internally? has to take additional parameter isDirectory (?)
-        private static string IncrementName(string fileNameOnly, string extension, string path, ref int count)
+        public static string IncrementName(string fileNameOnly, string extension, string path, ref int count)
         {
             string tempFileName = string.Format("{0}({1})", fileNameOnly, count++);
             return Path.Combine(path, tempFileName + extension);

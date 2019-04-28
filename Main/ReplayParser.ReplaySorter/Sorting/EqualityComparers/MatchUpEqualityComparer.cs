@@ -7,6 +7,8 @@ namespace ReplayParser.ReplaySorter.Sorting
 {
     class MatchUpEqualityComparer : IEqualityComparer<IDictionary<int, IDictionary<RaceType, int>>>
     {
+        private RaceCombinationEqualityComparer _raceEq = new RaceCombinationEqualityComparer();
+
         public bool Equals(IDictionary<int, IDictionary<RaceType, int>> x, IDictionary<int, IDictionary<RaceType, int>> y)
         {
             if (x == null || y == null)
@@ -18,23 +20,24 @@ namespace ReplayParser.ReplaySorter.Sorting
                 return false;
             }
 
-            RaceCombinationEqualityComparer RaceCombinationEq = new RaceCombinationEqualityComparer();
-            Dictionary<IDictionary<RaceType, int>, int> yRaceCombinationToTeam = y.ToDictionary(t => t.Value, t => t.Key);
-            bool[] teamMatched = new bool[y.Count];
+            // Overcomplicated??
+            Dictionary<IDictionary<RaceType, int>, int> yRaceCombinationToCounts = y
+                .GroupBy(t => t.Value, _raceEq)
+                .Select(raceCombinationGroup => new KeyValuePair<IDictionary<RaceType, int>, int>(raceCombinationGroup.Key, raceCombinationGroup.Select(g => g.Key).Aggregate(0, (count, team) => ++count)))
+                .ToDictionary(kvp => kvp.Key, kvp => kvp.Value, _raceEq);
 
-            foreach (var team in x)
+            foreach (var raceCombination in x.Values)
             {
-                if (!y.Values.Contains(team.Value, RaceCombinationEq))
+                if (!yRaceCombinationToCounts.ContainsKey(raceCombination))
                 {
                     return false;
                 }
                 else
                 {
-                    var yTeam = yRaceCombinationToTeam[team.Value];
-                    if (teamMatched[yTeam])
+                    if (yRaceCombinationToCounts[raceCombination] <= 0)
                         return false;
-                    else
-                        teamMatched[yTeam] = true;
+
+                    yRaceCombinationToCounts[raceCombination] = yRaceCombinationToCounts[raceCombination]--;
                 }
             }
             return true;
@@ -45,10 +48,9 @@ namespace ReplayParser.ReplaySorter.Sorting
             // ???
             var TeamsHash = obj.Keys.Count.GetHashCode();
             var RaceCombinationsHash = 0;
-            RaceCombinationEqualityComparer RaceEq = new RaceCombinationEqualityComparer();
             foreach (var RaceCombination in obj.Values)
             {
-                RaceCombinationsHash += RaceEq.GetHashCode(RaceCombination);
+                RaceCombinationsHash += _raceEq.GetHashCode(RaceCombination);
             }
             return TeamsHash + RaceCombinationsHash; 
         }

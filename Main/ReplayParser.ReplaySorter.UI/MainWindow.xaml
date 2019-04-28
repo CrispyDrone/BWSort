@@ -76,16 +76,12 @@
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"></ColumnDefinition>
                             <ColumnDefinition Width="3*"></ColumnDefinition>
-                            <ColumnDefinition Width="2*"></ColumnDefinition>
-                            <ColumnDefinition Width="2*"></ColumnDefinition>
                         </Grid.ColumnDefinitions>
                     </Grid>
                 </ItemsPanelTemplate>
             </StatusBar.ItemsPanel>
             <StatusBarItem x:Name="statusBarAction" Grid.Row="1" Grid.Column="0" Content="Waiting to parse..."></StatusBarItem>
             <StatusBarItem x:Name="statusBarErrors" Grid.Row="1" Grid.Column="1"></StatusBarItem>
-            <StatusBarItem x:Name="statusBarCurrentDir" Grid.Row="1" Grid.Column="2" Content="{Binding ElementName=replayDirectoryTextBox, Path=Text, Mode=OneWay}" ContentStringFormat="Parsing directory: {0}"></StatusBarItem>
-            <StatusBarItem x:Name="statusBarOutputDir" Grid.Row="1" Grid.Column="3" Content="{Binding ElementName=sortOutputDirectoryTextBox, Path=Text, Mode=OneWay}" ContentStringFormat="Sort output: {0}"></StatusBarItem>
         </StatusBar>
         <TabControl DockPanel.Dock="Top">
             <TabItem Header="Parse">
