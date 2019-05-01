@@ -142,5 +142,16 @@ namespace ReplayParser.ReplaySorter.Properties {
                 this["GENERATEINTERMEDIATESORTFOLDERS"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        public global::System.Collections.Specialized.StringCollection BWCONTEXT {
+            get {
+                return ((global::System.Collections.Specialized.StringCollection)(this["BWCONTEXT"]));
+            }
+            set {
+                this["BWCONTEXT"] = value;
+            }
+        }
     }
 }
