@@ -235,11 +235,13 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Backup\SQL\AddReplayToBackup.sql" />
-    <Content Include="Backup\SQL\CreateDatabase.sql" />
-    <Content Include="Backup\SQL\GetReplayIdByHash.sql" />
-    <Content Include="Backup\SQL\InsertReplay.sql" />
-    <Content Include="Backup\SQL\RemoveBackupByIdWithReplays.sql" />
+    <None Include="Backup\SQL\AddReplayToBackup.sql" />
+    <None Include="Backup\SQL\CreateDatabase.sql" />
+    <None Include="Backup\SQL\GetBackupById.sql" />
+    <None Include="Backup\SQL\GetReplayCountOfBackup.sql" />
+    <None Include="Backup\SQL\GetReplayIdByHash.sql" />
+    <None Include="Backup\SQL\InsertReplay.sql" />
+    <None Include="Backup\SQL\RemoveBackupByIdWithReplays.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Backup\SQL\GetBackupByIdWithReplays.sql" />

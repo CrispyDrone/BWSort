@@ -162,6 +162,33 @@ namespace ReplayParser.ReplaySorter.Backup
             var connection = _context.Connection;
             using (var command = connection.CreateCommand())
             {
+                command.CommandText = GetQuery("GetBackupById");
+                var backupId = command.CreateParameter();
+                backupId.ParameterName = "@Id";
+                backupId.Value = id;
+
+                var reader = command.ExecuteReader();
+                if (reader.Read())
+                {
+                    backup.Id = (int)reader[0];
+                    backup.Name = (string)reader[1];
+                    backup.Comment = (string)reader[2];
+                    backup.RootDirectory = (string)reader[3];
+                    backup.Date = (DateTime)reader[4];
+                }
+            }
+            if (backup.Id == 0)
+                return null;
+
+            return backup;
+        }
+
+        public Models.Backup GetWithReplays(int id)
+        {
+            var backup = new Models.Backup();
+            var connection = _context.Connection;
+            using (var command = connection.CreateCommand())
+            {
                 command.CommandText = GetQuery("GetBackupByIdWithReplays");
                 var backupId = command.CreateParameter();
                 backupId.ParameterName = "@Id";
@@ -213,6 +240,20 @@ namespace ReplayParser.ReplaySorter.Backup
                 return null;
 
             return backup;
+        }
+
+        public int? GetNumberOfBackedUpReplays(int backupId)
+        {
+            var connection = _context.Connection;
+            using (var getReplayCount = connection.CreateCommand())
+            {
+                getReplayCount.CommandText = GetQuery("GetReplayCountOfBackup");
+                var backupIdParam = getReplayCount.CreateParameter();
+                backupIdParam.ParameterName = "@Id";
+                backupIdParam.Value = backupId;
+
+                return (int?)getReplayCount.ExecuteScalar();
+            }
         }
 
         #endregion

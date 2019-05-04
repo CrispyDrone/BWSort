@@ -463,6 +463,54 @@
                     </ListView>
                 </DockPanel>
             </TabItem>
+            <TabItem Header="Backups">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition></RowDefinition>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition></ColumnDefinition>
+                        <ColumnDefinition Width="5"></ColumnDefinition>
+                        <ColumnDefinition Width="Auto"></ColumnDefinition>
+                    </Grid.ColumnDefinitions>
+                    <ListView>
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn Header="Name"></GridViewColumn>
+                                <GridViewColumn Header="Comment"></GridViewColumn>
+                                <GridViewColumn Header="RootDirectory"></GridViewColumn>
+                                <GridViewColumn Header="Date"></GridViewColumn>
+                                <GridViewColumn Header="Number of replays"></GridViewColumn>
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+                    <GridSplitter Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" HorizontalAlignment="Stretch"></GridSplitter>
+                    <Border BorderThickness="1" BorderBrush="Black" Grid.Row="0" Grid.Column="2" Grid.RowSpan="2">
+                        <StackPanel Orientation="Vertical" MinWidth="90">
+                            <DockPanel Margin="10">
+                                <Label>Active database:</Label>
+                                <ComboBox Name="databaseComboBox" MinWidth="70"></ComboBox>
+                            </DockPanel>
+                            <Button Content="Empty database" Margin="10"></Button>
+                            <Button Content="Delete database" Margin="10"></Button>
+                            <Button Content="Clean database list" Margin="10"></Button>
+                            <Label HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Margin="10">
+                                <TextBlock Text="Create new database" TextDecorations="Underline" FontSize="16"></TextBlock>
+                            </Label>
+                            <DockPanel Margin="10 0">
+                                <Label DockPanel.Dock="Left" Content="Name:"></Label>
+                                <TextBlock Name="databaseNameTextBlock"></TextBlock>
+                            </DockPanel>
+                            <StackPanel Margin="10 0" Orientation="Horizontal">
+                                <Label Content="Directory:"></Label>
+                                <Label Name="databaseDirectoryLabel"/>
+                            </StackPanel>
+                            <Button Content="Select directory" Margin="10"></Button>
+                            <Button Content="Create" Margin="10"></Button>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </TabItem>
             <TabItem IsEnabled="false" Header="Pool">
                 <DockPanel>
                     <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
