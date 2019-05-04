@@ -13,7 +13,7 @@ namespace ReplayParser.ReplaySorter.Backup
     {
         private string _connectionString;
         private static string CONNECTIONSTRINGFORMAT = "data source={0};Version=3";
-        private Repository<ReplayBackup> _backupRepository;
+        private Repository<Models.Backup> _backupRepository;
         private SQLiteConnection _connection;
         private SQLiteTransaction _transaction;
 
@@ -39,7 +39,7 @@ namespace ReplayParser.ReplaySorter.Backup
             return new BWContext(databaseName);
         }
 
-        public Repository<ReplayBackup> Backups => _backupRepository ?? (_backupRepository = new Repository<ReplayBackup>(this));
+        public Repository<Models.Backup> Backups => _backupRepository ?? (_backupRepository = new Repository<Models.Backup>(this));
         public SQLiteTransaction CurrentTransaction => _transaction;
         public bool HasActiveTransaction => _transaction != null;
         public SQLiteConnection Connection => _connection;

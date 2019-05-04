@@ -84,8 +84,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Backup\BWContext.cs" />
+    <Compile Include="Backup\Models\IEntity.cs" />
+    <Compile Include="Backup\Models\Backup.cs" />
+    <Compile Include="Backup\Models\Replay.cs" />
     <Compile Include="Backup\Models\ReplayBackup.cs" />
-    <Compile Include="Backup\Models\ReplayFile.cs" />
     <Compile Include="Backup\Repository.cs" />
     <Compile Include="Configuration\IReplaySorterConfiguration.cs" />
     <Compile Include="Configuration\ReplaySorterAppConfiguration.cs" />

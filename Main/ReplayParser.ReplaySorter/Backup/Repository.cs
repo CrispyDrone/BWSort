@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Data.SQLite;
 
 namespace ReplayParser.ReplaySorter.Backup
 {
@@ -18,33 +19,32 @@ namespace ReplayParser.ReplaySorter.Backup
             _context = context;
         }
 
-        public IEnumerable<T> GetAll(/*Func<T, string> includedProperties*/)
+        public IEnumerable<T> GetAll(string sql/*Func<T, string> includedProperties*/)
         {
-            // OpenConnection();
+            EnsureOpenConnection();
 
             // var command = _context.Connection.CreateCommand();
             // command.CommandText = $"select * from {}";
             throw new NotImplementedException();
         }
 
-        public IEnumerable<T> Where(Func<T, bool> predicate)
+        public IEnumerable<T> Where(string sql/*Func<T, bool> predicate*/)
         {
             throw new NotImplementedException();
         }
 
-        public void Add(T entity)
+        public void Add(string sql/*T entity*/)
         {
             throw new NotImplementedException();
         }
 
-        public void Remove(T entity)
+        public void Remove(string sql/*T entity*/)
         {
-            Remove(entity.Id);
         }
 
         public void Remove(int id)
         {
-            OpenConnection();
+            EnsureOpenConnection();
 
             // var command = _context.Connection.CreateCommand();
             // command.CommandText = "delete"
@@ -55,7 +55,7 @@ namespace ReplayParser.ReplaySorter.Backup
             throw new NotImplementedException();
         }
 
-        private void OpenConnection()
+        private void EnsureOpenConnection()
         {
             if (_context.Connection.State == System.Data.ConnectionState.Closed)
                 _context.Connection.Open();

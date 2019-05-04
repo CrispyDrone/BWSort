@@ -8,6 +8,11 @@ namespace ReplayParser.ReplaySorter.Backup.Models
 {
     public interface IEntity
     {
-        int Id { get; }
+        string CreateQueryFormat { get; }
+        string GetQueryFormat { get; }
+        string GetAllQueryFormat { get; }
+        string UpdateQueryFormat { get; }
+        string RemoveQueryFormat { get; }
+        IEntity Include(IEntity entity);
     }
 }
