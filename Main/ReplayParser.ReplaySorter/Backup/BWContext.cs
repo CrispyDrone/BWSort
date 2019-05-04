@@ -1,5 +1,4 @@
-﻿using ReplayParser.ReplaySorter.Backup.Models;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,7 +12,7 @@ namespace ReplayParser.ReplaySorter.Backup
     {
         private string _connectionString;
         private static string CONNECTIONSTRINGFORMAT = "data source={0};Version=3";
-        private Repository<Models.Backup> _backupRepository;
+        private BackupRepository _backupRepository;
         private SQLiteConnection _connection;
         private SQLiteTransaction _transaction;
 
@@ -39,27 +38,24 @@ namespace ReplayParser.ReplaySorter.Backup
             return new BWContext(databaseName);
         }
 
-        public Repository<Models.Backup> Backups => _backupRepository ?? (_backupRepository = new Repository<Models.Backup>(this));
+        public BackupRepository Backups => _backupRepository ?? (_backupRepository = new BackupRepository(this));
         public SQLiteTransaction CurrentTransaction => _transaction;
         public bool HasActiveTransaction => _transaction != null;
-        public SQLiteConnection Connection => _connection;
-
-        public SQLiteTransaction BeginTransaction(/*Isolation Level*/)
+        public SQLiteConnection Connection
         {
-            if (_transaction == null)
+            get
             {
                 if (_connection == null)
                     _connection = new SQLiteConnection(_connectionString);
 
                 if (_connection.State == System.Data.ConnectionState.Closed)
-                {
                     _connection.Open();
-                }
 
-                _transaction = _connection.BeginTransaction();
+                if (_transaction == null)
+                    _transaction = _connection.BeginTransaction();
+
+                return _connection;
             }
-
-            return _transaction;
         }
 
         public void Commit()
