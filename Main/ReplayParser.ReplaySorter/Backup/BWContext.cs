@@ -15,6 +15,20 @@ namespace ReplayParser.ReplaySorter.Backup
         private BackupRepository _backupRepository;
         private SQLiteConnection _connection;
         private SQLiteTransaction _transaction;
+        private bool _databaseInitialized = false;
+
+        private void InitializeDatabase()
+        {
+            using (var transaction = _connection.BeginTransaction())
+            {
+                using (var createDb = _connection.CreateCommand())
+                {
+                    createDb.CommandText = Backup.SQL.Queries.ResourceManager.GetString("CreateDatabase");
+                    createDb.ExecuteNonQuery();
+                }
+                transaction.Commit();
+            }
+        }
 
         private BWContext(string databaseName)
         {
@@ -39,7 +53,7 @@ namespace ReplayParser.ReplaySorter.Backup
             return new BWContext(databaseName);
         }
 
-        public BackupRepository Backups => _backupRepository ?? (_backupRepository = new BackupRepository(this));
+        public BackupRepository BackupRepository => _backupRepository ?? (_backupRepository = new BackupRepository(this));
         public SQLiteTransaction CurrentTransaction => _transaction;
         public bool HasActiveTransaction => _transaction != null;
         public SQLiteConnection Connection
@@ -52,12 +66,20 @@ namespace ReplayParser.ReplaySorter.Backup
                 if (_connection.State == System.Data.ConnectionState.Closed)
                     _connection.Open();
 
+                if (!_databaseInitialized)
+                {
+                    InitializeDatabase();
+                    _databaseInitialized = true;
+                }
+
                 if (_transaction == null)
                     _transaction = _connection.BeginTransaction();
 
                 return _connection;
             }
         }
+
+        public string ConnectionString => _connectionString;
 
         public void Commit()
         {
@@ -72,6 +94,7 @@ namespace ReplayParser.ReplaySorter.Backup
         public void Dispose()
         {
             _transaction?.Rollback();
+            _transaction.Dispose();
             _connection?.Dispose();
         }
     }

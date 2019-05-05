@@ -28,6 +28,7 @@ using System.Collections;
 using System.Windows.Input;
 using ReplayParser.ReplaySorter.Backup;
 using ReplayParser.ReplaySorter.Extensions;
+using System.Text.RegularExpressions;
 
 namespace ReplayParser.ReplaySorter.UI
 {
@@ -1587,6 +1588,7 @@ namespace ReplayParser.ReplaySorter.UI
 
         private BWContext _activeUow;
         private HashSet<string> _databaseNames = new HashSet<string>();
+        private static Regex _getSqliteFileName = new Regex(@"data source=(.*);", RegexOptions.IgnoreCase);
 
         #endregion
 
@@ -1621,14 +1623,25 @@ namespace ReplayParser.ReplaySorter.UI
                 }
 
                 var databaseName = Path.Combine(databaseDirectoryTextBox.Text, databaseNameTextBox.Text);
-                if (_databaseNames.Contains(databaseName))
+                if (Path.GetExtension(databaseName).ToLower() != ".sqlite")
                 {
-                    MessageBox.Show("Cannot create this database since it already exists!", "Database already exists!", MessageBoxButton.OK, MessageBoxImage.Warning, MessageBoxResult.OK);
+                    databaseName = databaseName + ".sqlite";
+                }
+
+                if (File.Exists(databaseName))
+                {
+                    MessageBox.Show(_databaseNames.Contains(databaseName) ? 
+                            "This database already exists and is part of the existing database list. Please choose it from the dropdown." : 
+                            "Cannot create this database since it already exists! Please choose add existing database instead!", 
+                        "Database already exists!", 
+                        MessageBoxButton.OK, 
+                        MessageBoxImage.Warning, 
+                        MessageBoxResult.OK);
                     return;
                 }
 
                 _activeUow = BWContext.Create(databaseName);
-                AddDatabaseName(databaseName);
+                RememberDatabase(databaseName);
                 ReloadDatabaseComboBox(databaseName);
                 statusBarAction.Content = $"Database {databaseName} successfully created!";
             }
@@ -1643,7 +1656,7 @@ namespace ReplayParser.ReplaySorter.UI
             }
         }
 
-        private void AddDatabaseName(string databaseName)
+        private void RememberDatabase(string databaseName)
         {
             var databaseNames = _replaySorterConfiguration.BWContextDatabaseNames;
 
@@ -1661,11 +1674,34 @@ namespace ReplayParser.ReplaySorter.UI
             }
         }
 
+        private void RemoveDatabase(string databaseName)
+        {
+            var databaseNames = _replaySorterConfiguration.BWContextDatabaseNames;
+
+            if (string.IsNullOrWhiteSpace(databaseName))
+                throw new InvalidOperationException("Cannot remove database from settings since settings are empty!");
+
+            var databaseNamesToKeep = databaseNames.Split('|').Where(db =>
+            {
+                var match = _getSqliteFileName.Match(db);
+                if (!match.Success)
+                    return false;
+
+                var dbName = match.Groups[1].Value;
+                if (dbName.ToLower() == databaseName.ToLower())
+                    return false;
+
+                return true;
+            });
+
+            _replaySorterConfiguration.BWContextDatabaseNames = string.Join("|", databaseNamesToKeep);
+        }
+
         private void ReloadDatabaseComboBox(string databaseName = "")
         {
             var databaseNames = _replaySorterConfiguration.BWContextDatabaseNames.Split('|').Where(db => !string.IsNullOrWhiteSpace(db)); 
             _databaseNames = databaseNames.ToHashSet();
-            databaseComboBox.ItemsSource = databaseNames;//.Select(db => Path.GetFileNameWithoutExtension(db));
+            databaseComboBox.ItemsSource = _databaseNames;//.Select(db => Path.GetFileNameWithoutExtension(db));
             if (!string.IsNullOrWhiteSpace(databaseName))
             {
                 databaseComboBox.SelectedItem = databaseName;
@@ -1674,11 +1710,19 @@ namespace ReplayParser.ReplaySorter.UI
 
         private void DatabaseComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            var databaseNameComboBox = sender as ComboBox;
-            var databaseName = e.AddedItems[0] as string;
             try
             {
-                _activeUow = BWContext.Create(databaseName, false);
+                var databaseNameComboBox = sender as ComboBox;
+                if (e.AddedItems.Count != 0)
+                {
+                    var databaseName = e.AddedItems[0] as string;
+                    _activeUow = BWContext.Create(databaseName, false);
+                }
+                else
+                {
+                    databaseNameComboBox.SelectedIndex = -1;
+                    _activeUow = null;
+                }
             }
             catch (Exception ex)
             {
@@ -1689,22 +1733,75 @@ namespace ReplayParser.ReplaySorter.UI
 
         private void EmptyDatabaseButton_Click(object sender, RoutedEventArgs e)
         {
+            if (_activeUow == null)
+            {
+                MessageBox.Show("Please choose a database from the list first!", "No database selected!", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
+                return;
+            }
 
+            var activeConnectionString = _activeUow.ConnectionString;
+            var dbName = GetDatabaseNameFromConnectionString(activeConnectionString);
+            var backupService = new BackupService(_activeUow);
+            backupService.DeleteAllBackupsAndReplays();
+            _activeUow = BWContext.Create(dbName);
+        }
+
+        private string GetDatabaseNameFromConnectionString(string activeConnectionString)
+        {
+            var connectionString = _activeUow.ConnectionString;
+            var match = _getSqliteFileName.Match(connectionString);
+            if (!match.Success)
+            {
+                return null;
+            }
+
+            if (match.Groups.Count < 2)
+                return null;
+
+            return match.Groups[1].Value;
         }
 
         private void DeleteDatabaseButton_Click(object sender, RoutedEventArgs e)
         {
+            if (_activeUow == null)
+            {
+                MessageBox.Show("Please choose a database from the list first!", "No database selected!", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
+                return;
+            }
 
+            var databaseName = GetDatabaseNameFromConnectionString(_activeUow.ConnectionString);
+
+            if (!File.Exists(databaseName))
+            {
+                MessageBox.Show("Database file does not exist!", "Database not found!", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
+                return;
+            }
+
+            File.Delete(databaseName);
+            _activeUow = null;
+            RemoveDatabase(databaseName);
+            ReloadDatabaseComboBox();
         }
 
         private void CleanDatabaseListButton_Click(object sender, RoutedEventArgs e)
         {
-
+            var databasesToKeep = databaseComboBox.Items.Cast<string>().Where(db => File.Exists(db) || File.Exists(db + ".sqlite"));
+            _replaySorterConfiguration.BWContextDatabaseNames = string.Join("|", databasesToKeep);
+            ReloadDatabaseComboBox();
         }
 
         private void AddExistingDatabaseButton_Click(object sender, RoutedEventArgs e)
         {
-
+            var databaseSelector = new CommonOpenFileDialog();
+            databaseSelector.EnsureFileExists = true;
+            databaseSelector.Multiselect = false;
+            databaseSelector.Title = "Choose an existing sqlite database.";
+            databaseSelector.Filters.Add(new CommonFileDialogFilter("sqlite database files", ".sqlite"));
+            if (databaseSelector.ShowDialog() == CommonFileDialogResult.Ok)
+            {
+                RememberDatabase(databaseSelector.FileName);
+                ReloadDatabaseComboBox(databaseSelector.FileName);
+            }
         }
 
         private void CreateBackupButton_Click(object sender, RoutedEventArgs e)

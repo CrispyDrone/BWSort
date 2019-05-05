@@ -296,9 +296,7 @@ namespace ReplayParser.ReplaySorter.Configuration
             }
             set
             {
-                if (string.IsNullOrWhiteSpace(value))
-                    return;
-
+                //TODO add validation?
                 _bwContextDatabaseNamesChanged = true;
                 Properties.Settings.Default.BWCONTEXTDATABASENAMES = value;
                 Save();

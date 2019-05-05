@@ -156,6 +156,16 @@ namespace ReplayParser.ReplaySorter.Backup
             }
         }
 
+        public void RemoveAll()
+        {
+            var connection = _context.Connection;
+            using (var removeAllBackupsAndReplays = connection.CreateCommand())
+            {
+                removeAllBackupsAndReplays.CommandText = GetQuery("RemoveAllBackupsAndReplays");
+                removeAllBackupsAndReplays.ExecuteNonQuery();
+            }
+        }
+
         public Models.Backup Get(int id)
         {
             var backup = new Models.Backup();

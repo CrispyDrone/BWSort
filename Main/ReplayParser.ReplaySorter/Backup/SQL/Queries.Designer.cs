@@ -179,6 +179,17 @@ namespace ReplayParser.ReplaySorter.Backup.SQL {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to delete from replaybackups;
+        ///delete from replays;
+        ///delete from backups;.
+        /// </summary>
+        internal static string RemoveAllBackupsAndReplays {
+            get {
+                return ResourceManager.GetString("RemoveAllBackupsAndReplays", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to With ReplaysToDelete
         ///as
         ///(
