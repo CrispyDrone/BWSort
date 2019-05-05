@@ -26,6 +26,8 @@ using ReplayParser.ReplaySorter.Sorting.SortResult;
 using ReplayParser.ReplaySorter.ReplayRenamer.RenameResult;
 using System.Collections;
 using System.Windows.Input;
+using ReplayParser.ReplaySorter.Backup;
+using ReplayParser.ReplaySorter.Extensions;
 
 namespace ReplayParser.ReplaySorter.UI
 {
@@ -92,6 +94,7 @@ namespace ReplayParser.ReplaySorter.UI
             EnableSortingAndRenamingButtons(ReplayAction.Parse, false);
             _replaySorterConfiguration = new ReplaySorterAppConfiguration();
             IntializeErrorLogger(_replaySorterConfiguration);
+            ReloadDatabaseComboBox();
         }
 
         private async void Window_Loaded(object sender, RoutedEventArgs e)
@@ -111,7 +114,7 @@ namespace ReplayParser.ReplaySorter.UI
                     catch (HttpRequestException ex)
                     {
                         statusBarErrors.Content = "Failed to check for updates.";
-                        ErrorLogger.GetInstance()?.LogError("Failed to check for updates.", ex: ex);
+                        ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - Failed to check for updates.", ex: ex);
                     }
                 }
             }
@@ -1576,6 +1579,153 @@ namespace ReplayParser.ReplaySorter.UI
             _lastExecutedFilter = null;
         }
 
+        #endregion
+
+        #region backups
+
+        #region fields
+
+        private BWContext _activeUow;
+        private HashSet<string> _databaseNames = new HashSet<string>();
+
+        #endregion
+
+        private void SelectDatabaseDirectoryButton_Click(object sender, RoutedEventArgs e)
+        {
+            SelectMapFolder(databaseDirectoryTextBox);
+        }
+
+        private void CreateNewDatabaseButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (!Directory.Exists(databaseDirectoryTextBox.Text))
+                {
+                    MessageBox.Show("Directory does not exist! Please select a valid directory to create a new database in.", "Nonexisting directory!", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
+                    return;
+                }
+
+                var databaseNameWithoutInvalidCharacters = ReplayHandler.RemoveInvalidChars(databaseNameTextBox.Text);
+
+                if (databaseNameWithoutInvalidCharacters != databaseNameTextBox.Text)
+                {
+                    var invalidCharacters = databaseNameTextBox.Text.Except(databaseNameWithoutInvalidCharacters).Distinct();
+                    // alternatively
+                    // var invalidCharacters2 = from character in databaseNameTextBox.Text
+                    //                         join otherCharacter in databaseNameWithoutInvalidCharacters on character equals otherCharacter into matchedCharacters
+                    //                         where matchedCharacters == null
+                    //                         select character;
+
+                    MessageBox.Show($"Database name contains the following invalid characters: {string.Join(",", invalidCharacters)}. Please remove them and try again.", "Invalid characters in file name.", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
+                    return;
+                }
+
+                var databaseName = Path.Combine(databaseDirectoryTextBox.Text, databaseNameTextBox.Text);
+                if (_databaseNames.Contains(databaseName))
+                {
+                    MessageBox.Show("Cannot create this database since it already exists!", "Database already exists!", MessageBoxButton.OK, MessageBoxImage.Warning, MessageBoxResult.OK);
+                    return;
+                }
+
+                _activeUow = BWContext.Create(databaseName);
+                AddDatabaseName(databaseName);
+                ReloadDatabaseComboBox(databaseName);
+                statusBarAction.Content = $"Database {databaseName} successfully created!";
+            }
+            catch (ArgumentException)
+            {
+                MessageBox.Show($"Database name cannot be an empty string", "Invalid database name", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - Something went wrong while creating the database.", ex: ex);
+                MessageBox.Show($"Something went wrong while creating the database: {ex.Message}", "Failed to create database!", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
+            }
+        }
+
+        private void AddDatabaseName(string databaseName)
+        {
+            var databaseNames = _replaySorterConfiguration.BWContextDatabaseNames;
+
+            if (string.IsNullOrWhiteSpace(databaseNames))
+            {
+                _replaySorterConfiguration.BWContextDatabaseNames = databaseName;
+            }
+            else
+            {
+                var databaseNamesHashSet = databaseNames.Split('|').ToHashSet();
+                if (!databaseNamesHashSet.Contains(databaseName))
+                {
+                    _replaySorterConfiguration.BWContextDatabaseNames = databaseNames + "|" + databaseName;
+                }
+            }
+        }
+
+        private void ReloadDatabaseComboBox(string databaseName = "")
+        {
+            var databaseNames = _replaySorterConfiguration.BWContextDatabaseNames.Split('|').Where(db => !string.IsNullOrWhiteSpace(db)); 
+            _databaseNames = databaseNames.ToHashSet();
+            databaseComboBox.ItemsSource = databaseNames;//.Select(db => Path.GetFileNameWithoutExtension(db));
+            if (!string.IsNullOrWhiteSpace(databaseName))
+            {
+                databaseComboBox.SelectedItem = databaseName;
+            }
+        }
+
+        private void DatabaseComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            var databaseNameComboBox = sender as ComboBox;
+            var databaseName = e.AddedItems[0] as string;
+            try
+            {
+                _activeUow = BWContext.Create(databaseName, false);
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - Something went wrong while opening the database.", ex: ex);
+                MessageBox.Show($"Something went wrong while opening the database: {ex.Message}. Find the database and place it in the correct location, or clean the list to remove stale entries.", "Failed to open the database!", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
+            }
+        }
+
+        private void EmptyDatabaseButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void DeleteDatabaseButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void CleanDatabaseListButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void AddExistingDatabaseButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void CreateBackupButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void InspectBackupButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void RestoreFromBackupButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void DeleteBackupButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
         #endregion
 
         #region settings

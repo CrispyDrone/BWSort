@@ -98,6 +98,7 @@
     <Compile Include="Configuration\ReplaySorterAppConfiguration.cs" />
     <Compile Include="Diagnostics\ErrorLogger.cs" />
     <Compile Include="Diagnostics\ProgressBar.cs" />
+    <Compile Include="Extensions\IEnumerableExtensions.cs" />
     <Compile Include="Extensions\ListExtensions.cs" />
     <Compile Include="Filtering\AddAdditionalAndAlsoToMethodCallModifier.cs" />
     <Compile Include="Ignoring\IgnoreFile.cs" />

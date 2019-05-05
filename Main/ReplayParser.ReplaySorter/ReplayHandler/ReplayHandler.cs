@@ -7,6 +7,8 @@ using ReplayParser.Interfaces;
 using ReplayParser.ReplaySorter.IO;
 using ReplayParser.ReplaySorter.Diagnostics;
 using System.Text.RegularExpressions;
+using System.Linq;
+using ReplayParser.ReplaySorter.Extensions;
 
 namespace ReplayParser.ReplaySorter
 {
@@ -247,27 +249,25 @@ namespace ReplayParser.ReplaySorter
             //}
         }
 
-        public static char[] InvalidFileChars = Path.GetInvalidFileNameChars();
-        public static char[] InvalidPathChars = Path.GetInvalidPathChars();
+        public static HashSet<char> InvalidFileChars = Path.GetInvalidFileNameChars().ToHashSet();
+        public static HashSet<char> InvalidPathChars = Path.GetInvalidPathChars().ToHashSet();
         //public static char[] InvalidFileCharsAdditional = new char[] { '*', ':' };
 
-        //TODO use StringBuilder instead??
-        //TODO use remove instead of replace
+        //TODO move to FileHandler
         public static string RemoveInvalidChars(string name)
         {
-            foreach (var InvalidChar in InvalidPathChars)
+            if (string.IsNullOrWhiteSpace(name))
+                throw new ArgumentException(nameof(name), "String cannot be empty or null.");
+
+            var sBuilder = new StringBuilder();
+            foreach (var character in name)
             {
-                name = name.Replace(InvalidChar.ToString(), string.Empty);
+                if (!InvalidFileChars.Contains(character) && !InvalidPathChars.Contains(character))
+                {
+                    sBuilder.Append(character);
+                }
             }
-            foreach (var InvalidChar in InvalidFileChars)
-            {
-                name = name.Replace(InvalidChar.ToString(), string.Empty);
-            }
-            //foreach (var InvalidChar in InvalidFileCharsAdditional)
-            //{
-            //    name = name.Replace(InvalidChar.ToString(), string.Empty);
-            //}
-            return name;
+            return sBuilder.ToString();
         }
 
         public static void SaveReplayFilePaths(List<File<IReplay>> listReplays)

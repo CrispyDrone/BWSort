@@ -467,13 +467,14 @@
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition></RowDefinition>
+                        <RowDefinition Height="Auto"></RowDefinition>
                     </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition></ColumnDefinition>
                         <ColumnDefinition Width="5"></ColumnDefinition>
-                        <ColumnDefinition Width="Auto"></ColumnDefinition>
+                        <ColumnDefinition Width="Auto" MinWidth="190"></ColumnDefinition>
                     </Grid.ColumnDefinitions>
-                    <ListView>
+                    <ListView Grid.Row="0" Grid.Column="0">
                         <ListView.View>
                             <GridView>
                                 <GridViewColumn Header="Name"></GridViewColumn>
@@ -484,29 +485,42 @@
                             </GridView>
                         </ListView.View>
                     </ListView>
+                    <StackPanel Grid.Row="1" Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Button Name="createBackupButton" Content="Create" MinWidth="90" MinHeight="70" Margin="10" Click="CreateBackupButton_Click"></Button>
+                        <Button Name="inspectBackupButton" Content="Inspect" MinWidth="90" MinHeight="70" Margin="10" Click="InspectBackupButton_Click"></Button>
+                        <Button Name="restoreFromBackupButton" Content="Restore" MinWidth="90" MinHeight="70" Margin="10" Click="RestoreFromBackupButton_Click"></Button>
+                        <Button Name="deleteBackupButton" Content="Delete" MinWidth="90" MinHeight="70" Margin="10" Click="DeleteBackupButton_Click"></Button>
+                    </StackPanel>
                     <GridSplitter Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" HorizontalAlignment="Stretch"></GridSplitter>
                     <Border BorderThickness="1" BorderBrush="Black" Grid.Row="0" Grid.Column="2" Grid.RowSpan="2">
-                        <StackPanel Orientation="Vertical" MinWidth="90">
+                        <StackPanel Orientation="Vertical">
                             <DockPanel Margin="10">
                                 <Label>Active database:</Label>
-                                <ComboBox Name="databaseComboBox" MinWidth="70"></ComboBox>
+                                <ComboBox Name="databaseComboBox" MinWidth="70" SelectionChanged="DatabaseComboBox_SelectionChanged"></ComboBox>
                             </DockPanel>
-                            <Button Content="Empty database" Margin="10"></Button>
-                            <Button Content="Delete database" Margin="10"></Button>
-                            <Button Content="Clean database list" Margin="10"></Button>
-                            <Label HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Margin="10">
+                            <Button Name="emptyDatabaseButton" Content="Empty database" MaxWidth="140" Margin="10 0 10 10" Click="EmptyDatabaseButton_Click"></Button>
+                            <Button Name="deleteDatabaseButton" Content="Delete database" MaxWidth="140" Margin="10 0 10 10" Click="DeleteDatabaseButton_Click"></Button>
+                            <Button Name="cleanDatabaseListButton" Content="Clean database list" MaxWidth="140" Margin="10 0 10 10" Click="CleanDatabaseListButton_Click"></Button>
+                            <Button Name="addExistingDatabaseButton" Content="Add existing database" MaxWidth="140" Margin="10 0 10 10" Click="AddExistingDatabaseButton_Click"></Button>
+                            <Label HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Margin="10 0 10 10">
                                 <TextBlock Text="Create new database" TextDecorations="Underline" FontSize="16"></TextBlock>
                             </Label>
-                            <DockPanel Margin="10 0">
-                                <Label DockPanel.Dock="Left" Content="Name:"></Label>
-                                <TextBlock Name="databaseNameTextBlock"></TextBlock>
-                            </DockPanel>
-                            <StackPanel Margin="10 0" Orientation="Horizontal">
-                                <Label Content="Directory:"></Label>
-                                <Label Name="databaseDirectoryLabel"/>
-                            </StackPanel>
-                            <Button Content="Select directory" Margin="10"></Button>
-                            <Button Content="Create" Margin="10"></Button>
+                            <Grid Margin="10 0 10 0">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition></RowDefinition>
+                                    <RowDefinition></RowDefinition>
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"></ColumnDefinition>
+                                    <ColumnDefinition></ColumnDefinition>
+                                </Grid.ColumnDefinitions>
+                                <Label Grid.Row="0" Grid.Column="0" Content="Name:" Margin="0 0 0 10"></Label>
+                                <TextBox Grid.Row="0" Grid.Column="1" Name="databaseNameTextBox" Margin="0 0 10 10"></TextBox>
+                                <Label Grid.Row="1" Grid.Column="0" Content="Directory:" Margin="0 0 0 10"></Label>
+                                <TextBox Grid.Row="1" Grid.Column="1" Name="databaseDirectoryTextBox" Margin="0 0 10 10"/>
+                            </Grid>
+                            <Button Name="selectDatabaseDirectoryButton" Content="Select directory" MaxWidth="140" Margin="10" Click="SelectDatabaseDirectoryButton_Click"></Button>
+                            <Button Name="createNewDatabaseButton" Content="Create" Margin="10" MaxWidth="140" Click="CreateNewDatabaseButton_Click"></Button>
                         </StackPanel>
                     </Border>
                 </Grid>

@@ -18,22 +18,23 @@ namespace ReplayParser.ReplaySorter.Backup
 
         private BWContext(string databaseName)
         {
-            if (!(File.Exists(databaseName) || File.Exists(databaseName + ".sqlite")))
-            {
-                if (Path.GetExtension(databaseName) == string.Empty)
-                {
-                    databaseName = databaseName + ".sqlite";
-                    _connectionString = string.Format(CONNECTIONSTRINGFORMAT, databaseName);
-                }
-
-                SQLiteConnection.CreateFile(databaseName);
-                _connection = new SQLiteConnection(_connectionString);
-            }
+            _connectionString = string.Format(CONNECTIONSTRINGFORMAT, databaseName);
         }
 
-        public BWContext Create(string databaseName)
+        public static BWContext Create(string databaseName, bool createIfNotExist = true)
         {
             if (string.IsNullOrWhiteSpace(databaseName)) throw new ArgumentException(nameof(databaseName));
+
+            if (Path.GetExtension(databaseName) == string.Empty)
+                databaseName = databaseName + ".sqlite";
+
+            if (!File.Exists(databaseName))
+            {
+                if (!createIfNotExist) throw new InvalidOperationException("Database does not exist but CreateIfNotExists is false!");
+
+                SQLiteConnection.CreateFile(databaseName);
+                // _connection = new SQLiteConnection(_connectionString);
+            }
 
             return new BWContext(databaseName);
         }

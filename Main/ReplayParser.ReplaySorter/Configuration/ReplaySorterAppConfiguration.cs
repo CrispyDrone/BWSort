@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Specialized;
 using System.IO;
 using System.Text.RegularExpressions;
 
@@ -20,6 +21,7 @@ namespace ReplayParser.ReplaySorter.Configuration
         private bool _checkForDuplicatesOnCumulativeParsing;
         private string _ignoreFilePath;
         private bool _generateIntermediateFoldersDuringSorting;
+        private string _bwContextDatabaseNames;
 
         private bool _logDirectoryChanged = true;
         private bool _maxUndoLevelChanged = true;
@@ -31,14 +33,18 @@ namespace ReplayParser.ReplaySorter.Configuration
         private bool _checkForDuplicatesOnCumulativeParsingChanged = true;
         private bool _ignoreFilePathChanged = true;
         private bool _generateIntermediateFoldersDuringSortingChanged = true;
+        private bool _bwContextDatabaseNamesChanged = true;
 
         #endregion
 
         #region methods
+
+        //TODO? Redundant save calls when saving advanced settings...
         private void Save()
         {
             Properties.Settings.Default.Save();
         }
+
         #endregion
 
         #endregion
@@ -273,6 +279,32 @@ namespace ReplayParser.ReplaySorter.Configuration
                 Save();
             }
         }
+
+        /// <summary>
+        /// Returns a string of '|' separated database path names
+        /// </summary>
+        public string BWContextDatabaseNames
+        {
+            get
+            {
+                if (_bwContextDatabaseNamesChanged)
+                {
+                    _bwContextDatabaseNames = Properties.Settings.Default.BWCONTEXTDATABASENAMES;
+                    _bwContextDatabaseNamesChanged = false;
+                }
+                return _bwContextDatabaseNames;
+            }
+            set
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                    return;
+
+                _bwContextDatabaseNamesChanged = true;
+                Properties.Settings.Default.BWCONTEXTDATABASENAMES = value;
+                Save();
+            }
+        }
+
         #endregion
 
         #endregion

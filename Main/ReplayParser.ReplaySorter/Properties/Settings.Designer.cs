@@ -145,12 +145,13 @@ namespace ReplayParser.ReplaySorter.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        public global::System.Collections.Specialized.StringCollection BWCONTEXT {
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string BWCONTEXTDATABASENAMES {
             get {
-                return ((global::System.Collections.Specialized.StringCollection)(this["BWCONTEXT"]));
+                return ((string)(this["BWCONTEXTDATABASENAMES"]));
             }
             set {
-                this["BWCONTEXT"] = value;
+                this["BWCONTEXTDATABASENAMES"] = value;
             }
         }
     }

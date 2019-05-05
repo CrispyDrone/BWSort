@@ -32,7 +32,7 @@
     <Setting Name="GENERATEINTERMEDIATESORTFOLDERS" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
-    <Setting Name="BWCONTEXT" Type="System.Collections.Specialized.StringCollection" Scope="User">
+    <Setting Name="BWCONTEXTDATABASENAMES" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
   </Settings>

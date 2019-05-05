@@ -23,5 +23,6 @@ namespace ReplayParser.ReplaySorter.Configuration
         bool CheckForDuplicatesOnCumulativeParsing { get; set; }
         string IgnoreFilePath { get; set; }
         bool GenerateIntermediateFoldersDuringSorting { get; set; }
+        string BWContextDatabaseNames { get; set; }
     }
 }
