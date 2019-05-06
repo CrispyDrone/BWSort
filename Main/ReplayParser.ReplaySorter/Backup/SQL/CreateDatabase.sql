@@ -17,5 +17,5 @@ create table replaybackups (
 	backupid integer NOT NULL,
 	replayid integer NOT NULL,
 	filename text NOT NULL,
-	PRIMARY KEY ( backupid, replayid )
+	PRIMARY KEY ( backupid, replayid, filename )
 ) WITHOUT ROWID;

@@ -10,12 +10,19 @@ namespace ReplayParser.ReplaySorter.Backup
 {
     public class BWContext : IDisposable
     {
+        private enum DatabaseSchemaType
+        {
+            EMPTY = 0,
+            VALID = 1,
+            INVALID = 2
+        }
+
         private string _connectionString;
         private static string CONNECTIONSTRINGFORMAT = "data source={0};Version=3";
         private BackupRepository _backupRepository;
         private SQLiteConnection _connection;
         private SQLiteTransaction _transaction;
-        private bool _databaseInitialized = false;
+        private static readonly HashSet<string> _databaseInitialized = new HashSet<string>();
 
         private void InitializeDatabase()
         {
@@ -27,6 +34,16 @@ namespace ReplayParser.ReplaySorter.Backup
                     createDb.ExecuteNonQuery();
                 }
                 transaction.Commit();
+            }
+        }
+
+        private DatabaseSchemaType VerifyDatabaseSchema()
+        {
+            using (var transaction = _connection.BeginTransaction())
+            using (var verifyDatabaseSchema = _connection.CreateCommand())
+            {
+                verifyDatabaseSchema.CommandText = Backup.SQL.Queries.ResourceManager.GetString("VerifyDatabaseSchema");
+                return (DatabaseSchemaType)Convert.ToInt64(verifyDatabaseSchema.ExecuteScalar());
             }
         }
 
@@ -66,10 +83,20 @@ namespace ReplayParser.ReplaySorter.Backup
                 if (_connection.State == System.Data.ConnectionState.Closed)
                     _connection.Open();
 
-                if (!_databaseInitialized)
+                if (!_databaseInitialized.Contains(_connectionString))
                 {
-                    InitializeDatabase();
-                    _databaseInitialized = true;
+                    var schemaType = VerifyDatabaseSchema();
+                    switch (schemaType)
+                    {
+                        case DatabaseSchemaType.INVALID:
+                            throw new InvalidOperationException("Invalid database schema!");
+                        case DatabaseSchemaType.EMPTY:
+                            InitializeDatabase();
+                            break;
+                        default:
+                            break;
+                    }
+                    _databaseInitialized.Add(_connectionString);
                 }
 
                 if (_transaction == null)

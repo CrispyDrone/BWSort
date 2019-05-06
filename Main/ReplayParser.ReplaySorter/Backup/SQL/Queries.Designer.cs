@@ -75,9 +75,9 @@ namespace ReplayParser.ReplaySorter.Backup.SQL {
         ///   Looks up a localized string similar to create table replays (
         ///	id integer primary key autoincrement,
         ///	hash text NOT NULL,
-        ///	bytes blob NOT NULL
+        ///	bytes blob NOT NULL,
         ///	UNIQUE ( hash )
-        ///) WITHOUT ROWID;
+        ///);
         ///
         ///create table backups (
         ///	id integer primary key autoincrement,
@@ -85,13 +85,13 @@ namespace ReplayParser.ReplaySorter.Backup.SQL {
         ///	comment text,
         ///	rootdirectory text NOT NULL,
         ///	date text NOT NULL
-        ///) WITHOUT ROWID;
+        ///);
         ///
         ///create table replaybackups (
         ///	backupid integer NOT NULL,
         ///	replayid integer NOT NULL,
-        ///	filename text NOT NULL
-        ///	PRIMARY KEY ( backupid, replayid )
+        ///	filename text NOT NULL,
+        ///	PRIMARY KEY ( backupid, replayid, filename )
         ///) WITHOUT ROWID;.
         /// </summary>
         internal static string CreateDatabase {
@@ -216,6 +216,40 @@ namespace ReplayParser.ReplaySorter.Backup.SQL {
         internal static string RemoveBackupByIdWithReplays {
             get {
                 return ResourceManager.GetString("RemoveBackupByIdWithReplays", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to CREATE TEMP TABLE IF NOT EXISTS Variables (Name TEXT PRIMARY KEY, Value TEXT);
+        ///
+        ///INSERT INTO Variables (Name, Value) 
+        ///VALUES	(&apos;NumberOfTables&apos;, 
+        ///			CAST((
+        ///				select 
+        ///					case count(*)
+        ///						when 0 then 0
+        ///						when 3 then 1
+        ///						else 2
+        ///					end
+        ///				from sqlite_master
+        ///				where type=&apos;table&apos;
+        ///			) as text)
+        ///		)
+        ///
+        ///INSERT INTO Variables (Name, Value)
+        ///VALUES	(&apos;TableNamesOk&apos;,
+        ///			CAST((
+        ///				select
+        ///					case count(*)
+        ///						when 0 then 0
+        ///						when 3 then 1
+        ///						else 2
+        ///					end
+        ///				from sqli [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string VerifyDatabaseSchema {
+            get {
+                return ResourceManager.GetString("VerifyDatabaseSchema", resourceCulture);
             }
         }
     }
