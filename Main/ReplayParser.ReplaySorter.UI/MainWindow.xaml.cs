@@ -1806,22 +1806,29 @@ namespace ReplayParser.ReplaySorter.UI
 
         private void CreateBackupButton_Click(object sender, RoutedEventArgs e)
         {
-
+            var createBackupDialog = new BackupWindow(BackupAction.Create, string.Empty);
+            createBackupDialog.ShowDialog();
         }
 
         private void InspectBackupButton_Click(object sender, RoutedEventArgs e)
         {
-
+            //TODO get selected item from listview
+            var inspectBackupDialog = new BackupWindow(BackupAction.Inspect, "jollygood");
+            inspectBackupDialog.ShowDialog();
         }
 
         private void RestoreFromBackupButton_Click(object sender, RoutedEventArgs e)
         {
-
+            //TODO get selected item from listview
+            var restoreBackupDialog = new BackupWindow(BackupAction.Restore, "jollygood");
+            restoreBackupDialog.ShowDialog();
         }
 
         private void DeleteBackupButton_Click(object sender, RoutedEventArgs e)
         {
-
+            //TODO get selected item from listview
+            var deleteBackupDialog = new BackupWindow(BackupAction.Delete, "jollygood");
+            deleteBackupDialog.ShowDialog();
         }
         #endregion
 

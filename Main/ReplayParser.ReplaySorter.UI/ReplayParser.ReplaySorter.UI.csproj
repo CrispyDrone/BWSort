@@ -111,6 +111,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="BackupAction.cs" />
     <Compile Include="Converters\FeedbackToColorConverter.cs" />
     <Compile Include="Converters\FramesToTimeSpanInSecondsConverter.cs" />
     <Compile Include="Converters\MapToFileNameConverter.cs" />
@@ -123,6 +124,9 @@
     <Compile Include="Sorting\SortAdorner.cs" />
     <Compile Include="Windows\AdvancedSettings.xaml.cs">
       <DependentUpon>AdvancedSettings.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Windows\BackupWindow.xaml.cs">
+      <DependentUpon>BackupWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="Windows\CreateIgnoreFile.xaml.cs">
       <DependentUpon>CreateIgnoreFile.xaml</DependentUpon>
@@ -147,6 +151,26 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Windows\BackupWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Resource Include="Windows\BackupActions\CreateBackupActionContent.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Resource>
+    <Resource Include="Windows\BackupActions\DeleteBackupActionContent.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Resource>
+    <Resource Include="Windows\BackupActions\InspectBackupActionContent.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Resource>
+    <Resource Include="Windows\BackupActions\RestoreBackupActionContent.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Resource>
     <Page Include="Windows\CreateIgnoreFile.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
