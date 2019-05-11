@@ -8,7 +8,7 @@ namespace ReplayParser.ReplaySorter.Backup.Models
 {
     public class Replay
     {
-        public int Id { get; set; }
+        public long Id { get; set; }
         public string Hash { get; set; }
         public byte[] Bytes { get; set; }
         public ICollection<ReplayBackup> ReplayBackups { get; set; }

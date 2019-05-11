@@ -101,6 +101,16 @@ namespace ReplayParser.ReplaySorter.Backup.SQL {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to select Id, Name, Comment, RootDirectory, Date
+        ///from backups.
+        /// </summary>
+        internal static string GetAllBackups {
+            get {
+                return ResourceManager.GetString("GetAllBackups", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to select id, Name, Comment, RootDirectory, Date
         ///from backups
         ///where id=@Id;.
@@ -120,7 +130,7 @@ namespace ReplayParser.ReplaySorter.Backup.SQL {
         ///from backups b
         ///inner join replaybackups rb on b.id = rb.backupid
         ///inner join replays r on rb.replayid = r.id
-        ///where b.id=@Id.
+        ///where b.id=@Id;.
         /// </summary>
         internal static string GetBackupByIdWithReplays {
             get {
@@ -134,7 +144,7 @@ namespace ReplayParser.ReplaySorter.Backup.SQL {
         ///inner join replaybackups rb
         ///on b.id = rb.backupid
         ///where b.id = @Id
-        ///group by b.id
+        ///group by b.id;
         ///.
         /// </summary>
         internal static string GetReplayCountOfBackup {
@@ -232,9 +242,9 @@ namespace ReplayParser.ReplaySorter.Backup.SQL {
         ///						else 2
         ///					end
         ///				from sqlite_master
-        ///				where type=&apos;table&apos;
+        ///				where type=&apos;table&apos; and tbl_name not like &apos;%sequence%&apos;
         ///			) as text)
-        ///		)
+        ///		);
         ///
         ///INSERT INTO Variables (Name, Value)
         ///VALUES	(&apos;TableNamesOk&apos;,
@@ -243,9 +253,7 @@ namespace ReplayParser.ReplaySorter.Backup.SQL {
         ///					case count(*)
         ///						when 0 then 0
         ///						when 3 then 1
-        ///						else 2
-        ///					end
-        ///				from sqli [rest of string was truncated]&quot;;.
+        ///	 [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string VerifyDatabaseSchema {
             get {

@@ -2,7 +2,7 @@
 using System.Globalization;
 using System.Windows.Data;
 using System.Windows.Media;
-using ReplayParser.ReplaySorter.UI;
+using ReplayParser.ReplaySorter.UI.Models;
 
 namespace ReplayParser.ReplaySorter.UI.Converters
 {

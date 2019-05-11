@@ -111,16 +111,18 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="BackupAction.cs" />
+    <Compile Include="Models\BackupAction.cs" />
     <Compile Include="Converters\FeedbackToColorConverter.cs" />
     <Compile Include="Converters\FramesToTimeSpanInSecondsConverter.cs" />
     <Compile Include="Converters\MapToFileNameConverter.cs" />
     <Compile Include="Converters\PathToFilenameConverter.cs" />
     <Compile Include="Converters\PlayerRaceToImagePathConverter.cs" />
     <Compile Include="Converters\PlayerToVisibilityConverter.cs" />
+    <Compile Include="Models\BackupWithCount.cs" />
+    <Compile Include="Models\CreateBackup.cs" />
     <Compile Include="Customization\TreeViewItemDataTemplateSelector.cs" />
-    <Compile Include="Feedback.cs" />
-    <Compile Include="ReplayAction.cs" />
+    <Compile Include="Models\Feedback.cs" />
+    <Compile Include="Models\ReplayAction.cs" />
     <Compile Include="Sorting\SortAdorner.cs" />
     <Compile Include="Windows\AdvancedSettings.xaml.cs">
       <DependentUpon>AdvancedSettings.xaml</DependentUpon>
@@ -142,7 +144,7 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="BoolAnswer.cs" />
+    <Compile Include="Models\BoolAnswer.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>

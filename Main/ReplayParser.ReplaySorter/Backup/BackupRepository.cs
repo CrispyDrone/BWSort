@@ -52,7 +52,27 @@ namespace ReplayParser.ReplaySorter.Backup
 
         public IEnumerable<Models.Backup> GetAll()
         {
-            throw new NotImplementedException();
+            var backups = new List<Models.Backup>();
+            var connection = _context.Connection;
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = GetQuery("GetAllBackups");
+                var backupId = command.CreateParameter();
+
+                var reader = command.ExecuteReader();
+                if (reader.Read())
+                {
+                    var backup = new Models.Backup();
+                    backup.Id = (long)reader[0];
+                    backup.Name = (string)reader[1];
+                    backup.Comment = (string)reader[2];
+                    backup.RootDirectory = (string)reader[3];
+                    backup.Date = DateTime.Parse(reader[4].ToString());
+                    backups.Add(backup);
+                }
+            }
+
+            return backups.AsEnumerable();
         }
 
         public IEnumerable<Models.Backup> Where(Func<Models.Backup, bool> predicate)
@@ -60,39 +80,33 @@ namespace ReplayParser.ReplaySorter.Backup
             throw new NotImplementedException();
         }
 
-        public int Create(Models.Backup backup)
+        public long Create(Models.Backup backup)
         {
-            //TODO insert backup
             var connection = _context.Connection;
             using (var createBackup = connection.CreateCommand())
             {
                 createBackup.CommandText = GetQuery("InsertBackup");
-                var backupName = createBackup.CreateParameter();
-                var backupComment = createBackup.CreateParameter();
-                var backupRootDirectory = createBackup.CreateParameter();
+                createBackup.Parameters.Add(new SQLiteParameter("@Name", backup.Name));
+                createBackup.Parameters.Add(new SQLiteParameter("@Comment", backup.Comment));
+                createBackup.Parameters.Add(new SQLiteParameter("@RootDirectory", backup.RootDirectory));
 
-                backupName.Value = backup.Name;
-                backupComment.Value = backup.Comment;
-                backupRootDirectory.Value = backup.RootDirectory;
-
-                backupName.ParameterName = "@Name";
-                backupComment.ParameterName = "@Comment";
-                backupRootDirectory.ParameterName = "@RootDirectory";
-
-                var backupId = (int)createBackup.ExecuteScalar();
+                var backupResult = createBackup.ExecuteScalar();
+                backupResult = (backupResult == DBNull.Value) ? null : backupResult;
+                var backupId = Convert.ToInt64(backupResult);
 
                 foreach (var replayBackup in backup.ReplayBackups)
                 {
-                    int replayId = 0;
+                    long replayId = 0;
 
                     using (var getReplay = connection.CreateCommand())
                     {
                         // check if replay already exist
                         getReplay.CommandText = GetQuery("GetReplayIdByHash");
-                        var replayHashParam = getReplay.CreateParameter();
-                        replayHashParam.ParameterName = "@Hash";
+                        getReplay.Parameters.Add(new SQLiteParameter("@Hash", replayBackup.Replay.Hash));
 
-                        replayId = (int)getReplay.ExecuteScalar();
+                        var replayResult = getReplay.ExecuteScalar();
+                        replayResult = (replayResult == DBNull.Value) ? null : replayResult;
+                        replayId = Convert.ToInt64(replayResult);
                     }
 
                     if (replayId == 0)
@@ -101,35 +115,26 @@ namespace ReplayParser.ReplaySorter.Backup
                         using (var insertReplay = connection.CreateCommand())
                         {
                             insertReplay.CommandText = GetQuery("InsertReplay");
-                            var replayHash = insertReplay.CreateParameter();
-                            var replayBytes = insertReplay.CreateParameter();
+                            insertReplay.Parameters.Add(new SQLiteParameter("@Hash", replayBackup.Replay.Hash));
+                            insertReplay.Parameters.Add(new SQLiteParameter("@Bytes", replayBackup.Replay.Bytes));
 
-                            replayHash.ParameterName = "@Hash";
-                            replayBytes.ParameterName = "@Bytes";
+                            var replayResult = insertReplay.ExecuteScalar();
+                            replayResult = (replayResult == DBNull.Value) ? null : replayResult;
+                            if (replayResult == null)
+                                throw new Exception($"Failed to insert replay {replayBackup.FileName} into database!");
 
-                            replayHash.Value = replayBackup.Replay.Hash;
-                            replayBytes.Value = replayBackup.Replay.Bytes;
-
-                            replayId = (int)insertReplay.ExecuteScalar();
+                            replayId = Convert.ToInt64(replayResult);
                         }
-
                     }
+
                     // LINK REPLAY TO BACKUP
                     using (var addReplays = connection.CreateCommand())
                     {
                         addReplays.CommandText = GetQuery("AddReplayToBackup");
-                        var replayFileName = addReplays.CreateParameter();
-                        var backupIdParam = addReplays.CreateParameter();
-                        var replayIdParam = addReplays.CreateParameter();
-
-                        replayFileName.ParameterName = "@FileName";
-                        backupIdParam.ParameterName = "@BackupId";
-                        replayIdParam.ParameterName = "@ReplayId";
-
-                        replayFileName.Value = replayBackup.FileName;
-                        backupIdParam.Value = backupId;
-                        replayIdParam.Value = replayId;
-
+                        addReplays.Parameters.Add(new SQLiteParameter("@FileName", replayBackup.FileName));
+                        addReplays.Parameters.Add(new SQLiteParameter("@BackupId", backupId));
+                        addReplays.Parameters.Add(new SQLiteParameter("@ReplayId", replayId));
+                        addReplays.ExecuteNonQuery();
                     }
 
                     backup.Id = backupId;
@@ -193,6 +198,7 @@ namespace ReplayParser.ReplaySorter.Backup
             return backup;
         }
 
+        //TODO this doesn't create backup properly (replaybackups can refere to same replay object)
         public Models.Backup GetWithReplays(int id)
         {
             var backup = new Models.Backup();
@@ -252,17 +258,19 @@ namespace ReplayParser.ReplaySorter.Backup
             return backup;
         }
 
-        public int? GetNumberOfBackedUpReplays(int backupId)
+        public int? GetNumberOfBackedUpReplays(long backupId)
         {
             var connection = _context.Connection;
             using (var getReplayCount = connection.CreateCommand())
             {
                 getReplayCount.CommandText = GetQuery("GetReplayCountOfBackup");
-                var backupIdParam = getReplayCount.CreateParameter();
-                backupIdParam.ParameterName = "@Id";
-                backupIdParam.Value = backupId;
+                getReplayCount.Parameters.Add(new SQLiteParameter("@Id", backupId));
+                var countResult = getReplayCount.ExecuteScalar();
+                countResult = (countResult == DBNull.Value) ? null : countResult;
+                if (countResult == null)
+                    return null;
 
-                return (int?)getReplayCount.ExecuteScalar();
+                return Convert.ToInt32(countResult);
             }
         }
 

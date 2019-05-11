@@ -8,7 +8,7 @@ namespace ReplayParser.ReplaySorter.Backup
 {
     public interface IRepository<T>
     {
-        int Create(T entity);
+        long Create(T entity);
         T Get(int id);
         IEnumerable<T> GetAll();
         IEnumerable<T> Where(Func<T, bool> predicate);

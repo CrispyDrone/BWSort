@@ -29,6 +29,9 @@ using System.Windows.Input;
 using ReplayParser.ReplaySorter.Backup;
 using ReplayParser.ReplaySorter.Extensions;
 using System.Text.RegularExpressions;
+using ReplayParser.ReplaySorter.UI.Models;
+using ReplayParser.ReplaySorter.Backup.Models;
+using System.Threading.Tasks;
 
 namespace ReplayParser.ReplaySorter.UI
 {
@@ -1589,6 +1592,7 @@ namespace ReplayParser.ReplaySorter.UI
         private BWContext _activeUow;
         private HashSet<string> _databaseNames = new HashSet<string>();
         private static Regex _getSqliteFileName = new Regex(@"data source=(.*);", RegexOptions.IgnoreCase);
+        private List<BackupWithCount> _backups = new List<BackupWithCount>();
 
         #endregion
 
@@ -1708,7 +1712,7 @@ namespace ReplayParser.ReplaySorter.UI
             }
         }
 
-        private void DatabaseComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private async void DatabaseComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             try
             {
@@ -1717,6 +1721,20 @@ namespace ReplayParser.ReplaySorter.UI
                 {
                     var databaseName = e.AddedItems[0] as string;
                     _activeUow = BWContext.Create(databaseName, false);
+                    var backups = _activeUow.BackupRepository.GetAll().ToList();
+                    //TODO add caching??
+                    _backups = (await Task.WhenAll(backups.Select(async b =>
+                        new BackupWithCount
+                        {
+                            Id = b.Id,
+                            Name = b.Name,
+                            Comment = b.Comment,
+                            RootDirectory = b.RootDirectory,
+                            Date = b.Date,
+                            Count = (await Task.Run(() => _activeUow.BackupRepository.GetNumberOfBackedUpReplays(b.Id).Value))
+                        }
+                    ))).ToList();
+                    backupListView.ItemsSource = _backups;
                 }
                 else
                 {
@@ -1806,28 +1824,67 @@ namespace ReplayParser.ReplaySorter.UI
 
         private void CreateBackupButton_Click(object sender, RoutedEventArgs e)
         {
-            var createBackupDialog = new BackupWindow(BackupAction.Create, string.Empty);
-            createBackupDialog.ShowDialog();
+            if (_activeUow == null)
+            {
+                MessageBox.Show("Please select an existing database to operate on first!", "Invalid operation", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
+                return;
+            }
+
+            var createBackupDialog = new BackupWindow(BackupAction.Create, string.Empty, _activeUow);
+            if (createBackupDialog.ShowDialog() == true)
+            {
+                AddBackupAndRefresh(createBackupDialog.Backup);
+            };
+        }
+
+        private void AddBackupAndRefresh(Backup.Models.Backup backup)
+        {
+            var numberOfReplaysBackedUp = _activeUow.BackupRepository.GetNumberOfBackedUpReplays(backup.Id);
+            _backups.Add(new BackupWithCount
+            {
+                Id = backup.Id,
+                Name = backup.Name,
+                Comment = backup.Comment,
+                RootDirectory = backup.RootDirectory,
+                Date = backup.Date,
+                Count = numberOfReplaysBackedUp.Value
+            });
+            backupListView.Items.Refresh();
         }
 
         private void InspectBackupButton_Click(object sender, RoutedEventArgs e)
         {
+            if (_activeUow == null)
+            {
+                MessageBox.Show("Please select an existing database to operate on first!", "Invalid operation", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
+                return;
+            }
             //TODO get selected item from listview
-            var inspectBackupDialog = new BackupWindow(BackupAction.Inspect, "jollygood");
+            var inspectBackupDialog = new BackupWindow(BackupAction.Inspect, "jollygood", _activeUow);
             inspectBackupDialog.ShowDialog();
         }
 
         private void RestoreFromBackupButton_Click(object sender, RoutedEventArgs e)
         {
+            if (_activeUow == null)
+            {
+                MessageBox.Show("Please select an existing database to operate on first!", "Invalid operation", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
+                return;
+            }
             //TODO get selected item from listview
-            var restoreBackupDialog = new BackupWindow(BackupAction.Restore, "jollygood");
+            var restoreBackupDialog = new BackupWindow(BackupAction.Restore, "jollygood", _activeUow);
             restoreBackupDialog.ShowDialog();
         }
 
         private void DeleteBackupButton_Click(object sender, RoutedEventArgs e)
         {
+            if (_activeUow == null)
+            {
+                MessageBox.Show("Please select an existing database to operate on first!", "Invalid operation", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
+                return;
+            }
             //TODO get selected item from listview
-            var deleteBackupDialog = new BackupWindow(BackupAction.Delete, "jollygood");
+            var deleteBackupDialog = new BackupWindow(BackupAction.Delete, "jollygood", _activeUow);
             deleteBackupDialog.ShowDialog();
         }
         #endregion

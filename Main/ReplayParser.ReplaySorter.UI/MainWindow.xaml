@@ -471,18 +471,18 @@
                         <RowDefinition Height="Auto"></RowDefinition>
                     </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition></ColumnDefinition>
+                        <ColumnDefinition Width="2*" MinWidth="450"></ColumnDefinition>
                         <ColumnDefinition Width="5"></ColumnDefinition>
-                        <ColumnDefinition Width="Auto" MinWidth="190"></ColumnDefinition>
+                        <ColumnDefinition Width="*" MinWidth="190"></ColumnDefinition>
                     </Grid.ColumnDefinitions>
-                    <ListView Grid.Row="0" Grid.Column="0">
+                    <ListView Name="backupListView" Grid.Row="0" Grid.Column="0">
                         <ListView.View>
                             <GridView>
-                                <GridViewColumn Header="Name"></GridViewColumn>
-                                <GridViewColumn Header="Comment"></GridViewColumn>
-                                <GridViewColumn Header="RootDirectory"></GridViewColumn>
-                                <GridViewColumn Header="Date"></GridViewColumn>
-                                <GridViewColumn Header="Number of replays"></GridViewColumn>
+                                <GridViewColumn Header="Name" DisplayMemberBinding="{Binding Path=Name}"></GridViewColumn>
+                                <GridViewColumn Header="Comment" DisplayMemberBinding="{Binding Comment}"></GridViewColumn>
+                                <GridViewColumn Header="RootDirectory" DisplayMemberBinding="{Binding RootDirectory}"></GridViewColumn>
+                                <GridViewColumn Header="Date" DisplayMemberBinding="{Binding Date}"></GridViewColumn>
+                                <GridViewColumn Header="Number of replays" DisplayMemberBinding="{Binding Count}"></GridViewColumn>
                             </GridView>
                         </ListView.View>
                     </ListView>
@@ -494,6 +494,7 @@
                     </StackPanel>
                     <GridSplitter Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" HorizontalAlignment="Stretch"></GridSplitter>
                     <Border BorderThickness="1" BorderBrush="Black" Grid.Row="0" Grid.Column="2" Grid.RowSpan="2">
+                    <!-- TODO use grid instead for cleaner lay out?? -->
                         <StackPanel Orientation="Vertical">
                             <DockPanel Margin="10">
                                 <Label>Active database:</Label>

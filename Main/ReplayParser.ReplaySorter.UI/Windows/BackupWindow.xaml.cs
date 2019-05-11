@@ -1,5 +1,7 @@
 ﻿using Microsoft.WindowsAPICodePack.Dialogs;
+using ReplayParser.ReplaySorter.Backup;
 using ReplayParser.ReplaySorter.Diagnostics;
+using ReplayParser.ReplaySorter.UI.Models;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -31,6 +33,7 @@ namespace ReplayParser.ReplaySorter.UI.Windows
         private BackupAction _backupAction;
         private string _backupName;
         private CancellationTokenSource _cancellationTokenSource;
+        private BWContext _activeUow;
 
         #endregion
 
@@ -68,16 +71,16 @@ namespace ReplayParser.ReplaySorter.UI.Windows
             var xamlReader = new XamlReader();
             //TODO investigate LoadAsync but no awaiter implemented...
             var uiElement = xamlReader.LoadAsync(resourceStreamInfo.Stream) as UIElement;
-            AttachEventHandlers(uiElement, backupAction);
+            AttachEventHandlersAndDataBinding(uiElement, backupAction);
             return uiElement;
         }
 
-        private void AttachEventHandlers(UIElement uiElement, BackupAction backupAction)
+        private void AttachEventHandlersAndDataBinding(UIElement uiElement, BackupAction backupAction)
         {
             switch (backupAction)
             {
                 case BackupAction.Create:
-                    AttachCreateEventHandlers(uiElement);
+                    AttachCreateEventHandlersAndDataBinding(uiElement);
                     break;
                 case BackupAction.Delete:
                     AttachDeleteEventHandlers(uiElement);
@@ -93,14 +96,16 @@ namespace ReplayParser.ReplaySorter.UI.Windows
             }
         }
 
-        private void AttachCreateEventHandlers(UIElement uiElement)
+        private void AttachCreateEventHandlersAndDataBinding(UIElement uiElement)
         {
             //TODO what would be a good way to make this less error prone, how to associate the names of these elements with the dynamically loaded xaml in a more robust or type safe way?
             var clearReplaysButton = LogicalTreeHelper.FindLogicalNode(uiElement, "clearFoundReplayFilesButton") as Button;
             var importReplaysButton = LogicalTreeHelper.FindLogicalNode(uiElement, "importReplayFilesButton") as Button;
+            var createBackupButton = LogicalTreeHelper.FindLogicalNode(uiElement, "createBackupButton") as Button;
 
             clearReplaysButton.Click += ClearFoundReplayFilesButton_Click;
             importReplaysButton.Click += ImportReplayFilesButton_Click;
+            createBackupButton.Click += CreateBackupButton_Click;
             //LogicalTreeHelper.FindLogicalNode(uiElement, "nameTextBox");
             //LogicalTreeHelper.FindLogicalNode(uiElement, "commentTextBox");
         }
@@ -130,6 +135,8 @@ namespace ReplayParser.ReplaySorter.UI.Windows
 
                     //TODO i guess in theory it would be possible to only retrieve a batch of elements, and if the user scrolls down we search for another batch etc
                     //TODO handle unauthorized exception??
+                    backupProgressBarLabel.Content = "Searching for replays...";
+                    backupProgressBar.IsIndeterminate = true;
                     var task = Task.Run(() =>
                         {
                             Task.Delay(2000);
@@ -153,6 +160,8 @@ namespace ReplayParser.ReplaySorter.UI.Windows
                     Focus();
 
                     var potentialFiles = await task;
+                    backupProgressBarLabel.Content = $"Finished searching for replays!";
+                    backupProgressBar.IsIndeterminate = false;
 
                     if (potentialFiles.Count() == 0)
                     {
@@ -163,8 +172,11 @@ namespace ReplayParser.ReplaySorter.UI.Windows
                     var replayFilesFoundListBox = LogicalTreeHelper.FindLogicalNode(this, "replayFilesFoundListBox") as ListBox;
                     replayFilesFoundListBox.ItemsSource = potentialFiles;
                     replayFilesFoundListBox.Items.Refresh();
+                    var rootDirectoryLabel = LogicalTreeHelper.FindLogicalNode(this, "rootDirectoryLabel") as Label;
+                    rootDirectoryLabel.Content = folderName;
+                    var replaysFoundMessageLabel = LogicalTreeHelper.FindLogicalNode(this, "replaysFoundMessageLabel") as Label;
+                    replaysFoundMessageLabel.Content = potentialFiles.Count; 
                     // statusBarAction.Content = $"Discovered {_files.Count} replays!";
-
 
                 }
                 catch (OperationCanceledException)
@@ -183,6 +195,38 @@ namespace ReplayParser.ReplaySorter.UI.Windows
                     _cancellationTokenSource = null;
                 }
             }
+        }
+
+        private async void CreateBackupButton_Click(object sender, RoutedEventArgs e)
+        {
+            var replayFilesFoundListBox = LogicalTreeHelper.FindLogicalNode(this, "replayFilesFoundListBox") as ListBox;
+            if (replayFilesFoundListBox.Items.Count == 0)
+            {
+                MessageBox.Show("No replays have been found. Import a directory with replays first before attempting to create a backup.", "Invalid operation", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
+                return;
+            }
+
+            var backupName = (LogicalTreeHelper.FindLogicalNode(this, "nameTextBox") as TextBox).Text;
+            var backupComment = (LogicalTreeHelper.FindLogicalNode(this, "commentTextBox") as TextBox).Text;
+            var rootDirectory = (LogicalTreeHelper.FindLogicalNode(this, "rootDirectoryLabel") as Label).Content as string;
+
+            var replayFiles = replayFilesFoundListBox.ItemsSource.Cast<string>();
+
+            //NOTE: I don't think i will be able to report progress for these things... so use a "busy indicator" instead of a progress bar
+            backupProgressBar.IsIndeterminate = true;
+            backupProgressBarLabel.Content = "Creating backup...";
+            await Task.Run(() => CreateBackup(backupName, backupComment, rootDirectory, replayFiles));
+            backupProgressBarLabel.Content = "Finished creating backup!";
+            backupProgressBar.IsIndeterminate = false;
+        }
+
+        private void CreateBackup(string name, string comment, string rootDirectory, IEnumerable<string> replayFiles)
+        {
+            // Dispatcher.Invoke(() => backupProgressBarLabel.Content = "Creating backup...");
+            var createBackup = Models.CreateBackup.Create(name, comment, rootDirectory, replayFiles);
+            _activeUow.BackupRepository.Create(createBackup.ToBackup());
+            _activeUow.Commit();
+            // Dispatcher.Invoke(() => backupProgressBarLabel.Content = "Finished creating backup!");
         }
 
         private void AttachDeleteEventHandlers(UIElement uiElement)
@@ -217,11 +261,12 @@ namespace ReplayParser.ReplaySorter.UI.Windows
 
         #region constructor
 
-        public BackupWindow(BackupAction backupAction, string backupName)
+        public BackupWindow(BackupAction backupAction, string backupName, BWContext bwContext)
         {
             InitializeComponent();
             _backupAction = backupAction;
             _backupName = backupName;
+            _activeUow = bwContext;
             InitializeWindow();
         }
 

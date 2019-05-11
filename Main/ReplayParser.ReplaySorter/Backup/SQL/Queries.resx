@@ -124,6 +124,9 @@
   <data name="CreateDatabase" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>createdatabase.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
   </data>
+  <data name="GetAllBackups" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>getallbackups.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
   <data name="GetBackupById" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>getbackupbyid.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
   </data>

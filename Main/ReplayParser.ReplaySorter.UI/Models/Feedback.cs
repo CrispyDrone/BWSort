@@ -1,4 +1,4 @@
-﻿namespace ReplayParser.ReplaySorter.UI
+﻿namespace ReplayParser.ReplaySorter.UI.Models
 {
     public enum FeedBack
     {
