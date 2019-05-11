@@ -9,15 +9,20 @@
     <Grid Name="mainLayoutGrid">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"></RowDefinition>
-            <RowDefinition></RowDefinition>
+            <RowDefinition Height="*"></RowDefinition>
             <RowDefinition Height="Auto"></RowDefinition>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
         </Grid.ColumnDefinitions>
-        <Label Name="header" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" FontSize="20" FontWeight="SemiBold" Margin="0 0 0 20"></Label>
-        <Grid Grid.Row="2" Grid.Column="0" Margin="10">
+        <Label Grid.Row="0" Name="header" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" FontSize="20" FontWeight="SemiBold" Margin="0 0 0 20"></Label>
+        <Grid Grid.Row="3" Grid.Column="0" Margin="10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"></ColumnDefinition>
+                <ColumnDefinition Width="Auto"></ColumnDefinition>
+            </Grid.ColumnDefinitions>
             <ProgressBar x:Name="progressBarRenamingOrRestoringReplays" Minimum="0" Maximum="100"></ProgressBar>
             <Label x:Name="progressBarRenamingReplaysLabel" Content="{Binding ElementName=progressBarRenamingOrRestoringReplays, Path=Value, StringFormat={}{0:0}%}" HorizontalAlignment="Center" VerticalAlignment="Center"></Label>
+            <Button Name="cancelAsyncOperationButton" Grid.Column="1" MinWidth="70" Content="Cancel" Margin="10 0 0 0" Click="CancelAsyncOperationButton_Click"/>
         </Grid>
     </Grid>
 </Window>

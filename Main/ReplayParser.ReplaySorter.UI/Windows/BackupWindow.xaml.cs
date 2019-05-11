@@ -1,8 +1,11 @@
-﻿using System;
+﻿using Microsoft.WindowsAPICodePack.Dialogs;
+using ReplayParser.ReplaySorter.Diagnostics;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -27,6 +30,7 @@ namespace ReplayParser.ReplaySorter.UI.Windows
 
         private BackupAction _backupAction;
         private string _backupName;
+        private CancellationTokenSource _cancellationTokenSource;
 
         #endregion
 
@@ -60,35 +64,156 @@ namespace ReplayParser.ReplaySorter.UI.Windows
         private UIElement GetActionContentAsync(BackupAction backupAction)
         {
             Uri actionContentUri = new Uri($"pack://application:,,,/Windows/BackupActions/{backupAction.ToString()}BackupActionContent.xaml", UriKind.Absolute);
-            // switch (backupAction)
-            // {
-            //     case BackupAction.Create:
-            //         actionContentUri = new Uri("/BackupActions/CreateBackupActionContent.xaml", UriKind.Relative);
-            //         break;
-            //     case BackupAction.Delete:
-            //         actionContentUri = new Uri("/BackupActions/DeleteBackupActionContent.xaml", UriKind.Relative);
-            //         break;
-            //     case BackupAction.Inspect:
-            //         actionContentUri = new Uri("/BackupActions/InspectBackupActionContent.xaml", UriKind.Relative);
-            //         break;
-            //     case BackupAction.Restore:
-            //         actionContentUri = new Uri("/BackupActions/RestoreActionContent.xaml", UriKind.Relative);
-            //         break;
-            //     default:
-            //         throw new ArgumentException(nameof(backupAction));
-            // }
-
             var resourceStreamInfo = Application.GetResourceStream(actionContentUri);
             var xamlReader = new XamlReader();
             //TODO investigate LoadAsync but no awaiter implemented...
-            return xamlReader.LoadAsync(resourceStreamInfo.Stream) as UIElement;
+            var uiElement = xamlReader.LoadAsync(resourceStreamInfo.Stream) as UIElement;
+            AttachEventHandlers(uiElement, backupAction);
+            return uiElement;
         }
 
+        private void AttachEventHandlers(UIElement uiElement, BackupAction backupAction)
+        {
+            switch (backupAction)
+            {
+                case BackupAction.Create:
+                    AttachCreateEventHandlers(uiElement);
+                    break;
+                case BackupAction.Delete:
+                    AttachDeleteEventHandlers(uiElement);
+                    break;
+                case BackupAction.Inspect:
+                    AttachInspectEventHandlers(uiElement);
+                    break;
+                case BackupAction.Restore:
+                    AttachRestoreEventHandlers(uiElement);
+                    break;
+                default:
+                    throw new ArgumentException(nameof(backupAction));
+            }
+        }
+
+        private void AttachCreateEventHandlers(UIElement uiElement)
+        {
+            //TODO what would be a good way to make this less error prone, how to associate the names of these elements with the dynamically loaded xaml in a more robust or type safe way?
+            var clearReplaysButton = LogicalTreeHelper.FindLogicalNode(uiElement, "clearFoundReplayFilesButton") as Button;
+            var importReplaysButton = LogicalTreeHelper.FindLogicalNode(uiElement, "importReplayFilesButton") as Button;
+
+            clearReplaysButton.Click += ClearFoundReplayFilesButton_Click;
+            importReplaysButton.Click += ImportReplayFilesButton_Click;
+            //LogicalTreeHelper.FindLogicalNode(uiElement, "nameTextBox");
+            //LogicalTreeHelper.FindLogicalNode(uiElement, "commentTextBox");
+        }
+
+        private void ClearFoundReplayFilesButton_Click(object sender, RoutedEventArgs e)
+        {
+            var replayFilesFoundListBox = LogicalTreeHelper.FindLogicalNode(this, "replayFilesFoundListBox") as ListBox;
+            replayFilesFoundListBox.ItemsSource = null;
+        }
+
+        private async void ImportReplayFilesButton_Click(object sender, RoutedEventArgs e)
+        {
+            var folderDialog = new CommonOpenFileDialog();
+            folderDialog.IsFolderPicker = true;
+            if (folderDialog.ShowDialog() == CommonFileDialogResult.Ok)
+            {
+                try
+                {
+                    var folderName = folderDialog.FileName;
+                    if (_cancellationTokenSource != null)
+                    {
+                        MessageBox.Show($"An operation is still in progress, click cancel before startching a new search.", "Invalid operation.", MessageBoxButton.OK, MessageBoxImage.Exclamation, MessageBoxResult.OK);
+                        return;
+                    }
+                    _cancellationTokenSource = new CancellationTokenSource();
+                    var token = _cancellationTokenSource.Token;
+
+                    //TODO i guess in theory it would be possible to only retrieve a batch of elements, and if the user scrolls down we search for another batch etc
+                    //TODO handle unauthorized exception??
+                    var task = Task.Run(() =>
+                        {
+                            Task.Delay(2000);
+                            List<string> files = new List<string>();
+                            foreach (var file in Directory.EnumerateFiles(
+                                        folderName,
+                                        "*",
+                                        SearchOption.AllDirectories))
+                            {
+                                if (token.IsCancellationRequested)
+                                    token.ThrowIfCancellationRequested();
+
+                                if (System.IO.Path.GetExtension(file) == ".rep")
+                                    files.Add(file);
+                            }
+                            return files;
+
+                        }, token
+                    );
+
+                    Focus();
+
+                    var potentialFiles = await task;
+
+                    if (potentialFiles.Count() == 0)
+                    {
+                        MessageBox.Show($"No replays found in {folderName}. Please specify an existing directory containing your replays.", "Failed to find replays.", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                        return;
+                    }
+
+                    var replayFilesFoundListBox = LogicalTreeHelper.FindLogicalNode(this, "replayFilesFoundListBox") as ListBox;
+                    replayFilesFoundListBox.ItemsSource = potentialFiles;
+                    replayFilesFoundListBox.Items.Refresh();
+                    // statusBarAction.Content = $"Discovered {_files.Count} replays!";
+
+
+                }
+                catch (OperationCanceledException)
+                {
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Something went wrong while finding replay files: {ex.Message}", "Failed to find replays.", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
+                    ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - Something went wrong while enumerating files", ex: ex);
+                    return;
+                }
+                finally
+                {
+                    _cancellationTokenSource.Dispose();
+                    _cancellationTokenSource = null;
+                }
+            }
+        }
+
+        private void AttachDeleteEventHandlers(UIElement uiElement)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void AttachInspectEventHandlers(UIElement uiElement)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void AttachRestoreEventHandlers(UIElement uiElement)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void CancelAsyncOperationButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (_cancellationTokenSource != null)
+            {
+                _cancellationTokenSource.Cancel();
+            }
+        }
         #endregion
 
         #endregion
 
         #region public
+
+        public ReplayParser.ReplaySorter.Backup.Models.Backup Backup { get; private set; }
 
         #region constructor
 
