@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Data.SQLite;
 using System.IO;
+using System.Text.RegularExpressions;
 
 namespace ReplayParser.ReplaySorter.Backup
 {
@@ -23,6 +24,7 @@ namespace ReplayParser.ReplaySorter.Backup
         private SQLiteConnection _connection;
         private SQLiteTransaction _transaction;
         private static readonly HashSet<string> _databaseInitialized = new HashSet<string>();
+        private static Regex _getSqliteFileName = new Regex(@"data source=(.*);", RegexOptions.IgnoreCase);
 
         private void InitializeDatabase()
         {
@@ -107,6 +109,23 @@ namespace ReplayParser.ReplaySorter.Backup
         }
 
         public string ConnectionString => _connectionString;
+
+        public string DatabaseName
+        {
+            get
+            {
+                var match = _getSqliteFileName.Match(_connectionString);
+                if (!match.Success)
+                {
+                    return null;
+                }
+
+                if (match.Groups.Count < 2)
+                    return null;
+
+                return match.Groups[1].Value;
+            }
+        }
 
         public void Commit()
         {

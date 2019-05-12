@@ -31,9 +31,9 @@ namespace ReplayParser.ReplaySorter.UI.Windows
         #region fields
 
         private BackupAction _backupAction;
-        private string _backupName;
         private CancellationTokenSource _cancellationTokenSource;
         private BWContext _activeUow;
+        private BackupWithCount _backupWithCount;
 
         #endregion
 
@@ -54,11 +54,11 @@ namespace ReplayParser.ReplaySorter.UI.Windows
                 case BackupAction.Create:
                     return "Create new backup";
                 case BackupAction.Delete:
-                    return $"Delete existing backup: {_backupName}";
+                    return $"Delete existing backup: {_backupWithCount?.Name ?? string.Empty}";
                 case BackupAction.Inspect:
-                    return $"Inspect existing backup: {_backupName}";
+                    return $"Inspect existing backup: {_backupWithCount?.Name ?? string.Empty}";
                 case BackupAction.Restore:
-                    return $"Restore from backup: {_backupName}";
+                    return $"Restore from backup: {_backupWithCount?.Name ?? string.Empty}";
                 default:
                     throw new ArgumentException(nameof(backupAction));
             }
@@ -83,7 +83,7 @@ namespace ReplayParser.ReplaySorter.UI.Windows
                     AttachCreateEventHandlersAndDataBinding(uiElement);
                     break;
                 case BackupAction.Delete:
-                    AttachDeleteEventHandlers(uiElement);
+                    AttachDeleteEventHandlersAndDataBinding(uiElement);
                     break;
                 case BackupAction.Inspect:
                     AttachInspectEventHandlers(uiElement);
@@ -223,15 +223,53 @@ namespace ReplayParser.ReplaySorter.UI.Windows
         private void CreateBackup(string name, string comment, string rootDirectory, IEnumerable<string> replayFiles)
         {
             // Dispatcher.Invoke(() => backupProgressBarLabel.Content = "Creating backup...");
+            var dbName = _activeUow.DatabaseName;
             var createBackup = Models.CreateBackup.Create(name, comment, rootDirectory, replayFiles);
-            _activeUow.BackupRepository.Create(createBackup.ToBackup());
+            var backupId = _activeUow.BackupRepository.Create(createBackup.ToBackup());
             _activeUow.Commit();
+            using (var uow = BWContext.Create(dbName, false))
+            {
+                var backup = uow.BackupRepository.Get(backupId);
+                var count = uow.BackupRepository.GetNumberOfBackedUpReplays(backupId).Value;
+                _backupWithCount = new BackupWithCount
+                {
+                    Id = backup.Id,
+                    Name = backup.Name,
+                    Comment = backup.Comment,
+                    RootDirectory = backup.RootDirectory,
+                    Date = backup.Date,
+                    Count = count
+                };
+            }
             // Dispatcher.Invoke(() => backupProgressBarLabel.Content = "Finished creating backup!");
         }
 
-        private void AttachDeleteEventHandlers(UIElement uiElement)
+        private void AttachDeleteEventHandlersAndDataBinding(UIElement uiElement)
         {
-            throw new NotImplementedException();
+            if (_backupWithCount == null)
+                throw new InvalidOperationException("Failed to load backup");
+
+            var deleteButton = LogicalTreeHelper.FindLogicalNode(this, "deleteBackupButton") as Button;
+            deleteButton.Click += DeleteBackup_Click;
+
+            var backupIdLabel = LogicalTreeHelper.FindLogicalNode(this, "backupIdLabel") as Label;
+            var nameLabel = LogicalTreeHelper.FindLogicalNode(this, "backupNameLabel") as Label;
+            var commentLabel = LogicalTreeHelper.FindLogicalNode(this, "backupCommentLabel") as Label;
+            var rootDirectoryLabel = LogicalTreeHelper.FindLogicalNode(this, "backupRootDirectoryLabel") as Label;
+            var dateLabel = LogicalTreeHelper.FindLogicalNode(this, "backupDateLabel") as Label;
+            var countLabel = LogicalTreeHelper.FindLogicalNode(this, "backupCountLabel") as Label;
+
+            backupIdLabel.Content = _backupWithCount.Id;
+            nameLabel.Content = _backupWithCount.Name;
+            commentLabel.Content = _backupWithCount.Comment;
+            rootDirectoryLabel.Content = _backupWithCount.RootDirectory;
+            dateLabel.Content = _backupWithCount.Date;
+            countLabel.Content = _backupWithCount.Count;
+        }
+
+        private void DeleteBackup_Click(object source, RoutedEventArgs e)
+        {
+            //TODO
         }
 
         private void AttachInspectEventHandlers(UIElement uiElement)
@@ -257,15 +295,22 @@ namespace ReplayParser.ReplaySorter.UI.Windows
 
         #region public
 
-        public ReplayParser.ReplaySorter.Backup.Models.Backup Backup { get; private set; }
+        public BackupWithCount Backup
+        {
+            get => _backupWithCount;
+            private set
+            {
+                _backupWithCount = value;
+            }
+        }
 
         #region constructor
 
-        public BackupWindow(BackupAction backupAction, string backupName, BWContext bwContext)
+        public BackupWindow(BackupAction backupAction, BackupWithCount backupWithCount, BWContext bwContext)
         {
             InitializeComponent();
+            _backupWithCount = backupWithCount;
             _backupAction = backupAction;
-            _backupName = backupName;
             _activeUow = bwContext;
             InitializeWindow();
         }

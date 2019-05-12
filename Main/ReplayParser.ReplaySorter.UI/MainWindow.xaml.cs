@@ -1591,8 +1591,8 @@ namespace ReplayParser.ReplaySorter.UI
 
         private BWContext _activeUow;
         private HashSet<string> _databaseNames = new HashSet<string>();
-        private static Regex _getSqliteFileName = new Regex(@"data source=(.*);", RegexOptions.IgnoreCase);
         private List<BackupWithCount> _backups = new List<BackupWithCount>();
+        private static Regex _getSqliteFileName = new Regex(@"data source=(.*);", RegexOptions.IgnoreCase);
 
         #endregion
 
@@ -1757,26 +1757,10 @@ namespace ReplayParser.ReplaySorter.UI
                 return;
             }
 
-            var activeConnectionString = _activeUow.ConnectionString;
-            var dbName = GetDatabaseNameFromConnectionString(activeConnectionString);
+            var dbName = _activeUow.DatabaseName;
             var backupService = new BackupService(_activeUow);
             backupService.DeleteAllBackupsAndReplays();
             _activeUow = BWContext.Create(dbName);
-        }
-
-        private string GetDatabaseNameFromConnectionString(string activeConnectionString)
-        {
-            var connectionString = _activeUow.ConnectionString;
-            var match = _getSqliteFileName.Match(connectionString);
-            if (!match.Success)
-            {
-                return null;
-            }
-
-            if (match.Groups.Count < 2)
-                return null;
-
-            return match.Groups[1].Value;
         }
 
         private void DeleteDatabaseButton_Click(object sender, RoutedEventArgs e)
@@ -1787,7 +1771,7 @@ namespace ReplayParser.ReplaySorter.UI
                 return;
             }
 
-            var databaseName = GetDatabaseNameFromConnectionString(_activeUow.ConnectionString);
+            var databaseName = _activeUow.DatabaseName;
 
             if (!File.Exists(databaseName))
             {
@@ -1830,26 +1814,34 @@ namespace ReplayParser.ReplaySorter.UI
                 return;
             }
 
-            var createBackupDialog = new BackupWindow(BackupAction.Create, string.Empty, _activeUow);
+            var createBackupDialog = new BackupWindow(BackupAction.Create, null, _activeUow);
+            var dbName = _activeUow.DatabaseName;
             if (createBackupDialog.ShowDialog() == true)
             {
-                AddBackupAndRefresh(createBackupDialog.Backup);
+                AddBackupAndRefresh(createBackupDialog.BackupId);
+                //TODO ... I don't like this
+                _activeUow = BWContext.Create(dbName);
             };
         }
 
-        private void AddBackupAndRefresh(Backup.Models.Backup backup)
+        private void AddBackupAndRefresh(long? backupId)
         {
-            var numberOfReplaysBackedUp = _activeUow.BackupRepository.GetNumberOfBackedUpReplays(backup.Id);
-            _backups.Add(new BackupWithCount
+            if (backupId != null)
             {
-                Id = backup.Id,
-                Name = backup.Name,
-                Comment = backup.Comment,
-                RootDirectory = backup.RootDirectory,
-                Date = backup.Date,
-                Count = numberOfReplaysBackedUp.Value
-            });
-            backupListView.Items.Refresh();
+                var backup = _activeUow.BackupRepository.Get(backupId.Value);
+                var numberOfReplaysBackedUp = _activeUow.BackupRepository.GetNumberOfBackedUpReplays(backup.Id);
+                _backups.Add(new BackupWithCount
+                {
+                    Id = backup.Id,
+                    Name = backup.Name,
+                    Comment = backup.Comment,
+                    RootDirectory = backup.RootDirectory,
+                    Date = backup.Date,
+                    Count = numberOfReplaysBackedUp.Value
+                });
+                backupListView.Items.Refresh();
+
+            }
         }
 
         private void InspectBackupButton_Click(object sender, RoutedEventArgs e)
@@ -1860,7 +1852,7 @@ namespace ReplayParser.ReplaySorter.UI
                 return;
             }
             //TODO get selected item from listview
-            var inspectBackupDialog = new BackupWindow(BackupAction.Inspect, "jollygood", _activeUow);
+            var inspectBackupDialog = new BackupWindow(BackupAction.Inspect, null, _activeUow);
             inspectBackupDialog.ShowDialog();
         }
 
@@ -1872,7 +1864,7 @@ namespace ReplayParser.ReplaySorter.UI
                 return;
             }
             //TODO get selected item from listview
-            var restoreBackupDialog = new BackupWindow(BackupAction.Restore, "jollygood", _activeUow);
+            var restoreBackupDialog = new BackupWindow(BackupAction.Restore, null, _activeUow);
             restoreBackupDialog.ShowDialog();
         }
 
@@ -1884,7 +1876,7 @@ namespace ReplayParser.ReplaySorter.UI
                 return;
             }
             //TODO get selected item from listview
-            var deleteBackupDialog = new BackupWindow(BackupAction.Delete, "jollygood", _activeUow);
+            var deleteBackupDialog = new BackupWindow(BackupAction.Delete, null, _activeUow);
             deleteBackupDialog.ShowDialog();
         }
         #endregion

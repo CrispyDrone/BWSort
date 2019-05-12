@@ -171,7 +171,7 @@ namespace ReplayParser.ReplaySorter.Backup
             }
         }
 
-        public Models.Backup Get(int id)
+        public Models.Backup Get(long id)
         {
             var backup = new Models.Backup();
             var connection = _context.Connection;
@@ -185,11 +185,11 @@ namespace ReplayParser.ReplaySorter.Backup
                 var reader = command.ExecuteReader();
                 if (reader.Read())
                 {
-                    backup.Id = (int)reader[0];
+                    backup.Id = (long)reader[0];
                     backup.Name = (string)reader[1];
                     backup.Comment = (string)reader[2];
                     backup.RootDirectory = (string)reader[3];
-                    backup.Date = (DateTime)reader[4];
+                    backup.Date = DateTime.Parse(reader[4].ToString());
                 }
             }
             if (backup.Id == 0)
@@ -199,31 +199,29 @@ namespace ReplayParser.ReplaySorter.Backup
         }
 
         //TODO this doesn't create backup properly (replaybackups can refere to same replay object)
-        public Models.Backup GetWithReplays(int id)
+        public Models.Backup GetWithReplays(long id)
         {
             var backup = new Models.Backup();
             var connection = _context.Connection;
             using (var command = connection.CreateCommand())
             {
                 command.CommandText = GetQuery("GetBackupByIdWithReplays");
-                var backupId = command.CreateParameter();
-                backupId.ParameterName = "@Id";
-                backupId.Value = id;
+                command.Parameters.Add(new SQLiteParameter("@Id", id));
                 var reader = command.ExecuteReader();
 
                 if (reader.Read())
                 {
-                    backup.Id = (int)reader[0];
+                    backup.Id = (long)reader[0];
                     backup.Name = (string)reader[1];
                     backup.Comment = (string)reader[2];
                     backup.RootDirectory = (string)reader[3];
-                    backup.Date = (DateTime)reader[4];
+                    backup.Date = DateTime.Parse(reader[4].ToString());
 
                     if (reader.NextResult())
                     {
                         while (reader.Read())
                         {
-                            var replayId = (int)reader[0];
+                            var replayId = (long)reader[0];
                             var hash = (string)reader[1];
                             var bytes = (byte[])reader[2];
                             var fileName = (string)reader[3];
