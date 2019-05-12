@@ -218,6 +218,7 @@ namespace ReplayParser.ReplaySorter.UI.Windows
             await Task.Run(() => CreateBackup(backupName, backupComment, rootDirectory, replayFiles));
             backupProgressBarLabel.Content = "Finished creating backup!";
             backupProgressBar.IsIndeterminate = false;
+            DialogResult = true;
         }
 
         private void CreateBackup(string name, string comment, string rootDirectory, IEnumerable<string> replayFiles)
@@ -249,15 +250,15 @@ namespace ReplayParser.ReplaySorter.UI.Windows
             if (_backupWithCount == null)
                 throw new InvalidOperationException("Failed to load backup");
 
-            var deleteButton = LogicalTreeHelper.FindLogicalNode(this, "deleteBackupButton") as Button;
+            var deleteButton = LogicalTreeHelper.FindLogicalNode(uiElement, "deleteBackupButton") as Button;
             deleteButton.Click += DeleteBackup_Click;
 
-            var backupIdLabel = LogicalTreeHelper.FindLogicalNode(this, "backupIdLabel") as Label;
-            var nameLabel = LogicalTreeHelper.FindLogicalNode(this, "backupNameLabel") as Label;
-            var commentLabel = LogicalTreeHelper.FindLogicalNode(this, "backupCommentLabel") as Label;
-            var rootDirectoryLabel = LogicalTreeHelper.FindLogicalNode(this, "backupRootDirectoryLabel") as Label;
-            var dateLabel = LogicalTreeHelper.FindLogicalNode(this, "backupDateLabel") as Label;
-            var countLabel = LogicalTreeHelper.FindLogicalNode(this, "backupCountLabel") as Label;
+            var backupIdLabel = LogicalTreeHelper.FindLogicalNode(uiElement, "backupIdLabel") as Label;
+            var nameLabel = LogicalTreeHelper.FindLogicalNode(uiElement, "backupNameLabel") as Label;
+            var commentLabel = LogicalTreeHelper.FindLogicalNode(uiElement, "backupCommentLabel") as Label;
+            var rootDirectoryLabel = LogicalTreeHelper.FindLogicalNode(uiElement, "backupRootDirectoryLabel") as Label;
+            var dateLabel = LogicalTreeHelper.FindLogicalNode(uiElement, "backupDateLabel") as Label;
+            var countLabel = LogicalTreeHelper.FindLogicalNode(uiElement, "backupCountLabel") as Label;
 
             backupIdLabel.Content = _backupWithCount.Id;
             nameLabel.Content = _backupWithCount.Name;
@@ -269,7 +270,29 @@ namespace ReplayParser.ReplaySorter.UI.Windows
 
         private void DeleteBackup_Click(object source, RoutedEventArgs e)
         {
+            if (_backupWithCount == null)
+                throw new NullReferenceException("Failed to load backup. Unable to delete.");
+
             //TODO
+            var backupId = _backupWithCount.Id;
+            var deleteOrphanReplaysCheckbox = LogicalTreeHelper.FindLogicalNode(this, "deleteOrphanReplays") as CheckBox;
+            var deleteOrphanReplays = deleteOrphanReplaysCheckbox.IsChecked.HasValue && deleteOrphanReplaysCheckbox.IsChecked.Value;
+
+            backupProgressBar.IsIndeterminate = true;
+            backupProgressBarLabel.Content = "Deleting backup...";
+            if (deleteOrphanReplays)
+            {
+                _activeUow.BackupRepository.RemoveWithOrphanReplays(backupId);
+            }
+            else
+            {
+                _activeUow.BackupRepository.Remove(backupId);
+            }
+            //TODO once you commit, _activeUow becomes useless so maybe you should automatically close the window or prevent them from pressing delete again etc...
+            _activeUow.Commit();
+            backupProgressBar.IsIndeterminate = false;
+            backupProgressBarLabel.Content = "Successfully deleted backup...";
+            DialogResult = true;
         }
 
         private void AttachInspectEventHandlers(UIElement uiElement)

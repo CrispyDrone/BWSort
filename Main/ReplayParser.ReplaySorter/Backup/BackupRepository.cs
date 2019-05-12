@@ -60,7 +60,7 @@ namespace ReplayParser.ReplaySorter.Backup
                 var backupId = command.CreateParameter();
 
                 var reader = command.ExecuteReader();
-                if (reader.Read())
+                while (reader.Read())
                 {
                     var backup = new Models.Backup();
                     backup.Id = (long)reader[0];
@@ -146,17 +146,14 @@ namespace ReplayParser.ReplaySorter.Backup
             return backup.Id;
         }
 
-        public void Remove(int id)
+        public void Remove(long id)
         {
+            //TODO this should not remove replays
             var connection = _context.Connection;
             using (var removeBackup = connection.CreateCommand())
             {
-                removeBackup.CommandText = GetQuery("RemoveBackupByIdWithReplays");
-                var backupId = removeBackup.CreateParameter();
-
-                backupId.Value = id;
-                backupId.ParameterName = "@Id";
-
+                removeBackup.CommandText = GetQuery("RemoveBackupById");
+                removeBackup.Parameters.Add(new SQLiteParameter("@BackupId", id));
                 removeBackup.ExecuteNonQuery();
             }
         }
@@ -178,9 +175,7 @@ namespace ReplayParser.ReplaySorter.Backup
             using (var command = connection.CreateCommand())
             {
                 command.CommandText = GetQuery("GetBackupById");
-                var backupId = command.CreateParameter();
-                backupId.ParameterName = "@Id";
-                backupId.Value = id;
+                command.Parameters.Add(new SQLiteParameter("@Id", id));
 
                 var reader = command.ExecuteReader();
                 if (reader.Read())
@@ -269,6 +264,17 @@ namespace ReplayParser.ReplaySorter.Backup
                     return null;
 
                 return Convert.ToInt32(countResult);
+            }
+        }
+
+        public void RemoveWithOrphanReplays(long id)
+        {
+            var connection = _context.Connection;
+            using (var removeBackup = connection.CreateCommand())
+            {
+                removeBackup.CommandText = GetQuery("RemoveBackupByIdWithReplays");
+                removeBackup.Parameters.Add(new SQLiteParameter("@BackupId", id));
+                removeBackup.ExecuteNonQuery();
             }
         }
 

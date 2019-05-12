@@ -1818,29 +1818,19 @@ namespace ReplayParser.ReplaySorter.UI
             var dbName = _activeUow.DatabaseName;
             if (createBackupDialog.ShowDialog() == true)
             {
-                AddBackupAndRefresh(createBackupDialog.BackupId);
+                AddBackupAndRefresh(createBackupDialog.Backup);
                 //TODO ... I don't like this
                 _activeUow = BWContext.Create(dbName);
             };
         }
 
-        private void AddBackupAndRefresh(long? backupId)
+        //TODO refactor
+        private void AddBackupAndRefresh(BackupWithCount backupWithCount)
         {
-            if (backupId != null)
+            if (backupWithCount != null)
             {
-                var backup = _activeUow.BackupRepository.Get(backupId.Value);
-                var numberOfReplaysBackedUp = _activeUow.BackupRepository.GetNumberOfBackedUpReplays(backup.Id);
-                _backups.Add(new BackupWithCount
-                {
-                    Id = backup.Id,
-                    Name = backup.Name,
-                    Comment = backup.Comment,
-                    RootDirectory = backup.RootDirectory,
-                    Date = backup.Date,
-                    Count = numberOfReplaysBackedUp.Value
-                });
+                _backups.Add(backupWithCount);
                 backupListView.Items.Refresh();
-
             }
         }
 
@@ -1876,8 +1866,21 @@ namespace ReplayParser.ReplaySorter.UI
                 return;
             }
             //TODO get selected item from listview
-            var deleteBackupDialog = new BackupWindow(BackupAction.Delete, null, _activeUow);
-            deleteBackupDialog.ShowDialog();
+            var backup = backupListView.SelectedItem as BackupWithCount;
+            if (backup == null)
+            {
+                MessageBox.Show("Please select a backup from the list first!", "Invalid operation", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
+                return;
+            }
+
+            var deleteBackupDialog = new BackupWindow(BackupAction.Delete, backup, _activeUow);
+            var dbName = _activeUow.DatabaseName;
+            if (deleteBackupDialog.ShowDialog() == true)
+            {
+                _backups.Remove(backup);
+                backupListView.Items.Refresh();
+                _activeUow = BWContext.Create(dbName);
+            }
         }
         #endregion
 
