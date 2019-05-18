@@ -10,7 +10,7 @@
         xmlns:sort="clr-namespace:ReplayParser.ReplaySorter.Sorting.SortResult;assembly=ReplayParser.ReplaySorter"
         xmlns:custom="clr-namespace:ReplayParser.ReplaySorter.UI.Customization"
         mc:Ignorable="d"
-        Title="BWSort" Height="500" Width="750"
+        Title="BWSort" Width="750" Height="500" MinHeight="500" MinWidth="750"
         Closing="Window_Closing"
         Loaded="Window_Loaded">
     <Window.Resources>

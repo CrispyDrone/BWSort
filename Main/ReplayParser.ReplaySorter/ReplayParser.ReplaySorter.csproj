@@ -109,6 +109,7 @@
     <Compile Include="IO\FileHandler.cs" />
     <Compile Include="IO\FileHasher.cs" />
     <Compile Include="IO\FileHistory.cs" />
+    <Compile Include="IO\SimpleFile.cs" />
     <Compile Include="Properties\Settings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>

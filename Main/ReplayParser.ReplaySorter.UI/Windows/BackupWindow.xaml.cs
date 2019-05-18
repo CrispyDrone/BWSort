@@ -1,23 +1,19 @@
 ﻿using Microsoft.WindowsAPICodePack.Dialogs;
 using ReplayParser.ReplaySorter.Backup;
 using ReplayParser.ReplaySorter.Diagnostics;
+using ReplayParser.ReplaySorter.IO;
+using ReplayParser.ReplaySorter.Sorting.SortResult;
 using ReplayParser.ReplaySorter.UI.Models;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
-using System.Windows;
+using System.Threading;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Markup;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
+using System.Windows;
+using System;
 
 namespace ReplayParser.ReplaySorter.UI.Windows
 {
@@ -86,7 +82,7 @@ namespace ReplayParser.ReplaySorter.UI.Windows
                     AttachDeleteEventHandlersAndDataBinding(uiElement);
                     break;
                 case BackupAction.Inspect:
-                    AttachInspectEventHandlers(uiElement);
+                    AttachInspectEventHandlersAndDataBinding(uiElement);
                     break;
                 case BackupAction.Restore:
                     AttachRestoreEventHandlers(uiElement);
@@ -295,9 +291,93 @@ namespace ReplayParser.ReplaySorter.UI.Windows
             DialogResult = true;
         }
 
-        private void AttachInspectEventHandlers(UIElement uiElement)
+        private void AttachInspectEventHandlersAndDataBinding(UIElement uiElement)
         {
-            throw new NotImplementedException();
+            //TODO
+            if (_backupWithCount == null)
+                throw new InvalidOperationException("Failed to load backup");
+
+            var backupIdLabel = LogicalTreeHelper.FindLogicalNode(uiElement, "backupIdLabel") as Label;
+            var nameLabel = LogicalTreeHelper.FindLogicalNode(uiElement, "backupNameLabel") as Label;
+            var commentLabel = LogicalTreeHelper.FindLogicalNode(uiElement, "backupCommentLabel") as Label;
+            var rootDirectoryLabel = LogicalTreeHelper.FindLogicalNode(uiElement, "backupRootDirectoryLabel") as Label;
+            var dateLabel = LogicalTreeHelper.FindLogicalNode(uiElement, "backupDateLabel") as Label;
+            var countLabel = LogicalTreeHelper.FindLogicalNode(uiElement, "backupCountLabel") as Label;
+            var replayTreeView = LogicalTreeHelper.FindLogicalNode(uiElement, "replayTreeView") as TreeView;
+
+            backupIdLabel.Content = _backupWithCount.Id;
+            nameLabel.Content = _backupWithCount.Name;
+            commentLabel.Content = _backupWithCount.Comment;
+            rootDirectoryLabel.Content = _backupWithCount.RootDirectory;
+            dateLabel.Content = _backupWithCount.Date;
+            countLabel.Content = _backupWithCount.Count;
+            var replays = _activeUow.BackupRepository.GetWithReplays(_backupWithCount.Id);
+            var tree = ToDirectoryTree(replays, _backupWithCount.RootDirectory);
+            replayTreeView.ItemsSource = tree.Root;
+        }
+
+        //TODO extract to general BuildTree function inside DirectoryFileTree ??
+        private DirectoryFileTreeSimple ToDirectoryTree(Backup.Models.Backup backup, string rootDirectory)
+        {
+            var tree = new DirectoryFileTreeSimple(rootDirectory);
+            var dirNodes = new Dictionary<string, DirectoryFileTreeNodeSimple>();
+            dirNodes.Add(rootDirectory, tree.Root);
+            var pathBuilder = new StringBuilder();
+
+            foreach (var replayBackup in backup.ReplayBackups)
+            {
+                pathBuilder.Append(rootDirectory);
+                var directories = FileHandler.ExtractDirectoriesFromPath(replayBackup.FileName, rootDirectory).Select(d => d.Trim(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar).TrimEnd(' ')).Where(d => !string.IsNullOrWhiteSpace(d)).ToList();;
+                foreach (var directory in directories)
+                {
+                    var previousDir = pathBuilder.ToString();
+                    pathBuilder.Append(Path.DirectorySeparatorChar + directory);
+                    var currentDir = pathBuilder.ToString();
+                    //TODO it could be cool I guess to allow inspecting a backup to also inspect a replay, this would however require parsing on the fly... For now I am using SimpleFile which
+                    // only has a string for the filename
+                    AddOrModify(tree, dirNodes, currentDir, previousDir, directory, pathBuilder.ToString() == Path.GetDirectoryName(replayBackup.FileName) ? FileHandler.GetFileNameWithoutExtension(replayBackup.FileName) : null);
+                }
+                pathBuilder.Clear();
+            }
+            return tree;
+        }
+
+        //TODO extract to general BuildTree function inside the DirectoryFileTree ?? Because i'm also using this inside the sorter to render output...
+        private void AddOrModify(DirectoryFileTreeSimple tree, Dictionary<string, DirectoryFileTreeNodeSimple> directories, string directoryPath, string previousDirectoryPath, string directory, string fileName)
+        {
+            if (directories == null || string.IsNullOrWhiteSpace(directoryPath))
+                return;
+
+            if (directories.ContainsKey(directoryPath))
+            {
+                if (fileName != null)
+                {
+                    tree.AddToNode(directories[directoryPath], new SimpleFile(fileName));
+                }
+            }
+            else
+            {
+                if (fileName != null)
+                {
+                    directories.Add(
+                        directoryPath,
+                        tree.AddToNode(
+                            directories[previousDirectoryPath],
+                            directory,
+                            new List<SimpleFile>() { new SimpleFile(fileName) }.AsEnumerable()
+                        )
+                    );
+                }
+                else
+                {
+                    directories.Add(
+                        directoryPath,
+                        tree.AddToNode(
+                            directories[previousDirectoryPath],
+                            directory)
+                    );
+                }
+            }
         }
 
         private void AttachRestoreEventHandlers(UIElement uiElement)

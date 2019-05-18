@@ -197,6 +197,7 @@ namespace ReplayParser.ReplaySorter.Backup
         public Models.Backup GetWithReplays(long id)
         {
             var backup = new Models.Backup();
+            backup.ReplayBackups = new Collection<ReplayBackup>();
             var connection = _context.Connection;
             using (var command = connection.CreateCommand())
             {

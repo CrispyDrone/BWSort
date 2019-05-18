@@ -230,4 +230,124 @@ namespace ReplayParser.ReplaySorter.Sorting.SortResult
 
         #endregion
     }
+
+    public class DirectoryFileTreeSimple : IEnumerable<DirectoryFileTreeNodeSimple>
+    {
+        #region private
+
+        #region fields
+
+        private DirectoryFileTreeNodeSimple _root;
+
+        #endregion
+
+        #endregion
+
+        #region public
+
+        #region constructor
+
+        public DirectoryFileTreeSimple(string rootName)
+        {
+            _root = new DirectoryFileTreeNodeSimple(rootName);
+            Count++;
+        }
+
+        #endregion
+
+        #region properties
+
+        public DirectoryFileTreeNodeSimple Root => _root;
+        public int Count { get; private set; } = 0;
+
+        #endregion
+
+        #region methods
+
+        #region tree operations
+
+        /// <summary>
+        /// Adds a single node to the parent node. 
+        /// </summary>
+        /// <param name="parentNode"></param>
+        /// <param name="value"></param>
+        /// <param name="isDirectory"></param>
+        public DirectoryFileTreeNodeSimple AddToNode(DirectoryFileTreeNodeSimple parentNode, SimpleFile value)
+        {
+            var newNode = parentNode.AddChild(value);
+            Count++;
+            return newNode;
+        }
+
+        /// <summary>
+        /// Add a new empty directory node.
+        /// </summary>
+        /// <param name="parentNode"></param>
+        /// <param name="directoryName"></param>
+        public DirectoryFileTreeNodeSimple AddToNode(DirectoryFileTreeNodeSimple parentNode, string directoryName)
+        {
+            var newNode = parentNode.AddDir(directoryName);
+            Count++;
+            return newNode;
+        }
+
+        /// <summary>
+        /// Adds a new directory based node and initializes it with the specified terminal values.
+        /// </summary>
+        /// <param name="parentNode"></param>
+        /// <param name="terminalValues"></param>
+        public DirectoryFileTreeNodeSimple AddToNode(DirectoryFileTreeNodeSimple parentNode, string directoryName, IEnumerable<SimpleFile> terminalValues)
+        {
+            var newNode = parentNode.AddDirWithChildren(directoryName, terminalValues);
+            Count += terminalValues.Count() + 1;
+            return newNode;
+        }
+
+        /// <summary>
+        /// Add a subtree.
+        /// </summary>
+        /// <param name="parentNode"></param>
+        /// <param name="tree"></param>
+        public void AddToNode(DirectoryFileTreeNodeSimple parentNode, DirectoryFileTreeSimple tree)
+        {
+            parentNode.AddTree(tree.Root);
+            Count += tree.Count;
+        }
+
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+
+            foreach (var child in this)
+            {
+                sb.AppendLine(child.ToString());
+            }
+            return sb.ToString();
+        }
+
+        #endregion
+
+        #region enumerator
+
+        public IEnumerator<DirectoryFileTreeNodeSimple> GetEnumerator()
+        {
+            return _root.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public IEnumerator<DirectoryFileTreeNodeSimple> GetBreadthFirstEnumerator()
+        {
+            return _root.GetBreadthFirstEnumerator();
+        }
+
+        #endregion
+
+        #endregion
+
+        #endregion
+    }
 }

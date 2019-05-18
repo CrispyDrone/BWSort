@@ -97,6 +97,7 @@ namespace ReplayParser.ReplaySorter
             return DirectoryFileReplay;
         }
 
+        //TODO extract to general BuildTree function inside DirectoryFileTree ??
         private DirectoryFileTree BuildTree()
         {
             var tree = new DirectoryFileTree(OriginalDirectory);
@@ -107,7 +108,7 @@ namespace ReplayParser.ReplaySorter
             foreach (var replay in OriginalListReplays)
             {
                 pathBuilder.Append(OriginalDirectory);
-                var dirs = ExtractDirectoriesFromPath(replay.FilePath, OriginalDirectory).Select(d => d.Trim(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar).TrimEnd(' ')).Where(d => !string.IsNullOrWhiteSpace(d)).ToList();
+                var dirs = FileHandler.ExtractDirectoriesFromPath(replay.FilePath, OriginalDirectory).Select(d => d.Trim(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar).TrimEnd(' ')).Where(d => !string.IsNullOrWhiteSpace(d)).ToList();
                 string previousDir = string.Empty;
                 foreach (var dir in dirs)
                 {
@@ -126,31 +127,32 @@ namespace ReplayParser.ReplaySorter
         /// <param name="replayFilePath"></param>
         /// <param name="rootDirectory"></param>
         /// <returns></returns>
-        private IEnumerable<string> ExtractDirectoriesFromPath(string replayFilePath, string rootDirectory)
-        {
-            if (string.IsNullOrWhiteSpace(replayFilePath) || string.IsNullOrWhiteSpace(rootDirectory)) yield break;
+        // private IEnumerable<string> ExtractDirectoriesFromPath(string replayFilePath, string rootDirectory)
+        // {
+        //     if (string.IsNullOrWhiteSpace(replayFilePath) || string.IsNullOrWhiteSpace(rootDirectory)) yield break;
 
-            var path = replayFilePath.Substring(rootDirectory.Length + 1);
-            // return path.Split(Path.DirectorySeparatorChar);
-            
-           while (path != string.Empty)
-           {
-                int indexOfSeparator = path.IndexOf(Path.DirectorySeparatorChar);
-                if (indexOfSeparator == -1)
-                {
-                    indexOfSeparator = path.IndexOf(Path.AltDirectorySeparatorChar);
+        //     var path = replayFilePath.Substring(rootDirectory.Length + 1);
+        //     // return path.Split(Path.DirectorySeparatorChar);
+        //     
+        //    while (path != string.Empty)
+        //    {
+        //         int indexOfSeparator = path.IndexOf(Path.DirectorySeparatorChar);
+        //         if (indexOfSeparator == -1)
+        //         {
+        //             indexOfSeparator = path.IndexOf(Path.AltDirectorySeparatorChar);
 
-                    if (indexOfSeparator == -1)
-                    {
-                        yield break;
-                    }
-                }
+        //             if (indexOfSeparator == -1)
+        //             {
+        //                 yield break;
+        //             }
+        //         }
 
-                yield return path.Substring(0, indexOfSeparator);
-                path = path.Substring(indexOfSeparator + 1);
-           }
-        }
+        //         yield return path.Substring(0, indexOfSeparator);
+        //         path = path.Substring(indexOfSeparator + 1);
+        //    }
+        // }
 
+        //TODO extract to general BuildTree function inside the DirectoryFileTree ?? Because i'm reusing it when inspecting a backup...
         private void AddOrModify(DirectoryFileTree tree, Dictionary<string, DirectoryFileTreeNode> directories, string directoryPath, string previousDirectoryPath, string directory, File<IReplay> replay)
         {
             if (directories == null || string.IsNullOrWhiteSpace(directoryPath))
@@ -378,7 +380,7 @@ namespace ReplayParser.ReplaySorter
                             }
                             //TODO I just noticed this CreateDirectory function actually can send messageboxes to the user lol...
                             var dirName = FileHandler.CreateDirectory(previewTreeNodeDirectories[previewChild], true);
-                            previewToResultingTreeNodesMapping.Add(previewChild, resultingTree.AddToNode(previewToResultingTreeNodesMapping[previewNode], ExtractDirectoriesFromPath(dirName, resultingTree.Root.Name).Last()));
+                            previewToResultingTreeNodesMapping.Add(previewChild, resultingTree.AddToNode(previewToResultingTreeNodesMapping[previewNode], FileHandler.ExtractDirectoriesFromPath(dirName, resultingTree.Root.Name).Last()));
                         }
                         else
                         {

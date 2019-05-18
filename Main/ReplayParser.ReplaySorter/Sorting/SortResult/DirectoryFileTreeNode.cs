@@ -484,4 +484,245 @@ namespace ReplayParser.ReplaySorter.Sorting.SortResult
         #endregion
 
     }
+
+    public class DirectoryFileTreeNodeSimple : IEnumerable<DirectoryFileTreeNodeSimple>
+    {
+        #region private
+
+        #region fields
+
+        private List<DirectoryFileTreeNodeSimple> _children;
+        private SimpleFile _value;
+
+        #endregion
+
+        #region breadth first enumerator
+
+        public class BreadthFirstEnumerator : IEnumerator<DirectoryFileTreeNodeSimple>
+        {
+            private DirectoryFileTreeNodeSimple _node;
+            private DirectoryFileTreeNodeSimple _currentNode;
+            private Queue<DirectoryFileTreeNodeSimple> _nodeQueue;
+
+            public BreadthFirstEnumerator(DirectoryFileTreeNodeSimple node)
+            {
+                _node = node;
+                _nodeQueue = new Queue<DirectoryFileTreeNodeSimple>();
+                _nodeQueue.Enqueue(node);
+            }
+
+            public DirectoryFileTreeNodeSimple Current => _currentNode;
+
+            object IEnumerator.Current => Current;
+
+            public void Dispose()
+            {
+                // No resources used...
+            }
+
+            public bool MoveNext()
+            {
+                if (_nodeQueue.Count == 0)
+                    return false;
+
+                var head = _nodeQueue.Dequeue();
+                if (head == null)
+                    return false;
+
+                _currentNode = head;
+
+                if (head.Children != null)
+                {
+                    foreach (var child in head.Children)
+                    {
+                        if (child != null)
+                            _nodeQueue.Enqueue(child);
+                    }
+                }
+
+                return true;
+            }
+
+            public void Reset()
+            {
+                _nodeQueue.Clear();
+                _nodeQueue.Enqueue(_node);
+            }
+        }
+
+        #endregion
+
+        #endregion
+
+        #region public
+
+        #region constructors
+
+        public DirectoryFileTreeNodeSimple(SimpleFile value)
+        {
+            //TODO prevent null?
+            _value = value;
+            Name = Path.GetFileName(value.FilePath);
+            IsDirectory = false;
+        }
+
+        public DirectoryFileTreeNodeSimple(string directoryName)
+        {
+            Name = directoryName;
+            IsDirectory = true;
+            _children = new List<DirectoryFileTreeNodeSimple>();
+        }
+
+        public DirectoryFileTreeNodeSimple(string directoryName, IEnumerable<DirectoryFileTreeNodeSimple> children)
+        {
+            Name = directoryName;
+            IsDirectory = true;
+            _children = children.ToList();
+        }
+
+        #endregion
+
+        #region enumerator
+
+        public IEnumerator<DirectoryFileTreeNodeSimple> GetEnumerator()
+        {
+            if (IsDirectory)
+                return Children.GetEnumerator();
+
+            return Enumerable.Empty<DirectoryFileTreeNodeSimple>().GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public IEnumerator<DirectoryFileTreeNodeSimple> GetBreadthFirstEnumerator()
+        {
+            return new BreadthFirstEnumerator(this);
+        }
+
+        #endregion
+
+        #region properties
+
+        public string Name { get; }
+
+        public SimpleFile Value
+        {
+            get
+            {
+                if (IsDirectory)
+                    ///TODO null instead of exception?
+                    throw new InvalidOperationException("A directory does not have a value!");
+
+                return _value;
+            }
+        }
+
+        public bool IsDirectory { get; }
+
+        // public DirectoryFileTree Tree { get; }
+
+        // public DirectoryFileTreeNode Parent { get; }
+
+        public IEnumerable<DirectoryFileTreeNodeSimple> Children
+        {
+            get
+            {
+                if (IsDirectory)
+                    return _children;
+
+                return null;
+            }
+        }
+
+        // public int Depth { get; }
+
+        #endregion
+
+        #region methods
+
+        /// <summary>
+        /// Add terminal value. Only possible in case the node is a directory. Verify with the IsDirectory property.
+        /// </summary>
+        /// <param name="value"></param>
+        public DirectoryFileTreeNodeSimple AddChild(SimpleFile value)
+        {
+            if (IsDirectory)
+            {
+                var newNode = new DirectoryFileTreeNodeSimple(value);
+                _children.Add(newNode);
+                return newNode;
+            }
+            else
+            {
+                throw new InvalidOperationException("This node is not a directory, can not add children to it!");
+            }
+        }
+
+        /// <summary>
+        /// Adds a new directory based node as a child.
+        /// </summary>
+        /// <param name="directoryName"></param>
+        public DirectoryFileTreeNodeSimple AddDir(string directoryName)
+        {
+            if (IsDirectory)
+            {
+                var newNode = new DirectoryFileTreeNodeSimple(directoryName);
+                _children.Add(newNode);
+                return newNode;
+            }
+            else
+            {
+                throw new InvalidOperationException("This node is not a directory, can not add children to it!");
+            }
+        }
+
+        /// <summary>
+        /// Adds a directory node with the specified terminal values.
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="terminalValues"></param>
+        public DirectoryFileTreeNodeSimple AddDirWithChildren(string directoryName, IEnumerable<SimpleFile> terminalValues)
+        {
+            if (IsDirectory)
+            {
+                var newNode = new DirectoryFileTreeNodeSimple(directoryName, terminalValues.Select(c => new DirectoryFileTreeNodeSimple(c)));
+                _children.Add(newNode);
+                return newNode;
+            }
+            else
+            {
+                throw new InvalidOperationException("This node is not a directory, can not add children to it!");
+            }
+        }
+
+        /// <summary>
+        /// Add a sub tree.
+        /// </summary>
+        /// <param name="node"></param>
+        public void AddTree(DirectoryFileTreeNodeSimple node)
+        {
+            if (IsDirectory)
+            {
+                if (node == null) return;
+                _children.Add(node);
+            }
+            else
+            {
+                throw new InvalidOperationException("This node is not a directory, can not add children to it!");
+            }
+        }
+
+        public override string ToString()
+        {
+            return Name + ": " + Children?.Count() ?? "0";
+        }
+
+        #endregion
+
+        #endregion
+
+    }
 }
