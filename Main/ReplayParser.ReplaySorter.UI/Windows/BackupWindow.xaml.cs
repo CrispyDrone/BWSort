@@ -135,7 +135,6 @@ namespace ReplayParser.ReplaySorter.UI.Windows
                     backupProgressBar.IsIndeterminate = true;
                     var task = Task.Run(() =>
                         {
-                            Task.Delay(2000);
                             List<string> files = new List<string>();
                             foreach (var file in Directory.EnumerateFiles(
                                         folderName,
@@ -295,7 +294,7 @@ namespace ReplayParser.ReplaySorter.UI.Windows
         {
             //TODO
             if (_backupWithCount == null)
-                throw new InvalidOperationException("Failed to load backup");
+                throw new InvalidOperationException("Failed to load backup!");
 
             var backupIdLabel = LogicalTreeHelper.FindLogicalNode(uiElement, "backupIdLabel") as Label;
             var nameLabel = LogicalTreeHelper.FindLogicalNode(uiElement, "backupNameLabel") as Label;
@@ -327,7 +326,7 @@ namespace ReplayParser.ReplaySorter.UI.Windows
             foreach (var replayBackup in backup.ReplayBackups)
             {
                 pathBuilder.Append(rootDirectory);
-                var directories = FileHandler.ExtractDirectoriesFromPath(replayBackup.FileName, rootDirectory).Select(d => d.Trim(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar).TrimEnd(' ')).Where(d => !string.IsNullOrWhiteSpace(d)).ToList();;
+                var directories = FileHandler.ExtractDirectoriesFromPath(replayBackup.FileName, rootDirectory).Select(d => d.Trim(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar).TrimEnd(' ')).Where(d => !string.IsNullOrWhiteSpace(d)).ToList();
                 foreach (var directory in directories)
                 {
                     var previousDir = pathBuilder.ToString();
@@ -382,7 +381,107 @@ namespace ReplayParser.ReplaySorter.UI.Windows
 
         private void AttachRestoreEventHandlers(UIElement uiElement)
         {
-            throw new NotImplementedException();
+            if (_backupWithCount == null)
+                throw new InvalidOperationException("Failed to load backup!");
+
+            var backupIdLabel = LogicalTreeHelper.FindLogicalNode(uiElement, "backupIdLabel") as Label;
+            var nameLabel = LogicalTreeHelper.FindLogicalNode(uiElement, "backupNameLabel") as Label;
+            var commentLabel = LogicalTreeHelper.FindLogicalNode(uiElement, "backupCommentLabel") as Label;
+            var rootDirectoryLabel = LogicalTreeHelper.FindLogicalNode(uiElement, "backupRootDirectoryLabel") as Label;
+            var dateLabel = LogicalTreeHelper.FindLogicalNode(uiElement, "backupDateLabel") as Label;
+            var countLabel = LogicalTreeHelper.FindLogicalNode(uiElement, "backupCountLabel") as Label;
+            var selectDirectoryButton = LogicalTreeHelper.FindLogicalNode(uiElement, "selectOutputDirectoryButton") as Button;
+            var restoreButton = LogicalTreeHelper.FindLogicalNode(uiElement, "restoreBackupButton") as Button;
+
+            backupIdLabel.Content = _backupWithCount.Id;
+            nameLabel.Content = _backupWithCount.Name;
+            commentLabel.Content = _backupWithCount.Comment;
+            rootDirectoryLabel.Content = _backupWithCount.RootDirectory;
+            dateLabel.Content = _backupWithCount.Date;
+            countLabel.Content = _backupWithCount.Count;
+
+            selectDirectoryButton.Click += SelectDirectoryButton_Click;
+            restoreButton.Click += RestoreBackupButton_Click;
+        }
+
+        private void SelectDirectoryButton_Click(object sender, RoutedEventArgs e)
+        {
+            var folderDialog = new CommonOpenFileDialog();
+            folderDialog.IsFolderPicker = true;
+            if (folderDialog.ShowDialog() == CommonFileDialogResult.Ok)
+            {
+                var outputDirectoryTextBlock = LogicalTreeHelper.FindLogicalNode(this, "outputDirectoryTextBlock") as TextBlock;
+                outputDirectoryTextBlock.Text = folderDialog.FileName;
+            }
+            Focus();
+        }
+
+        private async void RestoreBackupButton_Click(object sender, RoutedEventArgs e)
+        {
+            var outputDirectoryTextBlockText = (LogicalTreeHelper.FindLogicalNode(this, "outputDirectoryTextBlock") as TextBlock).Text;
+            if (string.IsNullOrWhiteSpace(outputDirectoryTextBlockText) || !Directory.Exists(outputDirectoryTextBlockText))
+            {
+                MessageBox.Show("Please select an output directory first!", "Invalid output directory", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
+                return;
+            }
+
+            try
+            {
+                _cancellationTokenSource = new CancellationTokenSource();
+                var token = _cancellationTokenSource.Token;
+
+                backupProgressBarLabel.Content = "Fetching replays...";
+                backupProgressBar.IsIndeterminate = true;
+                var pathBuilder = new StringBuilder();
+
+                var restoreTask = Task.Run(() =>
+                {
+                    using (_activeUow)
+                    {
+                        var backup = _activeUow.BackupRepository.GetWithReplays(_backupWithCount.Id);
+                        var replays = backup.ReplayBackups.Select(rb => new { rb.FileName, rb.Replay.Bytes });
+                        var rootDirectory = backup.RootDirectory;
+                        if (rootDirectory.Last() != Path.DirectorySeparatorChar || rootDirectory.Last() != Path.AltDirectorySeparatorChar)
+                            rootDirectory = rootDirectory + Path.DirectorySeparatorChar;
+
+                        Dispatcher.Invoke(() => backupProgressBarLabel.Content = "Writing replays to disk...");
+                        foreach (var replay in replays)
+                        {
+                            if (token.IsCancellationRequested)
+                                token.ThrowIfCancellationRequested();
+
+                            pathBuilder.Append(Path.Combine(outputDirectoryTextBlockText, replay.FileName.Contains(rootDirectory) ? replay.FileName.Substring(rootDirectory.Length) : replay.FileName));
+                            var dir = Path.GetDirectoryName(pathBuilder.ToString());
+
+                            if (!Directory.Exists(dir))
+                                Directory.CreateDirectory(dir);
+
+                            File.WriteAllBytes(pathBuilder.ToString(), replay.Bytes);
+                            pathBuilder.Clear();
+                        }
+                    }
+                }, token);
+
+                await restoreTask;
+                backupProgressBar.IsIndeterminate = false;
+                backupProgressBarLabel.Content = "Restore finished!";
+                DialogResult = true;
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Something went wrong while restoring the backup: {ex.Message}", "Failed during restore", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
+                ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - Something went wrong while restoring the backup", ex: ex);
+                return;
+            }
+            finally
+            {
+                _cancellationTokenSource.Dispose();
+                _cancellationTokenSource = null;
+            }
         }
 
         private void CancelAsyncOperationButton_Click(object sender, RoutedEventArgs e)

@@ -1860,7 +1860,13 @@ namespace ReplayParser.ReplaySorter.UI
                 return;
             }
             //TODO get selected item from listview
-            var restoreBackupDialog = new BackupWindow(BackupAction.Restore, null, _activeUow);
+            var backup = backupListView.SelectedItem as BackupWithCount;
+            if (backup == null)
+            {
+                MessageBox.Show("Please select a backup from the list first!", "Invalid operation", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
+                return;
+            }
+            var restoreBackupDialog = new BackupWindow(BackupAction.Restore, backup, _activeUow);
             restoreBackupDialog.ShowDialog();
         }
 

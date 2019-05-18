@@ -3,6 +3,7 @@ using ReplayParser.ReplaySorter.IO;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -46,6 +47,9 @@ namespace ReplayParser.ReplaySorter.UI.Models
             backup.Name = Name;
             backup.Comment = Comment;
             backup.RootDirectory = RootDirectory;
+            var rootDirectory = string.Empty;
+            if (RootDirectory.Last() != Path.DirectorySeparatorChar || RootDirectory.Last() != Path.AltDirectorySeparatorChar)
+                rootDirectory = RootDirectory + Path.DirectorySeparatorChar;
 
             ICollection<ReplayParser.ReplaySorter.Backup.Models.ReplayBackup> replayBackups = new Collection<ReplayParser.ReplaySorter.Backup.Models.ReplayBackup>();
             var replayDictionary = new Dictionary<string, ReplayParser.ReplaySorter.Backup.Models.Replay>();
@@ -73,7 +77,7 @@ namespace ReplayParser.ReplaySorter.UI.Models
                     var replayBackup = new ReplayParser.ReplaySorter.Backup.Models.ReplayBackup
                     {
                         Backup = backup,
-                        FileName = file,
+                        FileName = file.Contains(rootDirectory) ? file.Substring(rootDirectory.Length) : file,
                         Replay = replay
                     };
 
