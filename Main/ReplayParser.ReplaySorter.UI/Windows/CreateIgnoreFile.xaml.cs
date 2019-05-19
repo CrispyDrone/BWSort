@@ -112,6 +112,7 @@ namespace ReplayParser.ReplaySorter.UI.Windows
             if (importFileNamesDialog.ShowDialog() == CommonFileDialogResult.Ok)
             {
                 var dir = importFileNamesDialog.FileName;
+                //TODO should this search recursively? Also this should happen in the background otherwise you risk freezing the UI...
                 var toIgnoreFiles = Directory.EnumerateFiles(dir, "*.rep", SearchOption.AllDirectories).Where(f => Path.GetExtension(f) == ".rep");
                 foreach (var file in toIgnoreFiles)
                 {

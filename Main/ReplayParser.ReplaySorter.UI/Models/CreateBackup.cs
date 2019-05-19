@@ -89,6 +89,7 @@ namespace ReplayParser.ReplaySorter.UI.Models
                 }
                 catch (Exception ex)
                 {
+                    //TODO If a backup can't backup everything, it should fail instead...
                     ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - Something went wrong while opening or hashing the file", ex: ex);
                 }
             }
