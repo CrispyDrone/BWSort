@@ -1517,6 +1517,7 @@ namespace ReplayParser.ReplaySorter.UI
                     {
                         listViewReplays.ItemsSource = _listReplays;
                         filterReplaysProgressBar.Value = 0;
+                        statusBarAction.Content = string.Empty;
                     }
 
                     return;
@@ -1720,6 +1721,9 @@ namespace ReplayParser.ReplaySorter.UI
                 if (e.AddedItems.Count != 0)
                 {
                     var databaseName = e.AddedItems[0] as string;
+                    if (_activeUow != null)
+                        _activeUow.Dispose();
+
                     _activeUow = BWContext.Create(databaseName, false);
                     var backups = _activeUow.BackupRepository.GetAll().ToList();
                     //TODO add caching??
@@ -1739,6 +1743,9 @@ namespace ReplayParser.ReplaySorter.UI
                 else
                 {
                     databaseNameComboBox.SelectedIndex = -1;
+                    if (_activeUow != null)
+                        _activeUow.Dispose();
+
                     _activeUow = null;
                 }
             }

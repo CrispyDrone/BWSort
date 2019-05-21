@@ -624,6 +624,7 @@ namespace ReplayParser.ReplaySorter.Filtering
                 // replaysList.Where(r => r.Players.Intersect(requestePlayers).Count() == requestePlayers.Count());
                 // FOR NOW ==> replaysList.Where(r => r.Players.Any(p => p.Name == "") && r.Players.Any(p1 => p1.Name == "")); <== FOR NOW
                 // replaysList.Where(r => r.Players.Any(p => p.Name == "") && r.Players.Any(p => p.Name == ""));
+                Expression<Func<File<IReplay>, bool>> singlePlayersExpression = null;
                 foreach (var playerProperties in playersProperties)
                 {
                     var player = Expression.Parameter(typeof(IPlayer), "p");
@@ -696,10 +697,11 @@ namespace ReplayParser.ReplaySorter.Filtering
                         body = new AddAdditionalAndAlsoToMethodCallModifier(raceExpression, "Any").Modify(body);
                     }
 
-                    filterExpression = CreateOrAddAndExpression(filterExpression, body, replay);
+                    //TODO fix, this order doesn't work, it's adding duplicates and adding AND conditions at the wrong time
+                    singlePlayersExpression = CreateOrAddAndExpression(singlePlayersExpression, body, replay);
                 }
 
-                filterExpression = CreateOrAddOrExpression(filterExpression, body, replay);
+                filterExpression = CreateOrAddOrExpression(filterExpression, singlePlayersExpression.Body, replay);
             }
             return filterExpression?.Compile();
         }
