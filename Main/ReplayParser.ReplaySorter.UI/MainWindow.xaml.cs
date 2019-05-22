@@ -1718,6 +1718,9 @@ namespace ReplayParser.ReplaySorter.UI
             try
             {
                 var databaseNameComboBox = sender as ComboBox;
+                if (databaseNameComboBox.SelectedIndex == -1)
+                    return;
+
                 if (e.AddedItems.Count != 0)
                 {
                     var databaseName = e.AddedItems[0] as string;
@@ -1786,8 +1789,9 @@ namespace ReplayParser.ReplaySorter.UI
                 return;
             }
 
-            File.Delete(databaseName);
+            _activeUow.Dispose();
             _activeUow = null;
+            File.Delete(databaseName);
             RemoveDatabase(databaseName);
             ReloadDatabaseComboBox();
         }
@@ -1874,7 +1878,11 @@ namespace ReplayParser.ReplaySorter.UI
                 return;
             }
             var restoreBackupDialog = new BackupWindow(BackupAction.Restore, backup, _activeUow);
-            restoreBackupDialog.ShowDialog();
+            var dbName = _activeUow.DatabaseName;
+            if (restoreBackupDialog.ShowDialog() == true)
+            {
+                _activeUow = BWContext.Create(dbName);
+            }
         }
 
         private void DeleteBackupButton_Click(object sender, RoutedEventArgs e)

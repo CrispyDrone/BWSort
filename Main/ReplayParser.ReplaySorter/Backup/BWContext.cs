@@ -140,7 +140,7 @@ namespace ReplayParser.ReplaySorter.Backup
         public void Dispose()
         {
             _transaction?.Rollback();
-            _transaction.Dispose();
+            _transaction?.Dispose();
             _connection?.Dispose();
         }
     }

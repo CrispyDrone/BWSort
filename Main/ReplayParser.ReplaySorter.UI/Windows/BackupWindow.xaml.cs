@@ -326,7 +326,7 @@ namespace ReplayParser.ReplaySorter.UI.Windows
             foreach (var replayBackup in backup.ReplayBackups)
             {
                 pathBuilder.Append(rootDirectory);
-                var directories = FileHandler.ExtractDirectoriesFromPath(replayBackup.FileName, rootDirectory).Select(d => d.Trim(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar).TrimEnd(' ')).Where(d => !string.IsNullOrWhiteSpace(d)).ToList();
+                var directories = FileHandler.ExtractDirectoriesFromPath(replayBackup.FileName, string.Empty).Select(d => d.Trim(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar).TrimEnd(' ')).Where(d => !string.IsNullOrWhiteSpace(d)).ToList();
                 foreach (var directory in directories)
                 {
                     var previousDir = pathBuilder.ToString();
@@ -334,7 +334,7 @@ namespace ReplayParser.ReplaySorter.UI.Windows
                     var currentDir = pathBuilder.ToString();
                     //TODO it could be cool I guess to allow inspecting a backup to also inspect a replay, this would however require parsing on the fly... For now I am using SimpleFile which
                     // only has a string for the filename
-                    AddOrModify(tree, dirNodes, currentDir, previousDir, directory, pathBuilder.ToString() == Path.GetDirectoryName(replayBackup.FileName) ? FileHandler.GetFileNameWithoutExtension(replayBackup.FileName) : null);
+                    AddOrModify(tree, dirNodes, currentDir, previousDir, directory, pathBuilder.ToString() == rootDirectory + Path.DirectorySeparatorChar + Path.GetDirectoryName(replayBackup.FileName) ? FileHandler.GetFileNameWithoutExtension(replayBackup.FileName) : null);
                 }
                 pathBuilder.Clear();
             }

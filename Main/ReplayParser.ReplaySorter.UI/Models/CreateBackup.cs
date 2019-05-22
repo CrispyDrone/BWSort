@@ -78,6 +78,7 @@ namespace ReplayParser.ReplaySorter.UI.Models
                     {
                         Backup = backup,
                         FileName = file.Contains(rootDirectory) ? file.Substring(rootDirectory.Length) : file,
+                        //FileName = file,
                         Replay = replay
                     };
 
