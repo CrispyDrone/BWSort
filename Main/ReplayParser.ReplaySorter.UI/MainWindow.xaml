@@ -189,7 +189,7 @@
                                 <Setter Property="Template">
                                     <Setter.Value>
                                         <ControlTemplate TargetType="ListBoxItem">
-                                            <Border Name="Border" SnapsToDevicePixels="true" BorderBrush="Black" BorderThickness="1" Margin="3" Padding="3">
+                                            <Border Name="Border" SnapsToDevicePixels="true" BorderBrush="Black" BorderThickness="1" Margin="3" Padding="3" Background="{TemplateBinding Background}">
                                                 <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                             </Border>
                                             <ControlTemplate.Triggers>

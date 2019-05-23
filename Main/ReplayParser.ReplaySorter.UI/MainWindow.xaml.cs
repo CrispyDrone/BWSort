@@ -132,7 +132,7 @@ namespace ReplayParser.ReplaySorter.UI
             }
             if (_replaySorterConfiguration.LoadReplaysOnStartup)
             {
-                DiscoverReplayFiles();
+                await DiscoverReplayFiles();
                 parseReplays();
             }
         }
@@ -177,7 +177,7 @@ namespace ReplayParser.ReplaySorter.UI
             public FeedBack Feedback { get; set; }
         }
 
-        private void DiscoverReplayFiles()
+        private async Task DiscoverReplayFiles()
         {
             if (!Directory.Exists(replayDirectoryTextBox.Text))
             {
@@ -191,7 +191,8 @@ namespace ReplayParser.ReplaySorter.UI
 
             _replayDirectory = replayDirectoryTextBox.Text;
 
-            var potentialfiles = Directory.EnumerateFiles(_replayDirectory, "*.rep", searchOption).Where(file => Path.GetExtension(file) == ".rep");
+            var task = Task.Run(() => Directory.GetFiles(_replayDirectory, "*.rep", searchOption).Where(file => Path.GetExtension(file) == ".rep"));
+            var potentialfiles = await task;
             if (applyIgnoreFilesCheckbox.IsChecked.HasValue && applyIgnoreFilesCheckbox.IsChecked.Value)
             {
                 var ignoredFiles = _ignoreFileManager.Load(_replaySorterConfiguration.IgnoreFilePath)?.IgnoredFiles.Select(f => f.Item2);
@@ -478,9 +479,9 @@ namespace ReplayParser.ReplaySorter.UI
             SelectMapFolder(moveBadReplaysDirectory);
         }
 
-        private void AddNewReplayFilesButton_Click(object sender, RoutedEventArgs e)
+        private async void AddNewReplayFilesButton_Click(object sender, RoutedEventArgs e)
         {
-            DiscoverReplayFiles();
+            await DiscoverReplayFiles();
         }
 
         private void CreateNewIgnoreFile_Click(object sender, RoutedEventArgs e)

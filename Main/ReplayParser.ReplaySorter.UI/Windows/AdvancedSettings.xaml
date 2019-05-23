@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ReplayParser.ReplaySorter.UI.Windows"
         mc:Ignorable="d"
-        Title="Advanced settings" Height="450" Width="800" Loaded="Window_Loaded">
+        Title="Advanced settings" Height="500" Width="800" Loaded="Window_Loaded">
     <Grid>
         <DockPanel LastChildFill="False">
             <Label DockPanel.Dock="Top" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" FontSize="20" FontWeight="SemiBold" Margin="0 0 0 20">Advanced Settings</Label>
@@ -13,7 +13,8 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="0.5*"></ColumnDefinition>
                     <ColumnDefinition Width="*"></ColumnDefinition>
-                    <ColumnDefinition Width="*"></ColumnDefinition>
+                    <ColumnDefinition Width="Auto"></ColumnDefinition>
+                    <ColumnDefinition Width="1*"></ColumnDefinition>
                     <ColumnDefinition Width="0.5*"></ColumnDefinition>
                     <ColumnDefinition Width="0.5*"></ColumnDefinition>
                 </Grid.ColumnDefinitions>
