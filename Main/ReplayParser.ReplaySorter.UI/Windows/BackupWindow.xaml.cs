@@ -205,9 +205,14 @@ namespace ReplayParser.ReplaySorter.UI.Windows
             var backupComment = (LogicalTreeHelper.FindLogicalNode(this, "commentTextBox") as TextBox).Text;
             var rootDirectory = (LogicalTreeHelper.FindLogicalNode(this, "rootDirectoryLabel") as Label).Content as string;
 
+            if (string.IsNullOrWhiteSpace(backupName))
+            {
+                MessageBox.Show("Please specify a name for your backup.", "Invalid operation", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
+                return;
+            }
+
             var replayFiles = replayFilesFoundListBox.ItemsSource.Cast<string>();
 
-            //NOTE: I don't think i will be able to report progress for these things... so use a "busy indicator" instead of a progress bar
             backupProgressBar.IsIndeterminate = true;
             backupProgressBarLabel.Content = "Creating backup...";
             await Task.Run(() => CreateBackup(backupName, backupComment, rootDirectory, replayFiles));

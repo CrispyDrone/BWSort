@@ -1325,6 +1325,26 @@ namespace ReplayParser.ReplaySorter.UI
             return renamings;
         }
 
+        private void ChangeRenameTransformationListBoxRendering_Click(object sender, RoutedEventArgs e)
+        {
+            var button = sender as Button;
+            var currentPathResource = button.Tag.ToString();
+            string toApplyPathResouce = string.Empty;
+            switch (currentPathResource)
+            {
+                case "short-path":
+                    toApplyPathResouce = "long-path";
+                    break;
+                case "long-path":
+                    toApplyPathResouce = "short-path";
+                    break;
+                default: throw new Exception();
+            }
+            button.Tag = toApplyPathResouce;
+            var pathResource = (button.Parent as StackPanel).FindResource(toApplyPathResouce);
+            button.Content = pathResource;
+        }
+
         private void cancelRenamingButton_Click(object sender, RoutedEventArgs e)
         {
             if (_activeWorker != null && _activeWorker.IsBusy)
