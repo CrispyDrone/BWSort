@@ -180,7 +180,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
         private bool MoveAndRenameReplay(File<IReplay> replay, string sortDirectory, string FolderName, bool shouldCopy, bool KeepOriginalReplayNames, CustomReplayFormat CustomReplayFormat, IDictionary<string, List<File<IReplay>>> directoryFileReplay)
         {
             bool threwException = false;
-            FolderName = ReplayHandler.RemoveInvalidChars(FolderName);
+            FolderName = FileHandler.RemoveInvalidChars(FolderName);
 
             try
             {
@@ -289,7 +289,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                 try
                 {
                     var PlayerName = player;
-                    PlayerName = ReplayHandler.RemoveInvalidChars(PlayerName);
+                    PlayerName = FileHandler.RemoveInvalidChars(PlayerName);
                     Directory.CreateDirectory(sortDirectory + @"\" + PlayerName);
                     var FileReplays = new List<File<IReplay>>();
                     DirectoryFileReplay.Add(new KeyValuePair<string, List<File<IReplay>>>(sortDirectory + @"\" + PlayerName, FileReplays));
@@ -486,7 +486,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                 try
                 {
                     var PlayerName = player;
-                    PlayerName = ReplayHandler.RemoveInvalidChars(PlayerName);
+                    PlayerName = FileHandler.RemoveInvalidChars(PlayerName);
                     Directory.CreateDirectory(sortDirectory + @"\" + PlayerName);
                     var FileReplays = new List<File<IReplay>>();
                     DirectoryFileReplay.Add(new KeyValuePair<string, List<File<IReplay>>>(sortDirectory + @"\" + PlayerName, FileReplays));
@@ -677,7 +677,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
             foreach (var player in PlayerNames)
             {
                 var PlayerName = player;
-                PlayerName = ReplayHandler.RemoveInvalidChars(PlayerName);
+                PlayerName = FileHandler.RemoveInvalidChars(PlayerName);
                 DirectoryFileReplay.Add(new KeyValuePair<string, List<File<IReplay>>>(sortDirectory + @"\" + PlayerName, new List<File<IReplay>>()));
             }
 

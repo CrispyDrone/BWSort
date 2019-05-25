@@ -1,7 +1,9 @@
-﻿using ReplayParser.ReplaySorter.UserInput;
+﻿using ReplayParser.ReplaySorter.Extensions;
+using ReplayParser.ReplaySorter.UserInput;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using System.Windows;
 
 namespace ReplayParser.ReplaySorter.IO
@@ -168,5 +170,26 @@ namespace ReplayParser.ReplaySorter.IO
             
             return path.IndexOf(Path.AltDirectorySeparatorChar);
         }
+
+        private static HashSet<char> InvalidFileChars = Path.GetInvalidFileNameChars().ToHashSet();
+        private static HashSet<char> InvalidPathChars = Path.GetInvalidPathChars().ToHashSet();
+        //public static char[] InvalidFileCharsAdditional = new char[] { '*', ':' };
+
+        public static string RemoveInvalidChars(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                throw new ArgumentException(nameof(name), "String cannot be empty or null.");
+
+            var sBuilder = new StringBuilder();
+            foreach (var character in name)
+            {
+                if (!InvalidFileChars.Contains(character) && !InvalidPathChars.Contains(character))
+                {
+                    sBuilder.Append(character);
+                }
+            }
+            return sBuilder.ToString();
+        }
+
     }
 }

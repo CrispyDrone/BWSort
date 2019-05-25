@@ -1633,7 +1633,7 @@ namespace ReplayParser.ReplaySorter.UI
                     return;
                 }
 
-                var databaseNameWithoutInvalidCharacters = ReplayHandler.RemoveInvalidChars(databaseNameTextBox.Text);
+                var databaseNameWithoutInvalidCharacters = FileHandler.RemoveInvalidChars(databaseNameTextBox.Text);
 
                 if (databaseNameWithoutInvalidCharacters != databaseNameTextBox.Text)
                 {
@@ -1812,16 +1812,32 @@ namespace ReplayParser.ReplaySorter.UI
 
             _activeUow.Dispose();
             _activeUow = null;
-            File.Delete(databaseName);
-            RemoveDatabase(databaseName);
-            ReloadDatabaseComboBox();
+            try
+            {
+                File.Delete(databaseName);
+                RemoveDatabase(databaseName);
+                ReloadDatabaseComboBox();
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - Something went wrong while attempting to delete the database {databaseName}: {ex.Message}", ex: ex);
+                MessageBox.Show($"Something went wrong while attempting to delete the database {databaseName}: {ex.Message}", "Failed to delete database.", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
+            }
         }
 
         private void CleanDatabaseListButton_Click(object sender, RoutedEventArgs e)
         {
-            var databasesToKeep = databaseComboBox.Items.Cast<string>().Where(db => File.Exists(db) || File.Exists(db + ".sqlite"));
-            _replaySorterConfiguration.BWContextDatabaseNames = string.Join("|", databasesToKeep);
-            ReloadDatabaseComboBox();
+            try
+            {
+                var databasesToKeep = databaseComboBox.Items.Cast<string>().Where(db => File.Exists(db) || File.Exists(db + ".sqlite"));
+                _replaySorterConfiguration.BWContextDatabaseNames = string.Join("|", databasesToKeep);
+                ReloadDatabaseComboBox();
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - Something went wrong while cleaning the database list: {ex.Message}", ex: ex);
+                MessageBox.Show($"{DateTime.Now} - Something went wrong while cleaning the database list: {ex.Message}", "Failed to clean database list.", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
+            }
         }
 
         private void AddExistingDatabaseButton_Click(object sender, RoutedEventArgs e)
@@ -1846,14 +1862,22 @@ namespace ReplayParser.ReplaySorter.UI
                 return;
             }
 
-            var createBackupDialog = new BackupWindow(BackupAction.Create, null, _activeUow);
             var dbName = _activeUow.DatabaseName;
-            if (createBackupDialog.ShowDialog() == true)
+            try
             {
-                AddBackupAndRefresh(createBackupDialog.Backup);
-                //TODO ... I don't like this
-                _activeUow = BWContext.Create(dbName);
-            };
+                var createBackupDialog = new BackupWindow(BackupAction.Create, null, _activeUow);
+                if (createBackupDialog.ShowDialog() == true)
+                {
+                    AddBackupAndRefresh(createBackupDialog.Backup);
+                    //TODO ... I don't like this
+                    _activeUow = BWContext.Create(dbName);
+                };
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - Something went wrong while creating a backup: {ex.Message}", ex: ex);
+                MessageBox.Show($"{DateTime.Now} - Something went wrong while creating a backup: {ex.Message}", "Failed to create backup.", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
+            }
         }
 
         //TODO refactor
@@ -1873,15 +1897,24 @@ namespace ReplayParser.ReplaySorter.UI
                 MessageBox.Show("Please select an existing database to operate on first!", "Invalid operation", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
                 return;
             }
-            //TODO get selected item from listview
+
             var backup = backupListView.SelectedItem as BackupWithCount;
             if (backup == null)
             {
                 MessageBox.Show("Please select a backup from the list first!", "Invalid operation", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
                 return;
             }
-            var inspectBackupDialog = new BackupWindow(BackupAction.Inspect, backup, _activeUow);
-            inspectBackupDialog.ShowDialog();
+
+            try
+            {
+                var inspectBackupDialog = new BackupWindow(BackupAction.Inspect, backup, _activeUow);
+                inspectBackupDialog.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - Something went wrong while inspecting a backup: {ex.Message}", ex: ex);
+                MessageBox.Show($"{DateTime.Now} - Something went wrong while inspecting a backup: {ex.Message}", "Failed to inspect backup.", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
+            }
         }
 
         private void RestoreFromBackupButton_Click(object sender, RoutedEventArgs e)
@@ -1891,18 +1924,27 @@ namespace ReplayParser.ReplaySorter.UI
                 MessageBox.Show("Please select an existing database to operate on first!", "Invalid operation", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
                 return;
             }
-            //TODO get selected item from listview
+
             var backup = backupListView.SelectedItem as BackupWithCount;
             if (backup == null)
             {
                 MessageBox.Show("Please select a backup from the list first!", "Invalid operation", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
                 return;
             }
-            var restoreBackupDialog = new BackupWindow(BackupAction.Restore, backup, _activeUow);
+
             var dbName = _activeUow.DatabaseName;
-            if (restoreBackupDialog.ShowDialog() == true)
+            try
             {
-                _activeUow = BWContext.Create(dbName);
+                var restoreBackupDialog = new BackupWindow(BackupAction.Restore, backup, _activeUow);
+                if (restoreBackupDialog.ShowDialog() == true)
+                {
+                    _activeUow = BWContext.Create(dbName);
+                }
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - Something went wrong while restoring a backup: {ex.Message}", ex: ex);
+                MessageBox.Show($"{DateTime.Now} - Something went wrong while restoring a backup: {ex.Message}", "Failed to restore backup.", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
             }
         }
 
@@ -1913,7 +1955,7 @@ namespace ReplayParser.ReplaySorter.UI
                 MessageBox.Show("Please select an existing database to operate on first!", "Invalid operation", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
                 return;
             }
-            //TODO get selected item from listview
+
             var backup = backupListView.SelectedItem as BackupWithCount;
             if (backup == null)
             {
@@ -1921,15 +1963,24 @@ namespace ReplayParser.ReplaySorter.UI
                 return;
             }
 
-            var deleteBackupDialog = new BackupWindow(BackupAction.Delete, backup, _activeUow);
             var dbName = _activeUow.DatabaseName;
-            if (deleteBackupDialog.ShowDialog() == true)
+            try
             {
-                _backups.Remove(backup);
-                backupListView.Items.Refresh();
-                _activeUow = BWContext.Create(dbName);
+                var deleteBackupDialog = new BackupWindow(BackupAction.Delete, backup, _activeUow);
+                if (deleteBackupDialog.ShowDialog() == true)
+                {
+                    _backups.Remove(backup);
+                    backupListView.Items.Refresh();
+                    _activeUow = BWContext.Create(dbName);
+                }
+            }
+            catch (Exception ex)
+            {
+                ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - Something went wrong while deleting a backup: {ex.Message}", ex: ex);
+                MessageBox.Show($"{DateTime.Now} - Something went wrong while deleting a backup: {ex.Message}", "Failed to delete backup.", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
             }
         }
+
         #endregion
 
         #region settings

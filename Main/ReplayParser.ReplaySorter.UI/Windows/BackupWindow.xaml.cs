@@ -39,7 +39,7 @@ namespace ReplayParser.ReplaySorter.UI.Windows
         {
             Title = $"{_backupAction} backup";
             header.Content = GetHeader(_backupAction);
-            var actionContent = GetActionContentAsync(_backupAction);
+            var actionContent = GetActionContent(_backupAction);
             mainLayoutGrid.Children.Add(actionContent);
         }
 
@@ -60,13 +60,15 @@ namespace ReplayParser.ReplaySorter.UI.Windows
             }
         }
 
-        private UIElement GetActionContentAsync(BackupAction backupAction)
+        private UIElement GetActionContent(BackupAction backupAction)
         {
             Uri actionContentUri = new Uri($"pack://application:,,,/Windows/BackupActions/{backupAction.ToString()}BackupActionContent.xaml", UriKind.Absolute);
             var resourceStreamInfo = Application.GetResourceStream(actionContentUri);
-            var xamlReader = new XamlReader();
             //TODO investigate LoadAsync but no awaiter implemented...
-            var uiElement = xamlReader.LoadAsync(resourceStreamInfo.Stream) as UIElement;
+            // It seems because I have not applied the `x:SynchronouseMode="Async"` attribute to the root element of my xaml, it is being loaded synchronously. However this is good because If I was loading
+            // it asyncrhonously, I would have to use the LoadCompleted event or otherwise my attaching of event handlers would be in trouble...
+            // var xamlReader = new XamlReader();
+            var uiElement = XamlReader.Load(resourceStreamInfo.Stream) as UIElement;
             AttachEventHandlersAndDataBinding(uiElement, backupAction);
             return uiElement;
         }
@@ -102,8 +104,6 @@ namespace ReplayParser.ReplaySorter.UI.Windows
             clearReplaysButton.Click += ClearFoundReplayFilesButton_Click;
             importReplaysButton.Click += ImportReplayFilesButton_Click;
             createBackupButton.Click += CreateBackupButton_Click;
-            //LogicalTreeHelper.FindLogicalNode(uiElement, "nameTextBox");
-            //LogicalTreeHelper.FindLogicalNode(uiElement, "commentTextBox");
         }
 
         private void ClearFoundReplayFilesButton_Click(object sender, RoutedEventArgs e)

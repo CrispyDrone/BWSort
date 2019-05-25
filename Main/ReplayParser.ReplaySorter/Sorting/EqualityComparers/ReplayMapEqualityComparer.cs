@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using ReplayParser.Interfaces;
+using ReplayParser.ReplaySorter.IO;
 
 namespace ReplayParser.ReplaySorter.Sorting
 {
@@ -44,7 +45,7 @@ namespace ReplayParser.ReplaySorter.Sorting
             //{
             //    MapName = MapName.Replace(invalidChar.ToString(), "");
             //}
-            MapName = ReplayHandler.RemoveInvalidChars(MapName);
+            MapName = FileHandler.RemoveInvalidChars(MapName);
             return MapName;
         }
     }

@@ -229,7 +229,7 @@ namespace ReplayParser.ReplaySorter
 
             // remove invalid characters from the name
 
-            string CustomReplayNameString = RemoveInvalidChars(CustomReplayName.ToString());
+            string CustomReplayNameString = FileHandler.RemoveInvalidChars(CustomReplayName.ToString());
 
             return CustomReplayNameString;
 
@@ -247,27 +247,6 @@ namespace ReplayParser.ReplaySorter
             //{
             //    arguments.Count(x => x == argument)
             //}
-        }
-
-        public static HashSet<char> InvalidFileChars = Path.GetInvalidFileNameChars().ToHashSet();
-        public static HashSet<char> InvalidPathChars = Path.GetInvalidPathChars().ToHashSet();
-        //public static char[] InvalidFileCharsAdditional = new char[] { '*', ':' };
-
-        //TODO move to FileHandler
-        public static string RemoveInvalidChars(string name)
-        {
-            if (string.IsNullOrWhiteSpace(name))
-                throw new ArgumentException(nameof(name), "String cannot be empty or null.");
-
-            var sBuilder = new StringBuilder();
-            foreach (var character in name)
-            {
-                if (!InvalidFileChars.Contains(character) && !InvalidPathChars.Contains(character))
-                {
-                    sBuilder.Append(character);
-                }
-            }
-            return sBuilder.ToString();
         }
 
         public static void SaveReplayFilePaths(List<File<IReplay>> listReplays)

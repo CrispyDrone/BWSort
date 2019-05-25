@@ -35,7 +35,7 @@ If there are certain replays that you never want to parse, you can make use of a
 
 ![Create an ignore file to have the possibility to ignore specific files and directories during parsing.](./imgs/ignore-file.png)
 
-You can click on the `Import directory` to import all the filenames in that directory TODO(VERIFY IF RECURSIVELY). You can click on the `Select filenames` to select multiple replays you would like to ignore. __Note__ that you specify filenames, however the ignore functionality works based on file hashes. This means that it will ignore these replays you've specified, regardless of what the actual file name is!
+You can click on the `Import directory` to import all the filenames (recursively) in that directory. You can click on the `Select filenames` to select multiple replays you would like to ignore. __Note__ that you specify filenames, however the ignore functionality works based on file hashes. This means that it will ignore these replays you've specified, regardless of what the actual file name is!
 
 ### View and filter replays
 After you've parsed replays, you can see your results in the Search tab:
@@ -93,7 +93,7 @@ For each of the following filters you can combine different conditions by using 
 
   ![Specify a date in a relative or absolute format to filter on it.](./imgs/search-tab-filter-date.png)
 
-  You can specify relative or absolute dates to filter replays. Same as for durations the operators `<`, `<=`, `>`, `>=`, `=` are available. The digital pattern is as follows `<year><sep><month><sep><day>`:
+  You can specify relative or absolute dates to filter replays. Same as for durations the operators `<`, `<=`, `>`, `>=`, `=` are available. Note the dates represent a specific point in time. This means that when you say `<4 months and 3 weeks ago` it does not mean "less than 4 months and 3 weeks ago" but instead it means __before__ 4 months and 3 weeks ago! The digital pattern is as follows `<year><sep><month><sep><day>`:
   + `<year>`: Mandatory, can be 2 or 4 digits. 
   + `<month>`: Optional, can be 1 or 2 digits. 
   + `<day>`: Optional, can be 1 or 2 digits.
@@ -104,15 +104,18 @@ For each of the following filters you can combine different conditions by using 
   + You can specify `today` or `yesterday`
   + You can specify any month of the year literally such as `january`.
   + You can use a date of the format `<number><time-unit> ago` for example such as `5 months ago`, or `<number><time-unit> and ... ago` for example `5 months and 3 weeks ago`
-  + Finally there is also the `previous <number><time-unit>` format that works in a predictable manner:
     + 1 week is counted as 7 days
     + 1 month is counted as 31 days
     + 1 year is counted as 365 days
+  + Finally there is also the `previous <number><time-unit>`. This allows you to more easily refer to a time range of a specific time unit. For example `previous 2 weeks` would span the period between the ending of last week and the beginning of 2 weeks ago.
 
-  Finally, same as for the duration filter, you can use the `between x and y` construct to filter replays between 2 dates. `x` and `y` can be any format previously described.
+  Finally, same as for the duration filter, you can use the `between x and y` construct to filter replays between 2 dates. `x` and `y` can be any format previously described. Note that `between` works __inclusively__ which means that it acts as if you stated `>= date1 and <= date2`.
 
 #### Some additional examples
-TODO
+![](./imgs/search-tab-filter-date-between-inclusively.png)
+![](./imgs/search-tab-filter-date-greater-than-or-equal-ago.png)
+![](./imgs/search-tab-filter-date-less-than-ago.png)
+![](./imgs/search-tab-filter-date-previous.png)
 
 ### Sorting replays
 After parsing, you have the option to sort or categorize your replays to an output directory of your choice. You can either decide to sort the entire set of replays you've parsed, or to first filter them appropriately and then selecting the `Select as input` checkbox.
@@ -165,7 +168,7 @@ To create a backup, press the create button at the bottom of the screen. A new w
 
 ![Create a new backup by importing replays and specifying a name and optional comment.](./imgs/backup-tab-create-backup.png)
 
-You can specify a name and an optional comment. To add replays to this backup click on the import button. At the moment, you can only import replays from one directory! This is because when restoring from a backup, it needs to be able to write to a single directory. TODO(ADD TO FUTURE SECTION) maybe in the future, there will be support to make it so you can import replays from multiple directories, and it will congregate the multiple directories under one parent directory when executing the restore. To now create a backup, click on the `Create backup` button.
+You can specify a name and an optional comment. To add replays to this backup click on the import button. At the moment, you can only import replays from one directory! This is because when restoring from a backup, it needs to be able to write to a single directory. [Maybe in the future, there will be support to make it so you can import replays from multiple directories, and it will congregate the multiple directories under one parent directory when executing the restore.](#towards-the-future) To now create a backup, click on the `Create backup` button.
 
 ![After the backup is successfully created, you can see it in the list of backup.](./imgs/backup-list.png)
 
@@ -214,7 +217,7 @@ Due to the possible presence of some bugs and it being hard to verify edge case 
 2. The order of the match-up from a replay, and using the T[] argument, will not necessarily be the same (so it could say ZvP, while the first player is the Protoss, and the second one the Zerg)
 3. Teams aren't extracted properly because for most game types the team number is the same for opposing teams...
 
-## Towards the future:
+## Towards the future
 1. Add additional filters based on units, and user defined build orders.
 2. Allow sorting in place and add possibility to undo/redo.
 3. Add replay detail view with action history (i.e. build order) and some basic stats and graphs 
@@ -224,7 +227,8 @@ Due to the possible presence of some bugs and it being hard to verify edge case 
    + This will fix team identification which is currently very buggy. Players are often reported to be on the same team even though they are opponents.
    + Match-up identification as a result is also buggy since players are not separated into the correct teams.
 7. Support for 1.16 replays
-8. General bug fixing
+8. Allow backups of multiple directories at the same time
+9. General bug fixing
 
 In the very far future, there might be a complete rewrite from scratch with a much better designed codebase. To understand why this is necessary look at the [project history section](#project-history). 
 

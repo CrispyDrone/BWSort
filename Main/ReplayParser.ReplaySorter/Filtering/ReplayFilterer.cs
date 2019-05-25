@@ -588,7 +588,13 @@ namespace ReplayParser.ReplaySorter.Filtering
                 dateParts[1] = 1;
 
             if (dateParts[2] == 0)
+            {
                 dateParts[2] = 1;
+            }
+            else 
+            {
+                dateParts[2] = Math.Max(dateParts[2], DateTime.DaysInMonth(dateParts[0], dateParts[1]));
+            }
 
             return true;
         }
@@ -1008,7 +1014,7 @@ namespace ReplayParser.ReplaySorter.Filtering
         private static readonly string _digitalMinutesSecondsPattern = "^(\\d{2}):(\\d{2})$";
         private static readonly string _digitalHoursMinutesSecondsPattern = "^(\\d{2}):(\\d{2}):(\\d{2})$";
         private static readonly string _writtenHoursMinutesSecondsPattern = "^(?:(\\d+)(?:h(?:rs|hours)?))?(?:(\\d+)(?:m(?:in(?:utes)?)?))?(?:(\\d+)(?:s(?:ec(?:onds)?)?))?";
-        private static readonly string _timeRangePattern = "^between\\s*(.*?)-(.*)$";
+        private static readonly string _timeRangePattern = "^between\\s*(.*?)\\s+and\\s+(.*)$";
         private static readonly Regex _lessThanGreaterThanOperatorsRegex = new Regex(_lessThanGreaterThanOperatorsPattern);
         private static readonly Regex _digitalMinutesSecondsRegex = new Regex(_digitalMinutesSecondsPattern);
         private static readonly Regex _digitalHoursMinutesSecondsRegex = new Regex(_digitalHoursMinutesSecondsPattern);

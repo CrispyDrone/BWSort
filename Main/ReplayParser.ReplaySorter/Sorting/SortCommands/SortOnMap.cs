@@ -90,7 +90,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                 var MapName = map.Key.MapName;
                 List<File<IReplay>> FileReplays = new List<File<IReplay>>();
 
-                MapName = ReplayHandler.RemoveInvalidChars(MapName);
+                MapName = FileHandler.RemoveInvalidChars(MapName);
 
                 try
                 {
@@ -209,7 +209,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                 var MapName = map.Key.MapName;
                 var FileReplays = new List<File<IReplay>>();
 
-                MapName = ReplayHandler.RemoveInvalidChars(MapName);
+                MapName = FileHandler.RemoveInvalidChars(MapName);
 
                 try
                 {
@@ -340,7 +340,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                 var MapName = map.Key.MapName;
                 var FileReplays = new List<File<IReplay>>();
 
-                MapName = ReplayHandler.RemoveInvalidChars(MapName);
+                MapName = FileHandler.RemoveInvalidChars(MapName);
 
                 try
                 {
