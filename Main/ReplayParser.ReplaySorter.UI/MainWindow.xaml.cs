@@ -1,37 +1,35 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Windows;
-using System.Windows.Controls;
+﻿using Microsoft.WindowsAPICodePack.Dialogs;
 using ReplayParser.Interfaces;
 using ReplayParser.Loader;
-using System.IO;
-using System.Diagnostics;
-using System.ComponentModel;
-using Microsoft.WindowsAPICodePack.Dialogs;
-using ReplayParser.ReplaySorter.Sorting;
-using ReplayParser.ReplaySorter.ReplayRenamer;
+using ReplayParser.ReplaySorter.Backup;
 using ReplayParser.ReplaySorter.Configuration;
 using ReplayParser.ReplaySorter.Diagnostics;
-using ReplayParser.ReplaySorter.IO;
-using System.Net.Http;
-using ReplayParser.ReplaySorter.Filtering;
-using ReplayParser.ReplaySorter.UI.Windows;
-using ReplayParser.ReplaySorter.UI.Sorting;
-using System.Windows.Documents;
-using System.Windows.Data;
-using System.Text;
-using ReplayParser.ReplaySorter.Ignoring;
-using ReplayParser.ReplaySorter.Sorting.SortResult;
-using ReplayParser.ReplaySorter.ReplayRenamer.RenameResult;
-using System.Collections;
-using System.Windows.Input;
-using ReplayParser.ReplaySorter.Backup;
 using ReplayParser.ReplaySorter.Extensions;
-using System.Text.RegularExpressions;
+using ReplayParser.ReplaySorter.Filtering;
+using ReplayParser.ReplaySorter.IO;
+using ReplayParser.ReplaySorter.Ignoring;
+using ReplayParser.ReplaySorter.ReplayRenamer.RenameResult;
+using ReplayParser.ReplaySorter.ReplayRenamer;
+using ReplayParser.ReplaySorter.Sorting.SortResult;
+using ReplayParser.ReplaySorter.Sorting;
 using ReplayParser.ReplaySorter.UI.Models;
-using ReplayParser.ReplaySorter.Backup.Models;
+using ReplayParser.ReplaySorter.UI.Sorting;
+using ReplayParser.ReplaySorter.UI.Windows;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Net.Http;
+using System.Text.RegularExpressions;
+using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows;
+using System;
 
 namespace ReplayParser.ReplaySorter.UI
 {
@@ -619,7 +617,7 @@ namespace ReplayParser.ReplaySorter.UI
             }
         }
 
-        private static Panel GetSortCriteriaParametersPanel(string selectedItem)
+        private Panel GetSortCriteriaParametersPanel(string selectedItem)
         {
             switch (selectedItem)
             {
@@ -647,6 +645,7 @@ namespace ReplayParser.ReplaySorter.UI
                     playername.Children.Add(loser);
                     playername.Children.Add(both);
                     playername.Children.Add(none);
+                    playername.Margin = new Thickness(0, 10, 10, 10);
                     return playername;
                 case "DURATION":
                     StackPanel duration = new StackPanel();
@@ -658,6 +657,7 @@ namespace ReplayParser.ReplaySorter.UI
                     DurationIntervalsTextBox.MinWidth = 200;
                     duration.Children.Add(DurationIntervalsLabel);
                     duration.Children.Add(DurationIntervalsTextBox);
+                    duration.Margin = new Thickness(0, 10, 10, 10);
                     return duration;
                 case "MATCHUP":
                     StackPanel gametypesPanel = new StackPanel();
@@ -675,13 +675,14 @@ namespace ReplayParser.ReplaySorter.UI
                         gametype.Content = aGametype;
                         gametypesPanel.Children.Add(gametype);
                     }
+                    gametypesPanel.Margin = new Thickness(0, 10, 10, 10);
                     return gametypesPanel;
                 default:
                     return null;
             }
         }
 
-        private static void All_Clicked(object sender, RoutedEventArgs e)
+        private void All_Clicked(object sender, RoutedEventArgs e)
         {
             var allCheckbox = sender as CheckBox;
             if (allCheckbox == null)
@@ -705,7 +706,7 @@ namespace ReplayParser.ReplaySorter.UI
             }
         }
 
-        private static Panel GetPanelWithName(Panel parent, string name)
+        private Panel GetPanelWithName(Panel parent, string name)
         {
             if (parent != null)
             {
@@ -1033,7 +1034,7 @@ namespace ReplayParser.ReplaySorter.UI
             _swSort.Reset();
         }
 
-        private static BoolAnswer CheckSorterConditions(Sorter aSorter)
+        private BoolAnswer CheckSorterConditions(Sorter aSorter)
         {
             if (aSorter.ListReplays == null || aSorter.ListReplays.Count() == 0)
             {

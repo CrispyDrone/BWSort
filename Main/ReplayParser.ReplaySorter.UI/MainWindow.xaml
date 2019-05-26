@@ -211,25 +211,6 @@
                                 <EventSetter Event="PreviewMouseUp" Handler="ListBoxItem_PreviewMouseUp"/>
                             </Style>
                         </ListBox.ItemContainerStyle>
-                        <!--<ListBox.ItemContainerStyle>
-                            <Style TargetType="ListBoxItem">
-                                <Style.Triggers>
-                                    <Trigger Property="IsSelected" Value="true">
-                                        <Setter Property="Background" Value="Black"/>
-                                    </Trigger>
-                                </Style.Triggers>
-                                <Setter Property="BorderBrush" Value="Black"/>
-                                <Setter Property="BorderThickness" Value="1"/>
-                                <Setter Property="Margin" Value="3"/>
-                                <Setter Property="Padding" Value="3"/>
-
-                                <Setter Property="MinWidth" Value="140"/>
-                                <Setter Property="MaxWidth" Value="280"/>
-                                <Setter Property="AllowDrop" Value="True"/>
-                                <EventSetter Event="PreviewMouseMove" Handler="sortCriteriaListBoxItem_PreviewMouseMove"/>
-                                <EventSetter Event="Drop" Handler="sortCriteriaListBoxItem_Drop"/>
-                            </Style>
-                        </ListBox.ItemContainerStyle>-->
                         <ListBox.Style>
                             <Style TargetType="ListBox">
                                 <Setter Property="Background" Value="Transparent"/>
@@ -242,35 +223,6 @@
                         <ListBoxItem Content="MATCHUP"></ListBoxItem>
                         <ListBoxItem Content="GAMETYPE"></ListBoxItem>
                     </ListBox>
-                    <!--<Grid Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3" x:Name="gridContainingSortCriteriaComboBoxes" Margin="0 0 0 10">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition></ColumnDefinition>
-                            <ColumnDefinition></ColumnDefinition>
-                            <ColumnDefinition></ColumnDefinition>
-                            <ColumnDefinition></ColumnDefinition>
-                            <ColumnDefinition></ColumnDefinition>
-                        </Grid.ColumnDefinitions>
-                        <StackPanel Orientation="Horizontal" Grid.Column="0" Margin="10">
-                            <Label>1.</Label>
-                            <ComboBox x:Name="sortCriteriaOneComboBox"></ComboBox>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" Grid.Column="1" Margin="10">
-                            <Label>2.</Label>
-                            <ComboBox x:Name="sortCriteriaTwoComboBox"></ComboBox>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" Grid.Column="2" Margin="10">
-                            <Label>3.</Label>
-                            <ComboBox x:Name="sortCriteriaThreeComboBox"></ComboBox>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" Grid.Column="3" Margin="10">
-                            <Label>4.</Label>
-                            <ComboBox x:Name="sortCriteriaFourComboBox"></ComboBox>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" Grid.Column="4" Margin="10">
-                            <Label>5.</Label>
-                            <ComboBox x:Name="sortCriteriaFiveComboBox"></ComboBox>
-                        </StackPanel>
-                    </Grid>-->
                     <StackPanel Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="4" x:Name="sortCriteriaParameters" Orientation="Horizontal"></StackPanel>
                     <StackPanel Grid.Row="4" Grid.Column="0" x:Name="keepOriginalReplayNamesPanel" Orientation="Vertical">
                         <CheckBox x:Name="keepOriginalReplayNamesCheckBox" Content="Keep original replay names" Click="keepOriginalReplayNamesCheckBox_Click" IsChecked="True"></CheckBox>
