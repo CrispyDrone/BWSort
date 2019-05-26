@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -16,6 +17,7 @@ namespace ReplayParser.ReplaySorter.UI.Converters
         // structure to map strings that match regex to a constant string, which is the map name that will be mapped to an image
         public static ILookup<char, Tuple<Regex, string>> _mapNamesToFileNamesLookup;
         public static HashSet<string> _mapNames;
+        public static string _assemblyPath = System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 
         static MapToFileNameConverter()
         {
@@ -292,22 +294,35 @@ namespace ReplayParser.ReplaySorter.UI.Converters
             mapName = mapName.ToLower();
 
             var regexes = _mapNamesToFileNamesLookup.FirstOrDefault(l => l.Key == mapName.First());
+            var imagePath = string.Empty;
+
             if (regexes != null)
             {
                 foreach (var regex in regexes)
                 {
                     if (regex.Item1.IsMatch(mapName))
                     {
-                        return $"/images/maps/{regex.Item2}.jpg";
+                        var filePath = System.IO.Path.Combine(_assemblyPath, $@"images\maps\{regex.Item2}.jpg");
+                        if (!System.IO.File.Exists(filePath))
+                            break;
+
+                        imagePath = $"/images/maps/{regex.Item2}.jpg";
                     }
                 }
             }
 
-            var matchingMap = _mapNames.Where(m => mapName.Contains(m.Replace('-', ' ').Replace('_', ' '))).FirstOrDefault();
-            if (matchingMap != null)
-                return $"/images/maps/{matchingMap}.jpg";
+            if (imagePath == string.Empty)
+            {
+                var matchingMap = _mapNames.Where(m => mapName.Contains(m.Replace('-', ' ').Replace('_', ' '))).FirstOrDefault();
+                if (matchingMap != null)
+                {
+                    var filePath = System.IO.Path.Combine(_assemblyPath, $@"images\maps\{matchingMap}.jpg");
+                    if (System.IO.File.Exists(filePath))
+                        imagePath = $"/images/maps/{matchingMap}.jpg";
+                }
+            }
 
-            return $"/images/maps/placeholder.jpg";
+            return "pack://siteoforigin:,,," + (imagePath == string.Empty ? "/images/maps/placeholder.jpg" : imagePath);
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
