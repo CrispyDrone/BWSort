@@ -133,22 +133,19 @@ namespace ReplayParser.ReplaySorter
         public static void RemoveBadReplay(string filepath, string abadreplay)
         {
             if (!Directory.Exists(filepath))
-            {
                 Directory.CreateDirectory(filepath);
-            }
+
             File.Move(abadreplay, filepath + @"\" + abadreplay.Substring(abadreplay.LastIndexOf('\\') + 1));
         }
 
         public static void WriteUncompressedReplay(string filepath, string replay)
         {
             if (!Directory.Exists(filepath))
-            {
                 Directory.CreateDirectory(filepath);
-            }
-            var unpackedreplay = ReplayLoader.LoadReplay(new BinaryReader(new FileStream(replay, FileMode.Open)), true);
 
             try
             {
+                var unpackedreplay = ReplayLoader.LoadReplay(new BinaryReader(new FileStream(replay, FileMode.Open)), true);
                 using (var binarywriter = new BinaryWriter(File.OpenWrite(filepath + @"\" + replay.Substring(replay.LastIndexOf('\\') + 1))))
                 {
                     binarywriter.Write(unpackedreplay.Identifier);
@@ -163,7 +160,7 @@ namespace ReplayParser.ReplaySorter
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - Something went wrong while writing the uncompressed replay: {ex.Message}", ex: ex);
             }
         }
 
@@ -177,9 +174,7 @@ namespace ReplayParser.ReplaySorter
 
             //var BadReplays = @"C:\testreplays\BadReplays";
             if (!Directory.Exists(directory))
-            {
                 Directory.CreateDirectory(directory);
-            }
 
             using (var streamwriter = new StreamWriter(File.OpenWrite(directory + @"\BadReplays.txt")))
             {
@@ -202,51 +197,40 @@ namespace ReplayParser.ReplaySorter
                     streamwriter.WriteLine(footer);
             }
 
-            //Console.WriteLine("Bad replays have been moved to: {0}", BadReplays);
         }
 
         // Enumerate subdirectories, find replay files, copy to 1 big folder??
 
+        // OLD - REWRITE
+        // public static string GenerateReplayName(IReplay replay, CustomReplayFormat format)
+        // {
+        //     // generate mapping structure
+        //     // make interface that has method "GenerateReplayNameSection"
+        //     // make base class that implements interface
+        //     // derive a class per CustomReplayNameSyntax from this base class, fill in the code in the method
+
+        //     Dictionary<CustomReplayNameSyntax, string> CustomReplayNameSections = format.GenerateReplayNameSections(replay);
+
+        //     StringBuilder CustomReplayName = new StringBuilder();
+
+        //     string[] arguments = format.CustomFormat.Split(new char[] { '|' });
+
+        //     for (int i = 0; i < arguments.Length; i++)
+        //     {
+        //         CustomReplayName.Append(CustomReplayNameSections[(CustomReplayNameSyntax)Enum.Parse(typeof(CustomReplayNameSyntax), arguments[i])]);
+        //     }
+
+        //     string CustomReplayNameString = FileHandler.RemoveInvalidChars(CustomReplayName.ToString());
+        //     return CustomReplayNameString;
+        // }
+
         public static string GenerateReplayName(IReplay replay, CustomReplayFormat format)
         {
-            // generate mapping structure
-            // make interface that has method "GenerateReplayNameSection"
-            // make base class that implements interface
-            // derive a class per CustomReplayNameSyntax from this base class, fill in the code in the method
+            if (replay == null) throw new ArgumentNullException(nameof(replay));
+            if (format == null) throw new ArgumentNullException(nameof(format));
 
-
-            Dictionary<CustomReplayNameSyntax, string> CustomReplayNameSections = format.GenerateReplayNameSections(replay);
-
-            StringBuilder CustomReplayName = new StringBuilder();
-
-            string[] arguments = format.CustomFormat.Split(new char[] { '|' });
-
-            for (int i = 0; i < arguments.Length; i++)
-            {
-                CustomReplayName.Append(CustomReplayNameSections[(CustomReplayNameSyntax)Enum.Parse(typeof(CustomReplayNameSyntax), arguments[i])]);
-            }
-
-
-            // remove invalid characters from the name
-
-            string CustomReplayNameString = FileHandler.RemoveInvalidChars(CustomReplayName.ToString());
-
-            return CustomReplayNameString;
-
-            //Dictionary<int, Dictionary<CustomReplayNameSyntax, string[]>> CustomReplayNameSectionsForAllTeams = new Dictionary<int, Dictionary<CustomReplayNameSyntax, string[]>>();
-
-            //int NumberOfTeams = CustomReplayNameSectionsForAllTeams.Count;
-
-            //StringBuilder CustomReplayName = new StringBuilder();
-
-            //Dictionary<int, string> ArgumentsDictionary = new Dictionary<int, string>();
-
-            //string[] arguments = format.CustomFormat.Split(new char[] { '|' });
-            //// now create the argumentsdictionary that consists of the arguments with an index denoting the team number it belongs to
-            //foreach (var argument in arguments)
-            //{
-            //    arguments.Count(x => x == argument)
-            //}
+            var customReplayName = format.GenerateReplayName(replay);
+            return FileHandler.RemoveInvalidChars(customReplayName);
         }
 
         public static void SaveReplayFilePaths(List<File<IReplay>> listReplays)
