@@ -94,7 +94,9 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                 {
                     if (SortCriteriaParameters.ValidGameTypes[replay.Content.GameType] == true)
                     {
+                        //TODO adjust to NOT use Teams ??
                         Teams Team = new Teams(replay.Content);
+                        //TODO adjust to NOT use MatchUp ??
                         MatchUp MatchUp = new MatchUp(replay.Content, Team);
                         // int => team
                         IDictionary<int, IDictionary<RaceType, int>> EncodedMatchUp = new Dictionary<int, IDictionary<RaceType, int>>();
@@ -217,7 +219,9 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                 {
                     if (SortCriteriaParameters.ValidGameTypes[replay.Content.GameType] == true)
                     {
+                        //TODO adjust to NOT use Teams ??
                         Teams Team = new Teams(replay.Content);
+                        //TODO adjust to NOT use MatchUp ??
                         MatchUp MatchUp = new MatchUp(replay.Content, Team);
                         // int => team
                         IDictionary<int, IDictionary<RaceType, int>> EncodedMatchUp = new Dictionary<int, IDictionary<RaceType, int>>();
@@ -353,7 +357,9 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                 {
                     if (SortCriteriaParameters.ValidGameTypes[replay.Content.GameType] == true)
                     {
+                        //TODO adjust to NOT use Teams ??
                         Teams Team = new Teams(replay.Content);
+                        //TODO adjust to NOT use MatchUp ??
                         MatchUp MatchUp = new MatchUp(replay.Content, Team);
                         // int => team
                         IDictionary<int, IDictionary<RaceType, int>> EncodedMatchUp = new Dictionary<int, IDictionary<RaceType, int>>();

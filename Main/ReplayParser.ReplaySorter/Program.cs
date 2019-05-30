@@ -14,6 +14,7 @@ using ReplayParser.Interfaces;
 using ReplayParser.ReplaySorter.Diagnostics;
 using ReplayParser.ReplaySorter.Configuration;
 using ReplayParser.ReplaySorter.IO;
+using ReplayParser.ReplaySorter.Renaming;
 
 namespace ReplayParser.ReplaySorter
 {
@@ -230,14 +231,14 @@ namespace ReplayParser.ReplaySorter
                     {
                         if ((bool)!KeepOriginalReplayNames.Yes)
                         {
-                            CustomReplayFormat aCustomReplayFormat = new CustomReplayFormat();
-                            while (aCustomReplayFormat.CustomFormat == null)
+                            CustomReplayFormat aCustomReplayFormat = null;
+                            while (aCustomReplayFormat == null)
                             {
                                 Console.WriteLine("Custom format?");
                                 string customformat = Console.ReadLine();
                                 try
                                 {
-                                    aCustomReplayFormat.CustomFormat = customformat;
+                                    aCustomReplayFormat = CustomReplayFormat.Create(customformat);
                                     sorter.CustomReplayFormat = aCustomReplayFormat;
                                 }
                                 catch (Exception)

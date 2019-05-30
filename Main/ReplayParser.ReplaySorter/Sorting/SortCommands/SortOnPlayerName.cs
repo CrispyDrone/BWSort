@@ -6,6 +6,7 @@ using ReplayParser.Interfaces;
 using ReplayParser.ReplaySorter.Diagnostics;
 using System.ComponentModel;
 using ReplayParser.ReplaySorter.IO;
+using ReplayParser.ReplaySorter.Renaming;
 
 namespace ReplayParser.ReplaySorter.Sorting.SortCommands
 {

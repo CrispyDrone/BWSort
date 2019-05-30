@@ -1,14 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.IO;
+﻿using ReplayParser.Interfaces;
 using ReplayParser.Loader;
-using ReplayParser.Interfaces;
-using ReplayParser.ReplaySorter.IO;
 using ReplayParser.ReplaySorter.Diagnostics;
+using ReplayParser.ReplaySorter.IO;
+using ReplayParser.ReplaySorter.Renaming;
+using System.Collections.Generic;
+using System.IO;
 using System.Text.RegularExpressions;
-using System.Linq;
-using ReplayParser.ReplaySorter.Extensions;
+using System;
 
 namespace ReplayParser.ReplaySorter
 {

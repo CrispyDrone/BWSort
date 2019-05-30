@@ -1,15 +1,12 @@
-﻿using ReplayParser.ReplaySorter.CustomFormat;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using ReplayParser.ReplaySorter.Renaming.Enums;
 
 namespace ReplayParser.ReplaySorter.ReplayRenamer
 {
+    //TODO remove
     interface IReplayNameSection
     {
         void GenerateSection();
         string GetSection(string separator = "");
-        CustomReplayNameSyntax Type { get; }
+        ReplayNameSectionType Type { get; }
     }
 }

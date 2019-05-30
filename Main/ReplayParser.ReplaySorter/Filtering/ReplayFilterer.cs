@@ -834,8 +834,11 @@ namespace ReplayParser.ReplaySorter.Filtering
 
             foreach (var matchupExpression in matchupExpressions)
             {
+                //TODO adjust to NOT use Teams ??
                 var replayTeams = Expression.New(typeof(Teams).GetConstructor(new Type[] { typeof(IReplay) }), replayProper);
+                //TODO adjust to NOT use MatchUp ??
                 var replayMatchup = Expression.New(typeof(MatchUp).GetConstructor(new Type[] { typeof(IReplay), typeof(Teams) }), replayProper, replayTeams);
+                //TODO adjust to NOT use MatchUp ??
                 var replayMatchupAsString = Expression.Call(replayMatchup, typeof(MatchUp).GetMethod("GetSection"), Expression.Constant(string.Empty, typeof(string)));
                 // where(r => CompareMatchups(new matchup(new team(replay), replay).GetSection(), matchupstring))
                 Expression body = Expression.IsTrue(

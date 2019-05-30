@@ -1,4 +1,4 @@
-﻿namespace ReplayParser.ReplaySorter.CustomFormat
+﻿namespace ReplayParser.ReplaySorter.Renaming
 {
     public enum CustomReplayNameSyntax
     {
@@ -23,6 +23,7 @@
         PlayerX = 262144,
         PlayerXRaceShort = 524288,
         PlayerXRaceLong = 1048576,
-        PlayerXVictoryStatus = 2097152
+        PlayerXVictoryStatusShort = 2097152,
+        PlayerXVictoryStatusLong = 4194304
     }
 }

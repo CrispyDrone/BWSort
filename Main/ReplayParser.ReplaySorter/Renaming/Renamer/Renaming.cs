@@ -1,7 +1,7 @@
 ﻿using ReplayParser.Interfaces;
 using ReplayParser.ReplaySorter.IO;
 
-namespace ReplayParser.ReplaySorter.ReplayRenamer.RenameResult
+namespace ReplayParser.ReplaySorter.ReplayRenamer
 {
     public class Renaming
     {

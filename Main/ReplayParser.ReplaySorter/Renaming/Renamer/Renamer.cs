@@ -8,6 +8,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using ReplayParser.ReplaySorter.Renaming;
 
 namespace ReplayParser.ReplaySorter.ReplayRenamer
 {

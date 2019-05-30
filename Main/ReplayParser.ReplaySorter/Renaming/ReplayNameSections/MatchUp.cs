@@ -1,11 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using ReplayParser.Interfaces;
+using ReplayParser.ReplaySorter.Renaming.Enums;
 
 namespace ReplayParser.ReplaySorter.ReplayRenamer
 {
+    //TODO remove
     class MatchUp : IReplayNameSection
     {
         public MatchUp(IReplay areplay, Teams team)
@@ -19,7 +20,7 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
 
         public string[] TeamRaces { get; set; }
 
-        public CustomReplayNameSyntax Type { get { return CustomReplayNameSyntax.MU; } }
+        public ReplayNameSectionType Type { get { return ReplayNameSectionType.MU; } }
 
         public Teams teams { get; set; }
 

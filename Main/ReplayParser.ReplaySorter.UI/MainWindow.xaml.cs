@@ -8,7 +8,6 @@ using ReplayParser.ReplaySorter.Extensions;
 using ReplayParser.ReplaySorter.Filtering;
 using ReplayParser.ReplaySorter.IO;
 using ReplayParser.ReplaySorter.Ignoring;
-using ReplayParser.ReplaySorter.ReplayRenamer.RenameResult;
 using ReplayParser.ReplaySorter.ReplayRenamer;
 using ReplayParser.ReplaySorter.Sorting.SortResult;
 using ReplayParser.ReplaySorter.Sorting;
@@ -30,6 +29,7 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows;
 using System;
+using ReplayParser.ReplaySorter.Renaming;
 
 namespace ReplayParser.ReplaySorter.UI
 {
@@ -751,7 +751,7 @@ namespace ReplayParser.ReplaySorter.UI
                 {
                     if (customFormatTextBox != null)
                     {
-                        customReplayFormat = new CustomReplayFormat(customFormatTextBox.Text);
+                        customReplayFormat = CustomReplayFormat.Create(customFormatTextBox.Text);
                     }
                     else
                     {
@@ -1129,7 +1129,7 @@ namespace ReplayParser.ReplaySorter.UI
 
                 try
                 {
-                    customReplayFormat = new CustomReplayFormat(replayRenamingSyntax);
+                    customReplayFormat = CustomReplayFormat.Create(replayRenamingSyntax);
                 }
                 catch (ArgumentException)
                 {
@@ -1310,9 +1310,9 @@ namespace ReplayParser.ReplaySorter.UI
             }
         }
 
-        private IEnumerable<Renaming> RenderRenaming(IEnumerable<File<IReplay>> result)
+        private IEnumerable<ReplayRenamer.Renaming> RenderRenaming(IEnumerable<File<IReplay>> result)
         {
-            var renamings = new List<Renaming>();
+            var renamings = new List<ReplayRenamer.Renaming>();
 
             foreach (var replay in result)
             {
@@ -1320,7 +1320,7 @@ namespace ReplayParser.ReplaySorter.UI
                 replay.Rewind();
                 var oldName = replay.FilePath;
                 replay.Forward();
-                renamings.Add(new Renaming(replay, oldName, newName));
+                renamings.Add(new ReplayRenamer.Renaming(replay, oldName, newName));
             }
 
             return renamings;
@@ -1482,9 +1482,9 @@ namespace ReplayParser.ReplaySorter.UI
             listViewReplays.Items.Refresh();
         }
 
-        private IEnumerable<Renaming> RenderUndoOrRedo(IEnumerable<File<IReplay>> replays, bool isUndo)
+        private IEnumerable<ReplayRenamer.Renaming> RenderUndoOrRedo(IEnumerable<File<IReplay>> replays, bool isUndo)
         {
-            var renamings = new List<Renaming>();
+            var renamings = new List<ReplayRenamer.Renaming>();
 
             if (isUndo)
             {
@@ -1494,7 +1494,7 @@ namespace ReplayParser.ReplaySorter.UI
                     replay.Forward();
                     var oldName = replay.FilePath;
                     replay.Rewind();
-                    renamings.Add(new Renaming(replay, oldName, newName));
+                    renamings.Add(new ReplayRenamer.Renaming(replay, oldName, newName));
                 }
             }
             else
@@ -1505,7 +1505,7 @@ namespace ReplayParser.ReplaySorter.UI
                     replay.Rewind();
                     var oldName = replay.FilePath;
                     replay.Forward();
-                    renamings.Add(new Renaming(replay, oldName, newName));
+                    renamings.Add(new ReplayRenamer.Renaming(replay, oldName, newName));
                 }
             }
             return renamings.AsEnumerable();
@@ -2118,7 +2118,7 @@ namespace ReplayParser.ReplaySorter.UI
                     if (string.IsNullOrWhiteSpace(replayDialog.Answer))
                         throw new ArgumentException();
 
-                    customReplayFormat = new CustomReplayFormat(replayDialog.Answer);
+                    customReplayFormat = CustomReplayFormat.Create(replayDialog.Answer);
                 }
                 catch(ArgumentException)
                 {

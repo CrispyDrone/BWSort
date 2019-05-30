@@ -1,12 +1,9 @@
 ﻿using ReplayParser.Entities;
 using ReplayParser.Interfaces;
-using ReplayParser.ReplaySorter.CustomFormat;
-using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+using System;
 
 namespace ReplayParser.ReplaySorter.Renaming
 {
@@ -69,6 +66,21 @@ namespace ReplayParser.ReplaySorter.Renaming
                 default:
                     throw new InvalidOperationException();
             }
+        }
+
+        private char GetLastCharacterStringBuilder(StringBuilder outputSb)
+        {
+            var length = outputSb.Length;
+            if (length == 0)
+                return char.MinValue;
+
+            return outputSb[length - 1];
+        }
+
+        private IPlayer GetPlayerX(string formatItem)
+        {
+            var playerNumber = int.Parse(formatItem.Substring(formatItem.IndexOf('/') + 1), NumberStyles.None);
+            return _replay.Players.Where(p => p.Identifier == playerNumber).FirstOrDefault();
         }
 
         #endregion
@@ -166,7 +178,40 @@ namespace ReplayParser.ReplaySorter.Renaming
 
         private string GetGameFormat()
         {
-            throw new NotImplementedException();
+            switch (_replay.GameType)
+            {
+                case GameType.CaptureTheFlag:
+                case GameType.Greed:
+                case GameType.Slaughter:
+                case GameType.SuddenDeath:
+                case GameType.Ladder:
+                case GameType.UseMapSettings:
+                case GameType.TeamMelee:
+                case GameType.TeamFreeForAll:
+                case GameType.TeamCaptureTheFlag:
+                case GameType.TopVsBottom:
+                case GameType.Unknown:
+                case GameType.Melee:
+                    {
+                        var groupedPlayers = _replay.Players?.Except(_replay.Observers).GroupBy(p => p.ForceIdentifier);
+                        if (groupedPlayers == null)
+                            return "NoPlayers";
+
+                        return string.Join("v", groupedPlayers.Select(group => group.Count()));
+                    }
+
+                case GameType.FreeForAll:
+                    {
+                        var playerCount = _replay.Players?.Except(_replay.Observers).Count() ?? 0;
+                        return playerCount == 0 ? "NoPlayers" : string.Join("v", new string('1', playerCount).AsEnumerable());
+                    }
+
+                case GameType.OneOnOne:
+                    return "1v1";
+
+                default:
+                    throw new InvalidOperationException();
+            }
         }
 
         private string GetGameType(OutputFormat outputFormat)
@@ -175,25 +220,118 @@ namespace ReplayParser.ReplaySorter.Renaming
             return outputFormat == OutputFormat.Short ? GetShortFormGameType(gameType) : gameType.ToString();
         }
 
-        private string GetPlayerInfo(string formatRegex)
+        private string GetPlayerInfo(string formatItem)
         {
-            throw new NotImplementedException();
+            var players = _replay.Players.Except(_replay.Observers);
+            if (players == null)
+                return "NoPlayers";
+
+            var playerRace = new Func<IPlayer, string>(p => p.RaceType.ToString());
+            var playerVictoryStatus = new Func<IReplay, IPlayer, bool>((r, p) => r.Winners.Contains(p));
+
+            var outputSb = new StringBuilder();
+            var formatItemChars = formatItem.ToCharArray();
+            var charCount = formatItemChars.Count();
+            int toSkip = 0;
+            bool skipMoreWhiteSpace = false;
+            var playerCount = players.Count();
+            for (int playerIndex = 0; playerIndex < playerCount; playerIndex++)
+            {
+                var player = players.ElementAt(playerIndex);
+                for (int i = 0; i < charCount; i++)
+                {
+                    if (toSkip > 0)
+                    {
+                        toSkip--;
+                        continue;
+                    }
+
+                    var c = formatItemChars[i];
+
+                    if (c == '/')
+                    {
+                        var nextCharIndex = ++i;
+                        if (nextCharIndex < charCount)
+                        {
+                            switch (formatItemChars[nextCharIndex])
+                            {
+                                case 'p':
+                                    outputSb.Append(player.Name);
+                                    break;
+                                case 'r':
+                                    outputSb.Append(playerRace(player).First());
+                                    break;
+                                case 'R':
+                                    outputSb.Append(playerRace(player));
+                                    break;
+                                case 'w':
+                                    char toAppend = playerVictoryStatus(_replay, player) ? 'W' : 'L';
+                                    char lastChar = GetLastCharacterStringBuilder(outputSb);
+                                    outputSb.Append((char.IsWhiteSpace(lastChar) || char.MinValue == lastChar) ? toAppend.ToString() : $" {toAppend}");
+                                    break;
+                                case 'W':
+                                    string toAppendString = playerVictoryStatus(_replay, player) ? "Winner" : "Loser";
+                                    char lastCharacter = GetLastCharacterStringBuilder(outputSb);
+                                    outputSb.Append((char.IsWhiteSpace(lastCharacter) || char.MinValue == lastCharacter) ? toAppendString : $" {toAppendString}");
+                                    break;
+                                default:
+                                    throw new InvalidOperationException();
+                            }
+                        }
+                    }
+                    else if (char.IsWhiteSpace(c) && !skipMoreWhiteSpace)
+                    {
+                        skipMoreWhiteSpace = true;
+                        outputSb.Append(c);
+                    }
+                    else
+                    {
+                        skipMoreWhiteSpace = false;
+                        outputSb.Append(c);
+                    }
+                }
+                if (playerIndex < playerCount - 1)
+                {
+                    outputSb.Append(", ");
+                }
+            }
+            return outputSb.ToString();
         }
 
-        private string GetPlayers(string formatRegex = "")
+        private string GetPlayers(string formatItem = null)
         {
-            var players = _replay.Players;
-            return players == null ? string.Empty : string.Join(",", players);
+            if (formatItem == null)
+            {
+                var players = _replay.Players;
+                return players == null ? string.Empty : string.Join(",", players);
+            }
+            else
+            {
+                var player = GetPlayerX(formatItem);
+                if (player == null)
+                    return "NoPlayer";
+
+                return player.Name;
+            }
         }
 
-        private string GetPlayersRaces(string formatRegex, OutputFormat outputFormat)
+        private string GetPlayersRaces(string formatItem, OutputFormat outputFormat)
         {
-            throw new NotImplementedException();
+            var player = GetPlayerX(formatItem);
+            if (player == null)
+                return "NoPlayer";
+
+            return outputFormat == OutputFormat.Short ? player.RaceType.ToString().First().ToString() : player.RaceType.ToString();
         }
 
-        private string GetPlayersVictoryStatus(string formatRegex)
+        private string GetPlayersVictoryStatus(string formatItem, OutputFormat outputFormat)
         {
-            throw new NotImplementedException();
+            var player = GetPlayerX(formatItem);
+            if (player == null)
+                return "NoPlayer";
+
+            var victoryStatusString = _replay.Winners.Contains(player) ? "Winner" : "Loser";
+            return outputFormat == OutputFormat.Short ? victoryStatusString.First().ToString() : victoryStatusString;
         }
 
         #endregion
@@ -293,8 +431,11 @@ namespace ReplayParser.ReplaySorter.Renaming
                 case CustomReplayNameSyntax.PlayerXRaceLong:
                     return GetPlayersRaces(customReplayNameSyntaxItem.Item2, OutputFormat.Long);
 
-                case CustomReplayNameSyntax.PlayerXVictoryStatus:
-                    return GetPlayersVictoryStatus(customReplayNameSyntaxItem.Item2);
+                case CustomReplayNameSyntax.PlayerXVictoryStatusShort:
+                    return GetPlayersVictoryStatus(customReplayNameSyntaxItem.Item2, OutputFormat.Long);
+
+                case CustomReplayNameSyntax.PlayerXVictoryStatusLong:
+                    return GetPlayersVictoryStatus(customReplayNameSyntaxItem.Item2, OutputFormat.Long);
 
                 default:
                     throw new InvalidOperationException();

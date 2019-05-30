@@ -116,10 +116,14 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
-    <Compile Include="Renaming\RenameResult\Renaming.cs" />
+    <Compile Include="Renaming\Enums\ReplayNameSectionType.cs" />
+    <Compile Include="Renaming\Renamer\Renaming.cs" />
     <Compile Include="Renaming\Renamer\RenamingParameters.cs" />
     <Compile Include="Renaming\Renamer\Renamer.cs" />
     <Compile Include="Renaming\ReplayDecorator.cs" />
+    <Compile Include="Renaming\ReplayNameSections\IReplayNameSection.cs" />
+    <Compile Include="Renaming\ReplayNameSections\MatchUp.cs" />
+    <Compile Include="Renaming\ReplayNameSections\Team.cs" />
     <Compile Include="Replays.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -133,16 +137,6 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ReplayHandler\ReplayHandler.cs" />
-    <Compile Include="Renaming\ReplayNameSections\Date.cs" />
-    <Compile Include="Renaming\ReplayNameSections\Duration.cs" />
-    <Compile Include="Renaming\ReplayNameSections\IReplayNameSection.cs" />
-    <Compile Include="Renaming\ReplayNameSections\LosingRace.cs" />
-    <Compile Include="Renaming\ReplayNameSections\LosingTeam.cs" />
-    <Compile Include="Renaming\ReplayNameSections\Map.cs" />
-    <Compile Include="Renaming\ReplayNameSections\MatchUp.cs" />
-    <Compile Include="Renaming\ReplayNameSections\Team.cs" />
-    <Compile Include="Renaming\ReplayNameSections\WinningRace.cs" />
-    <Compile Include="Renaming\ReplayNameSections\WinningTeam.cs" />
     <Compile Include="Sorting\Enums\PlayerType.cs" />
     <Compile Include="Sorting\SortCommands\ISortCommand.cs" />
     <Compile Include="Sorting\SortCommands\SortCommandFactory.cs" />

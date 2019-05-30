@@ -1,15 +1,13 @@
 ﻿using ReplayParser.Interfaces;
-using ReplayParser.ReplaySorter.ReplayRenamer;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System;
 using ReplayParser.ReplaySorter.Extensions;
-using ReplayParser.ReplaySorter.CustomFormat;
 using System.Text;
 
-namespace ReplayParser.ReplaySorter
+namespace ReplayParser.ReplaySorter.Renaming
 {
     public class CustomReplayFormat
     {
@@ -20,11 +18,21 @@ namespace ReplayParser.ReplaySorter
         #region static
 
         //TODO validate regexes
-        private static Regex _escapeCharacter = new Regex(@"\");
-        private static Dictionary<Regex, CustomReplayNameSyntax> _formatRegexes = new Dictionary<Regex, CustomReplayNameSyntax>
+        private static readonly Regex _escapeCharacter = new Regex(@"\");
+        private static readonly string _playerInfoOption1 =  @"(/p\s*(/[Rr]\s*)?(/[Ww]\s*)?)";
+        private static readonly string _playerInfoOption2 = @"(/p\s*(/[Ww]\s*)?(/[Rr]\s*)?)";
+        private static readonly string _playerInfoOption3 = @"(/[Rr]\s*(/p\s*)?(/[Ww]\s*)?)";
+        private static readonly string _playerInfoOption4 = @"(/[Rr]\s*(/[Ww]\s*)?(/p\s*)?)";
+        private static readonly string _playerInfoOption5 = @"(/[Ww]\s*(/p\s*)?(/[Rr]\s*)?)";
+        private static readonly string _playerInfoOption6 = @"(/[Ww]\s*(/[Rr]\s*)?(/p\s*)?)";
+
+        private static readonly Dictionary<Regex, CustomReplayNameSyntax> _formatRegexes = new Dictionary<Regex, CustomReplayNameSyntax>
         {
+            //TODO long, short form...
             { new Regex(@"^(W[Rr])"), CustomReplayNameSyntax.WinningRaces }, // Races of winners, comma separated list
+            //TODO long, short form...
             { new Regex(@"^(L[Rr)]"), CustomReplayNameSyntax.LosingRaces }, // Races of losers, comma separated list
+            //TODO long, short form...
             { new Regex(@"^([Rr])"), CustomReplayNameSyntax.Races }, // All races, comma separated list
             { new Regex(@"^(W[Tt]"), CustomReplayNameSyntax.WinningTeams }, // Winning team, comma separated list of players
             { new Regex(@"^(L[Tt])"), CustomReplayNameSyntax.LosingTeams }, // Losing teams, comma separated list of players, each team surrounded by parentheses
@@ -39,24 +47,25 @@ namespace ReplayParser.ReplaySorter
             { new Regex(@"^(F)"), CustomReplayNameSyntax.GameFormat }, // game format i.e. 1v1, 2v2, ... 
             { new Regex(@"^(gt)"), CustomReplayNameSyntax.GameTypeShort }, // game type i.e. melee, free for all, short form
             { new Regex(@"^(G[Tt])"), CustomReplayNameSyntax.GameTypeLong }, // game type i.e. melee, free for all, long form
-            { new Regex(@"^(<(((/p|/[Rr]|/[Ww]).*)+)>)"), CustomReplayNameSyntax.PlayerInfo }, // player specific instructions
-            { new Regex(@"^([P])"), CustomReplayNameSyntax.Players }, // comma separated list of all players
-            { new Regex(@"^([p]\d+)"), CustomReplayNameSyntax.PlayerX }, // extract the x'th player
-            { new Regex(@"^([r]\d+)"), CustomReplayNameSyntax.PlayerXRaceShort }, // extract the x'th player's race, short form
-            { new Regex(@"^([R]\d+)"), CustomReplayNameSyntax.PlayerXRaceLong }, // extract the x'th player's race, long form
-            { new Regex(@"^([Ww]\d+)"), CustomReplayNameSyntax.PlayerXVictoryStatus } // extract the the victory status of the x'th player
+            { new Regex($@"^(?:<{_playerInfoOption1}|{_playerInfoOption2}|{_playerInfoOption3}|{_playerInfoOption4}|{_playerInfoOption5}|{_playerInfoOption6}>)"), CustomReplayNameSyntax.PlayerInfo }, // player specific instructions
+            // { new Regex(@"^(?:<(((/p|/[Rr]|/[Ww])(?:\s+)?)+)>)"), CustomReplayNameSyntax.PlayerInfo }, // player specific instructions
+            { new Regex(@"^(P)"), CustomReplayNameSyntax.Players }, // comma separated list of all players
+            { new Regex(@"^(p\d+)"), CustomReplayNameSyntax.PlayerX }, // extract the x'th player
+            { new Regex(@"^(r\d+)"), CustomReplayNameSyntax.PlayerXRaceShort }, // extract the x'th player's race, short form
+            { new Regex(@"^(R\d+)"), CustomReplayNameSyntax.PlayerXRaceLong }, // extract the x'th player's race, long form
+            { new Regex(@"^(w\d+)"), CustomReplayNameSyntax.PlayerXVictoryStatusShort }, // extract the the victory status of the x'th player, short form
+            { new Regex(@"^(W\d+)"), CustomReplayNameSyntax.PlayerXVictoryStatusLong } // extract the the victory status of the x'th player, long form
+            //TODO add players+observers option?
             // { new Regex(@""), CustomReplayNameSyntax. }, // 
         };
 
         //TODO validate regexes
-        // private static Regex _playerBlockInfo = new Regex(@"^(((/p|/[Rr]|/[Ww]).*)+)$");
-        private static HashSet<char> _invalidFileChars = Path.GetInvalidFileNameChars().ToHashSet();
+        private static readonly HashSet<char> _invalidFileChars = Path.GetInvalidFileNameChars().ToHashSet();
 
         #endregion
 
-        private string _customFormat;
-        private Dictionary<CustomReplayNameSyntax, char> _separators = new Dictionary<CustomReplayNameSyntax, char>();
-        private List<Tuple<CustomReplayNameSyntax, string>> _customFormatSections;
+        private readonly string _customFormat;
+        private readonly List<Tuple<CustomReplayNameSyntax, string>> _customFormatSections;
 
         #endregion
 
@@ -131,28 +140,6 @@ namespace ReplayParser.ReplaySorter
                 customFormatStringBuilder.Append($"{literalFormat}{{{matchCounter++}}}");
                 customReplayFormatSections.Add(Tuple.Create(formatRegex.Value, formatSpecifier));
                 previousMatchIndexEnd = match.Index + 1 + formatSpecifier.Length;
-                // customReplayFormatSections.Add(Tuple.Create(formatSpecifier.Value, format))
-
-                // var nextMatch = match.NextMatch();
-                // var potentialFormatSpecifier = tocheck.Substring(
-                //         Math.Max(match.Index + 1, tocheck.Length - 1), 
-                //         nextMatch.Success ? (nextMatch.Index - (match.Index + 1)) : (tocheck.Length - (match.Index + 1))
-                // );
-
-                // var literalFormat = tocheck.Substring(previousMatchIndex, )
-
-                // var formatRegex = _formatRegexes.FirstOrDefault(r => r.Key.IsMatch(potentialFormatSpecifier));
-                // if (formatRegex.Equals(default(KeyValuePair<Regex, CustomReplayNameSyntax>)))
-                // {
-                //     customReplayFormat = null;
-                //     return false;
-                // }
-                // else
-                // {
-                //     var formatSpecifier = formatRegex.Key.Match(potentialFormatSpecifier).;
-                //     customFormatStringBuilder.Append(potentialFormatSpecifier.Substring(formatSpecifier.Length));
-                //     customReplayFormatSections.Add(Tuple.Create(formatRegex.Value, formatSpecifier));
-                // }
             }
             // If escapeCharacter doesn't match a single time, it just means it will be interpreted as a literal string...
             customReplayFormat = new CustomReplayFormat(customFormatStringBuilder.ToString(), customReplayFormatSections);
@@ -163,37 +150,12 @@ namespace ReplayParser.ReplaySorter
 
         #region instance
 
-        //TODO: fix
-        public Dictionary<CustomReplayNameSyntax, string> GenerateReplayNameSections(IReplay replay)
-        {
-            IReplayNameSection[] IReplayNameSections = new IReplayNameSection[(Enum.GetValues(typeof(CustomReplayNameSyntax))).Length];
-            IReplayNameSections[0] = new Teams(replay);
-            IReplayNameSections[1] = new WinningTeam(replay);
-            IReplayNameSections[2] = new LosingTeam(replay);
-            IReplayNameSections[3] = new Map(replay);
-            IReplayNameSections[4] = new Date(replay);
-            IReplayNameSections[5] = new WinningRace(replay);
-            IReplayNameSections[6] = new LosingRace(replay);
-            IReplayNameSections[7] = new MatchUp(replay, (Teams)IReplayNameSections[0]);
-            IReplayNameSections[8] = new Duration(replay);
+        // public Dictionary<CustomReplayNameSyntax, string> GenerateReplayNameSections(IReplay replay)
+        // {
+        //     throw new NotImplementedException();
+        // }
 
-            Dictionary<CustomReplayNameSyntax, string> ReplayNameSections = new Dictionary<CustomReplayNameSyntax, string>();
-
-            foreach (var argument in IReplayNameSections)
-            {
-                if (_separators.ContainsKey(argument.Type))
-                {
-                    ReplayNameSections.Add(argument.Type, argument.GetSection(_separators[argument.Type].ToString()));
-                }
-                else
-                {
-                    ReplayNameSections.Add(argument.Type, argument.GetSection());
-                }
-            }
-
-            return ReplayNameSections;
-        }
-
+        //TODO implement
         public string GenerateReplayName(IReplay replay)
         {
             // use replaywrapper object that has methods for each replay formatting item

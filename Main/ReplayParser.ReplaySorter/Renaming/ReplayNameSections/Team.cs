@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using ReplayParser.Interfaces;
+using ReplayParser.ReplaySorter.Renaming.Enums;
 
 namespace ReplayParser.ReplaySorter.ReplayRenamer
 {
+    //TODO remove
     public class Teams : IReplayNameSection
     {
         public Teams(IReplay areplay)
@@ -23,7 +25,7 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
         // Option 2
         //public IEnumerable<IList<IPlayer>> GroupedPlayers { get; set; }
 
-        public CustomReplayNameSyntax Type { get { return CustomReplayNameSyntax.T; } }
+        public ReplayNameSectionType Type { get { return ReplayNameSectionType.T; } }
 
         public void GenerateSection()
         {

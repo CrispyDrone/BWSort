@@ -9,6 +9,7 @@ using System.ComponentModel;
 using ReplayParser.ReplaySorter.Sorting.SortResult;
 using ReplayParser.ReplaySorter.IO;
 using System.Text;
+using ReplayParser.ReplaySorter.Renaming;
 
 namespace ReplayParser.ReplaySorter
 {
