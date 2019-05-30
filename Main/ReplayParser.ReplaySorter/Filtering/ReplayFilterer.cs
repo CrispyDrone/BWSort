@@ -1094,9 +1094,6 @@ namespace ReplayParser.ReplaySorter.Filtering
             return filterExpression?.Compile();
         }
 
-        //TODO extract to constants class or something
-        private const double FastestFPS = (double)1000 / 42;
-
         private int?[]  ParseDuration(string durationExpressionString)
         {
             if (string.IsNullOrWhiteSpace(durationExpressionString)) return null;
@@ -1159,7 +1156,7 @@ namespace ReplayParser.ReplaySorter.Filtering
             }
 
             //TODO make helper function to calculate frames from time value
-            return (int)((timeParts[0] * 3600 + timeParts[1] * 60 + timeParts[2]) * FastestFPS);
+            return (int)((timeParts[0] * 3600 + timeParts[1] * 60 + timeParts[2]) * Constants.FastestFPS);
         }
 
         //TODO extract common logic

@@ -32,8 +32,8 @@ namespace ReplayParser.ReplaySorter
             { new Regex(@"^(m)"), CustomReplayNameSyntax.MapShort }, // Map, short form i.e. first letter of each word
             { new Regex(@"^(M(?![Uu]))"), CustomReplayNameSyntax.MapLong }, // Map, long form
             { new Regex(@"^(M[Uu])"), CustomReplayNameSyntax.Matchup }, // Matchup
-            { new Regex(@"^(d(?!u))"), CustomReplayNameSyntax.Date }, // Date
-            { new Regex(@"^(D(?![Uu]))"), CustomReplayNameSyntax.DateTime }, // DateTime
+            { new Regex(@"^(d(?!u))"), CustomReplayNameSyntax.Date }, // Date, yy-MM-dd
+            { new Regex(@"^(D(?![Uu]))"), CustomReplayNameSyntax.DateTime }, // DateTime, yy-MM-dd hh:mm:ss
             { new Regex(@"^(du)"), CustomReplayNameSyntax.DurationShort }, // Duration, short format
             { new Regex(@"^(D[Uu])"), CustomReplayNameSyntax.DurationLong }, // Duration, long format
             { new Regex(@"^(F)"), CustomReplayNameSyntax.GameFormat }, // game format i.e. 1v1, 2v2, ... 
@@ -163,15 +163,9 @@ namespace ReplayParser.ReplaySorter
 
         #region instance
 
+        //TODO: fix
         public Dictionary<CustomReplayNameSyntax, string> GenerateReplayNameSections(IReplay replay)
         {
-            // implement factory design pattern, create respective object for each custom replay format argument
-            //Dictionary<CustomReplayNameSyntax, string>[] CustomReplayNameSections = new Dictionary<CustomReplayNameSyntax, string>[]();
-
-            //foreach (var CustomReplayNameSection in Enum.GetValues(typeof(CustomReplayNameSyntax)))
-            //{
-
-            //}
             IReplayNameSection[] IReplayNameSections = new IReplayNameSection[(Enum.GetValues(typeof(CustomReplayNameSyntax))).Length];
             IReplayNameSections[0] = new Teams(replay);
             IReplayNameSections[1] = new WinningTeam(replay);
@@ -198,18 +192,13 @@ namespace ReplayParser.ReplaySorter
             }
 
             return ReplayNameSections;
-            //int NumberOfTeams = ((Team)ReplayNameSections[0]).Teams.Length;
-
-            //Dictionary<int, Dictionary<CustomReplayNameSyntax, string[]>> TeamReplayNameSections = new Dictionary<int, Dictionary<CustomReplayNameSyntax, string[]>>();
-            //for (int i = 0; i < NumberOfTeams; i++)
-            //{
-            //    TeamReplayNameSections.Add(i, new Dictionary<CustomReplayNameSyntax, string[]>());
-            //}
-            //CustomReplayNameSections.Add(new KeyValuePair<CustomReplayNameSyntax, string>(CustomReplayNameSyntax.T, team.))
         }
 
         public string GenerateReplayName(IReplay replay)
         {
+            // use replaywrapper object that has methods for each replay formatting item
+            // replaywrapper needs to know the replay, the customreplaynamesyntax and in a few cases the actual regex itself for more information
+            // use string.Format with the formatting string and pass all the formatting items to it
             throw new NotImplementedException();
         }
 

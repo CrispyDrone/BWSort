@@ -97,6 +97,7 @@
     </Compile>
     <Compile Include="Configuration\IReplaySorterConfiguration.cs" />
     <Compile Include="Configuration\ReplaySorterAppConfiguration.cs" />
+    <Compile Include="Constants.cs" />
     <Compile Include="Diagnostics\ErrorLogger.cs" />
     <Compile Include="Diagnostics\ProgressBar.cs" />
     <Compile Include="Extensions\IEnumerableExtensions.cs" />
@@ -118,6 +119,7 @@
     <Compile Include="Renaming\RenameResult\Renaming.cs" />
     <Compile Include="Renaming\Renamer\RenamingParameters.cs" />
     <Compile Include="Renaming\Renamer\Renamer.cs" />
+    <Compile Include="Renaming\ReplayDecorator.cs" />
     <Compile Include="Replays.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
