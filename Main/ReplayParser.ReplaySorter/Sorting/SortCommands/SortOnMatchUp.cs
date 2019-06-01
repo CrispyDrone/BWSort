@@ -46,6 +46,8 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                     teamRaceBuilder.Append(matchup[i]);
                 }
             }
+            if (teamRaceBuilder.Length != 0)
+                yield return teamRaceBuilder.ToString();
         }
 
         private IDictionary<RaceType, int> EncodeRacesFrequency(string raceCombination)
@@ -72,7 +74,9 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                 }
                 MatchUpString.Append("vs");
             }
-            MatchUpString.Remove(MatchUpString.Length - 2, 2);
+            if (MatchUpString.Length >= 2)
+                MatchUpString.Remove(MatchUpString.Length - 2, 2);
+
             return MatchUpString.ToString();
         }
 
@@ -180,6 +184,10 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
             {
                 // make directory per matchup
                 var MatchUpName = MatchUpToString(matchup);
+
+                if (string.IsNullOrWhiteSpace(MatchUpName))
+                    MatchUpName = "NoPlayers";
+
                 Directory.CreateDirectory(sortDirectory + @"\" + MatchUpName);
 
                 var FileReplays = new List<File<IReplay>>();
@@ -289,6 +297,10 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
             {
                 // make directory per matchup
                 var MatchUpName = MatchUpToString(matchup);
+
+                if (string.IsNullOrWhiteSpace(MatchUpName))
+                    MatchUpName = "NoPlayers";
+
                 Directory.CreateDirectory(sortDirectory + @"\" + MatchUpName);
 
                 var FileReplays = new List<File<IReplay>>();
@@ -409,6 +421,10 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
             foreach (var matchup in ReplayMatchUp.Keys)
             {
                 var MatchUpName = MatchUpToString(matchup);
+
+                if (string.IsNullOrWhiteSpace(MatchUpName))
+                    MatchUpName = "NoPlayers";
+
                 var FileReplays = new List<File<IReplay>>();
                 DirectoryFileReplay.Add(new KeyValuePair<string, List<File<IReplay>>>(sortDirectory + @"\" + MatchUpName, FileReplays));
                 var MatchUpReplays = ReplayMatchUp[matchup];

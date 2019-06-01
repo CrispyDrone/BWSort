@@ -18,7 +18,7 @@ namespace ReplayParser.ReplaySorter.Renaming
         #region static
 
         //TODO validate regexes
-        private static readonly Regex _escapeCharacter = new Regex(@"\");
+        private static readonly Regex _escapeCharacter = new Regex(@"/");
         private static readonly string _playerInfoOption1 =  @"(/p\s*(/[Rr]\s*)?(/[Ww]\s*)?)";
         private static readonly string _playerInfoOption2 = @"(/p\s*(/[Ww]\s*)?(/[Rr]\s*)?)";
         private static readonly string _playerInfoOption3 = @"(/[Rr]\s*(/p\s*)?(/[Ww]\s*)?)";
@@ -31,10 +31,10 @@ namespace ReplayParser.ReplaySorter.Renaming
             //TODO long, short form...
             { new Regex(@"^(W[Rr])"), CustomReplayNameSyntax.WinningRaces }, // Races of winners, comma separated list
             //TODO long, short form...
-            { new Regex(@"^(L[Rr)]"), CustomReplayNameSyntax.LosingRaces }, // Races of losers, comma separated list
+            { new Regex(@"^(L[Rr])]"), CustomReplayNameSyntax.LosingRaces }, // Races of losers, comma separated list
             //TODO long, short form...
             { new Regex(@"^([Rr])"), CustomReplayNameSyntax.Races }, // All races, comma separated list
-            { new Regex(@"^(W[Tt]"), CustomReplayNameSyntax.WinningTeams }, // Winning team, comma separated list of players
+            { new Regex(@"^(W[Tt])"), CustomReplayNameSyntax.WinningTeams }, // Winning team, comma separated list of players
             { new Regex(@"^(L[Tt])"), CustomReplayNameSyntax.LosingTeams }, // Losing teams, comma separated list of players, each team surrounded by parentheses
             { new Regex(@"^(T)"), CustomReplayNameSyntax.Teams }, // Teams, comma separated list of players, each team surrounded by parentheses
             { new Regex(@"^(m)"), CustomReplayNameSyntax.MapShort }, // Map, short form i.e. first letter of each word
@@ -123,7 +123,7 @@ namespace ReplayParser.ReplaySorter.Renaming
             {
                 var nextMatch = match.NextMatch();
                 var stringContainingFormatSpecifier = toCheck.Substring(
-                            Math.Max(match.Index + 1, toCheck.Length - 1),
+                            Math.Min(match.Index + 1, toCheck.Length - 1),
                             nextMatch.Success ? (nextMatch.Index - (match.Index + 1)) : (toCheck.Length - (match.Index + 1))
                         );
 
@@ -161,7 +161,14 @@ namespace ReplayParser.ReplaySorter.Renaming
             // use replaywrapper object that has methods for each replay formatting item
             // replaywrapper needs to know the replay, the customreplaynamesyntax and in a few cases the actual regex itself for more information
             // use string.Format with the formatting string and pass all the formatting items to it
-            throw new NotImplementedException();
+            var replayWrapper = ReplayDecorator.Create(replay);
+            var customReplayNameSectionsReplacements = new string[_customFormatSections.Count];
+            for (int i = 0; i < _customFormatSections.Count; i++)
+            {
+                customReplayNameSectionsReplacements[i] = replayWrapper.GetReplayItem(_customFormatSections[i]);
+            }
+
+            return string.Format(_customFormat, customReplayNameSectionsReplacements);
         }
 
         public override string ToString()

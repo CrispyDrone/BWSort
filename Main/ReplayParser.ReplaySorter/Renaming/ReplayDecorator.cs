@@ -4,6 +4,8 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System;
+using ReplayParser.ReplaySorter.IO;
+using System.Text.RegularExpressions;
 
 namespace ReplayParser.ReplaySorter.Renaming
 {
@@ -144,10 +146,12 @@ namespace ReplayParser.ReplaySorter.Renaming
             return outputSb.ToString();
         }
 
+        private static Regex _ignoreMapNameParts = new Regex(@"iccup|\d+|\d+\.\d+", RegexOptions.IgnoreCase);
         private string GetMap(OutputFormat outputFormat)
         {
             var map = _replay.ReplayMap.MapName;
-            return outputFormat == OutputFormat.Short ? new string(map.Split( ).Select(word => word.First()).ToArray()) : map;
+            map = FileHandler.RemoveInvalidChars(map);
+            return outputFormat == OutputFormat.Short ? new string(map.Split((char[])null, StringSplitOptions.RemoveEmptyEntries).Where(word => !_ignoreMapNameParts.IsMatch(word)).Select(word => word.First()).ToArray()) : map;
         }
 
         private string GetMatchup()
