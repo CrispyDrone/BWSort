@@ -57,7 +57,7 @@ namespace ReplayParser.ReplaySorter.Renaming
             { new Regex(@"^(F)"), CustomReplayNameSyntax.GameFormat }, // game format i.e. 1v1, 2v2, ... 
             { new Regex(@"^(gt)"), CustomReplayNameSyntax.GameTypeShort }, // game type i.e. melee, free for all, short form
             { new Regex(@"^(G[Tt])"), CustomReplayNameSyntax.GameTypeLong }, // game type i.e. melee, free for all, long form
-            { new Regex($@"^(<{_playerInfoOption1}|{_playerInfoOption2}|{_playerInfoOption3}|{_playerInfoOption4}|{_playerInfoOption5}|{_playerInfoOption6}|{_playerInfoOption7}|{_playerInfoOption8}|{_playerInfoOption9}|{_playerInfoOption10}|{_playerInfoOption11}|{_playerInfoOption12}|{_playerInfoOption13}|{_playerInfoOption14}|{_playerInfoOption15}>)"), CustomReplayNameSyntax.PlayerInfo }, // player specific instructions
+            { new Regex($@"^(<({_playerInfoOption1}|{_playerInfoOption2}|{_playerInfoOption3}|{_playerInfoOption4}|{_playerInfoOption5}|{_playerInfoOption6}|{_playerInfoOption7}|{_playerInfoOption8}|{_playerInfoOption9}|{_playerInfoOption10}|{_playerInfoOption11}|{_playerInfoOption12}|{_playerInfoOption13}|{_playerInfoOption14}|{_playerInfoOption15})>)"), CustomReplayNameSyntax.PlayerInfo }, // player specific instructions
             // { new Regex(@"^(?:<(((/p|/[Rr]|/[Ww])(?:\s+)?)+)>)"), CustomReplayNameSyntax.PlayerInfo }, // player specific instructions
             { new Regex(@"^(P)"), CustomReplayNameSyntax.Players }, // comma separated list of all players
             { new Regex(@"^(p\d+)"), CustomReplayNameSyntax.PlayerX }, // extract the x'th player
