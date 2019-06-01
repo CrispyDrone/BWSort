@@ -1,5 +1,6 @@
 ﻿using ReplayParser.Interfaces;
 using ReplayParser.ReplaySorter.IO;
+using ReplayParser.ReplaySorter.Renaming;
 using ReplayParser.ReplaySorter.ReplayRenamer;
 using ReplayParser.ReplaySorter.Sorting;
 using System;
@@ -834,12 +835,25 @@ namespace ReplayParser.ReplaySorter.Filtering
 
             foreach (var matchupExpression in matchupExpressions)
             {
-                //TODO adjust to NOT use Teams ??
-                var replayTeams = Expression.New(typeof(Teams).GetConstructor(new Type[] { typeof(IReplay) }), replayProper);
-                //TODO adjust to NOT use MatchUp ??
-                var replayMatchup = Expression.New(typeof(MatchUp).GetConstructor(new Type[] { typeof(IReplay), typeof(Teams) }), replayProper, replayTeams);
-                //TODO adjust to NOT use MatchUp ??
-                var replayMatchupAsString = Expression.Call(replayMatchup, typeof(MatchUp).GetMethod("GetSection"), Expression.Constant(string.Empty, typeof(string)));
+                // OLD
+                // var replayTeams = Expression.New(typeof(Teams).GetConstructor(new Type[] { typeof(IReplay) }), replayProper);
+                // var replayMatchup = Expression.New(typeof(MatchUp).GetConstructor(new Type[] { typeof(IReplay), typeof(Teams) }), replayProper, replayTeams);
+                // var replayMatchupAsString = Expression.Call(replayMatchup, typeof(MatchUp).GetMethod("GetSection"), Expression.Constant(string.Empty, typeof(string)));
+
+                //TODO: TEST - NEW
+                var replayDecorator = Expression.Call(typeof(ReplayDecorator).GetMethod("Create"), replayProper);
+                // var replayDecorator = Expression.New(typeof(ReplayDecorator).GetConstructor(new Type[] { typeof(IReplay) }), replayProper);
+                var replayMatchupAsString = Expression.Call(
+                    replayDecorator, 
+                    typeof(ReplayDecorator).GetMethod("GetReplayItem"), 
+                    Expression.Call(
+                        typeof(Tuple).GetMethods().Where(m => m.Name == "Create" && m.GetGenericArguments().Count() == 2).Single().MakeGenericMethod((new[] { typeof(CustomReplayNameSyntax), typeof(string) })),
+                        Expression.Constant(CustomReplayNameSyntax.Matchup), 
+                        Expression.Constant(string.Empty)
+                    )
+                );
+
+
                 // where(r => CompareMatchups(new matchup(new team(replay), replay).GetSection(), matchupstring))
                 Expression body = Expression.IsTrue(
                     Expression.TryCatch(
@@ -942,6 +956,9 @@ namespace ReplayParser.ReplaySorter.Filtering
                 if (raceCountsTeamWithoutWildCards[i] != raceCountsTeamWithWildCards[i] && --numberOfWildCards < 0)
                     return false;
             }
+            if (numberOfWildCards > 0)
+                return false;
+
             return true;
         }
 

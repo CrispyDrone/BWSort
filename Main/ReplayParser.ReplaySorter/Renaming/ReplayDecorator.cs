@@ -83,6 +83,17 @@ namespace ReplayParser.ReplaySorter.Renaming
             return _replay.Players.Where(p => p.Identifier == playerNumber).FirstOrDefault();
         }
 
+        private int TakeWhileWhiteSpaceCount(char[] formatItemChars, int startIndex)
+        {
+            var maxIndex = formatItemChars.Count() - 1;
+            if (startIndex > maxIndex)
+                return 0;
+
+            int count = startIndex;
+            while (count <= maxIndex && char.IsWhiteSpace(formatItemChars[count++])) ;
+            return Math.Max(0, count - startIndex - 1);
+        }
+
         #endregion
 
         //TODO support custom separator?
@@ -233,7 +244,6 @@ namespace ReplayParser.ReplaySorter.Renaming
             var formatItemChars = formatItem.ToCharArray();
             var charCount = formatItemChars.Count();
             int toSkip = 0;
-            bool skipMoreWhiteSpace = false;
             var playerCount = players.Count();
             for (int playerIndex = 0; playerIndex < playerCount; playerIndex++)
             {
@@ -250,9 +260,10 @@ namespace ReplayParser.ReplaySorter.Renaming
 
                     if (c == '/')
                     {
-                        var nextCharIndex = ++i;
+                        var nextCharIndex = i + 1;
                         if (nextCharIndex < charCount)
                         {
+                            toSkip += 1 + TakeWhileWhiteSpaceCount(formatItemChars, i + 2);
                             switch (formatItemChars[nextCharIndex])
                             {
                                 case 'p':
@@ -279,14 +290,8 @@ namespace ReplayParser.ReplaySorter.Renaming
                             }
                         }
                     }
-                    else if (char.IsWhiteSpace(c) && !skipMoreWhiteSpace)
-                    {
-                        skipMoreWhiteSpace = true;
-                        outputSb.Append(c);
-                    }
                     else
                     {
-                        skipMoreWhiteSpace = false;
                         outputSb.Append(c);
                     }
                 }
