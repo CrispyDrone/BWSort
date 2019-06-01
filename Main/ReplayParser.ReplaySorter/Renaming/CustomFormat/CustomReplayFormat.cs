@@ -147,35 +147,6 @@ namespace ReplayParser.ReplaySorter.Renaming
                     return false;
                 }
 
-                // var nextMatchIndexFromMatch = 0;
-
-                // var nextChar = toCheck[matchIndex + 1];
-                // if (nextChar == '<')
-                // {
-                //     matchIndex += 2;
-                //     var nextMatch = _playerInfoBlockEnd.Match(toCheck.Substring(matchIndex));
-                //     if (!nextMatch.Success)
-                //     {
-                //         customReplayFormat = null;
-                //         return false;
-                //     }
-
-                //     nextMatchIndexFromMatch = nextMatch.Index;
-                //     match = match.NextMatch();
-                //     while (match.Success && match.Index < matchIndex + nextMatchIndexFromMatch)
-                //     {
-                //         match = match.NextMatch();
-                //     }
-                // }
-                // else
-                // {
-                //     matchIndex += 1;
-                //     var nextMatch = match.NextMatch();
-                //     nextMatchIndexFromMatch = nextMatch.Success ? nextMatch.Index : 0;
-                //     match = nextMatch;
-                // }
-
-                // var stringContainingFormatSpecifier = toCheck.Substring(matchIndex, nextMatchIndexFromMatch).Trim();
                 var stringContainingFormatSpecifier = toCheck.Substring(matchIndex + 1);
                 var formatRegex = _formatRegexes.FirstOrDefault(r => r.Key.IsMatch(stringContainingFormatSpecifier));
 
@@ -197,61 +168,6 @@ namespace ReplayParser.ReplaySorter.Renaming
             customFormatStringBuilder.Append(toCheck.Substring(previousMatchIndexEnd));
             customReplayFormat = new CustomReplayFormat(customFormatStringBuilder.ToString(), customReplayFormatSections);
             return true;
-
-            //TODO thrash code doesn't work
-            // var matches = _escapeCharacter.Matches(toCheck);
-            // var previousMatchIndexEnd = 0;
-            // var matchCounter = 0;
-            // foreach (Match match in matches)
-            // {
-            //     var matchIndex = match.Index;
-            //     var nextMatchIndexFromMatch = toCheck.Length - (matchIndex + 1);
-            //     if (matchIndex + 1 < toCheck.Length)
-            //     {
-            //         var nextChar = toCheck[matchIndex + 1];
-            //         if (nextChar == '<')
-            //         {
-            //             var nextMatch = _playerInfoBlockEnd.Match(toCheck.Substring(matchIndex));
-            //             if (nextMatch.Success)
-            //             {
-            //                 nextMatchIndexFromMatch = nextMatch.Index - 1;
-            //                 matchIndex += 2;
-            //             }
-            //         }
-            //         else
-            //         {
-            //             var nextMatch = match.NextMatch();
-            //             if (nextMatch.Success)
-            //             {
-            //                 nextMatchIndexFromMatch = nextMatch.Index - (matchIndex + 1);
-            //                 matchIndex += 1;
-            //             }
-            //         }
-            //     }
-            //     else
-            //     {
-            //         customReplayFormat = null;
-            //         return false;
-            //     }
-
-            //     var stringContainingFormatSpecifier = toCheck.Substring(matchIndex, nextMatchIndexFromMatch);
-            //     var literalFormat = toCheck.Substring(previousMatchIndexEnd, match.Index - previousMatchIndexEnd);
-            //     var formatRegex = _formatRegexes.FirstOrDefault(r => r.Key.IsMatch(stringContainingFormatSpecifier));
-
-            //     if (formatRegex.Equals(default(KeyValuePair<Regex, CustomReplayNameSyntax>)))
-            //     {
-            //         customReplayFormat = null;
-            //         return false;
-            //     }
-
-            //     var formatSpecifier = formatRegex.Key.Match(stringContainingFormatSpecifier).Groups[0].Value;
-            //     customFormatStringBuilder.Append($"{literalFormat}{{{matchCounter++}}}");
-            //     customReplayFormatSections.Add(Tuple.Create(formatRegex.Value, formatSpecifier));
-            //     previousMatchIndexEnd = match.Index + 1 + formatSpecifier.Length;
-            // }
-            // If escapeCharacter doesn't match a single time, it just means it will be interpreted as a literal string...
-            // customReplayFormat = new CustomReplayFormat(customFormatStringBuilder.ToString(), customReplayFormatSections);
-            // return true;
         }
 
         #endregion
@@ -263,7 +179,6 @@ namespace ReplayParser.ReplaySorter.Renaming
         //     throw new NotImplementedException();
         // }
 
-        //TODO implement
         public string GenerateReplayName(IReplay replay)
         {
             // use replaywrapper object that has methods for each replay formatting item

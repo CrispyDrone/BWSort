@@ -123,13 +123,13 @@ namespace ReplayParser.ReplaySorter.Renaming
         {
             //TODO: Issue with players of different ForceIdentifiers both winning...
             var winningTeam = _replay.Winners;
-            return winningTeam == null ? "NoWinners" : string.Join(",", winningTeam);
+            return winningTeam == null ? "NoWinners" : string.Join(",", winningTeam.Select(p => p.Name));
         }
 
         private string GetLosingTeam()
         {
             var losingTeam = _replay.Players.Except(_replay.Winners);
-            return losingTeam == null ? "NoLosers" : string.Join(",", losingTeam);
+            return losingTeam == null ? "NoLosers" : string.Join(",", losingTeam.Select(p => p.Name));
         }
 
         private string GetTeams()
@@ -140,7 +140,7 @@ namespace ReplayParser.ReplaySorter.Renaming
             foreach (var team in playersPerTeam)
             {
                 outputSb.Append("(");
-                outputSb.Append(string.Join(",", team));
+                outputSb.Append(string.Join(",", team.Select(p => p.Name)));
                 outputSb.Append(")");
             }
             return outputSb.ToString();
@@ -169,7 +169,7 @@ namespace ReplayParser.ReplaySorter.Renaming
 
         private string GetDateTime()
         {
-            return _replay.Timestamp.ToString("yy-MM-dd hh:mm:ss", CultureInfo.InvariantCulture);
+            return _replay.Timestamp.ToString("yy-MM-ddThhmmss", CultureInfo.InvariantCulture);
         }
 
         private string GetDuration(OutputFormat outputFormat)
@@ -178,9 +178,9 @@ namespace ReplayParser.ReplaySorter.Renaming
             var gameLength = TimeSpan.FromSeconds(Math.Round(_replay.FrameCount / Constants.FastestFPS));
             if (outputFormat == OutputFormat.Short)
             {
-                durationSb.Append(gameLength.Hours == 0 ? string.Empty : $"{gameLength.Hours.ToString().PadLeft(2, '0')}:");
-                durationSb.Append($"{gameLength.Minutes.ToString().PadLeft(2, '0')}:");
-                durationSb.Append($"{gameLength.Seconds.ToString().PadLeft(2, '0')}:");
+                durationSb.Append(gameLength.Hours == 0 ? string.Empty : $"{gameLength.Hours.ToString().PadLeft(2, '0')}_");
+                durationSb.Append($"{gameLength.Minutes.ToString().PadLeft(2, '0')}_");
+                durationSb.Append($"{gameLength.Seconds.ToString().PadLeft(2, '0')}");
             }
             else
             {
@@ -312,7 +312,7 @@ namespace ReplayParser.ReplaySorter.Renaming
             if (formatItem == null)
             {
                 var players = _replay.Players;
-                return players == null ? string.Empty : string.Join(",", players);
+                return players == null ? string.Empty : string.Join(",", players.Select(p => p.Name));
             }
             else
             {
