@@ -245,13 +245,15 @@ Due to the possible presence of some bugs and it being hard to verify edge case 
 2. Allow sorting in place and add possibility to undo/redo.
 3. Add replay detail view with action history (i.e. build order) and some basic stats and graphs 
 4. Add map rendering in the replay list view based on map data inside the replay instead of needing to use image files
-5. Improve renaming flexibility similar to sc2gears/scelight
-6. Try to improve the parsing algorithm which will mean more reliable sorting, renaming, filtering,...:
+5. Try to improve the parsing algorithm which will mean more reliable sorting, renaming, filtering,...:
    + This will fix team identification which is currently very buggy. Players are often reported to be on the same team even though they are opponents.
    + Match-up identification as a result is also buggy since players are not separated into the correct teams.
-7. Support for 1.16 replays
-8. Allow backups of multiple directories at the same time
-9. General bug fixing
+   + It will fix observer identification since actions in many instances aren't parsed correctly
+   + It will fix the action list allowing much better insight into the build order of a replay
+   + ...
+6. Support for 1.16 replays
+7. Allow backups of multiple directories at the same time
+8. General bug fixing
 
 In the very far future, there might be a complete rewrite from scratch with a much better designed codebase. To understand why this is necessary look at the [project history section](#project-history). 
 
@@ -261,6 +263,7 @@ At the end of 2017 I had just started to learn how to program and was still play
 
 ### Change history
 #### v1.0
++ Rewrote the renaming feature. It is now much more flexible and supports many more options.
 + Removed support to rename the last sort since it was too complex and made some aspects of the UI confusing
 + Updated graphical user interface to be more intuitive
   + Added a view to discover replay files before parsing allowing you to craft the set of replays you want to parse i.e. you can import from multiple directories and remove individual replays
