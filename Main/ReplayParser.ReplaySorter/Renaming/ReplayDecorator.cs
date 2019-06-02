@@ -275,6 +275,10 @@ namespace ReplayParser.ReplaySorter.Renaming
                         if (nextCharIndex < charCount)
                         {
                             toSkip += 1 + TakeWhileWhiteSpaceCount(formatItemChars, i + 2);
+                            char lastChar = GetLastCharacterStringBuilder(outputSb);
+                            if (!char.IsWhiteSpace(lastChar))
+                                outputSb.Append(' ');
+
                             switch (formatItemChars[nextCharIndex])
                             {
                                 case 'p':
@@ -287,14 +291,10 @@ namespace ReplayParser.ReplaySorter.Renaming
                                     outputSb.Append(playerRace(player));
                                     break;
                                 case 'w':
-                                    char toAppend = playerVictoryStatus(_replay, player) ? 'W' : 'L';
-                                    char lastChar = GetLastCharacterStringBuilder(outputSb);
-                                    outputSb.Append((char.IsWhiteSpace(lastChar) || char.MinValue == lastChar) ? toAppend.ToString() : $" {toAppend}");
+                                    outputSb.Append(playerVictoryStatus(_replay, player) ? 'W' : 'L');
                                     break;
                                 case 'W':
-                                    string toAppendString = playerVictoryStatus(_replay, player) ? "Winner" : "Loser";
-                                    char lastCharacter = GetLastCharacterStringBuilder(outputSb);
-                                    outputSb.Append((char.IsWhiteSpace(lastCharacter) || char.MinValue == lastCharacter) ? toAppendString : $" {toAppendString}");
+                                    outputSb.Append(playerVictoryStatus(_replay, player) ? "Winner" : "Loser");
                                     break;
                                 default:
                                     throw new InvalidOperationException();

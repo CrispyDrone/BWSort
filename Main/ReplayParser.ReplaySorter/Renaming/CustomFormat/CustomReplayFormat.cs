@@ -52,7 +52,7 @@ namespace ReplayParser.ReplaySorter.Renaming
             { new Regex(@"^(M(?![Uu]))"), CustomReplayNameSyntax.MapLong }, // Map, long form
             { new Regex(@"^(M[Uu])"), CustomReplayNameSyntax.Matchup }, // Matchup
             { new Regex(@"^(d(?!u))"), CustomReplayNameSyntax.Date }, // Date, yy-MM-dd
-            { new Regex(@"^(D(?![Uu]))"), CustomReplayNameSyntax.DateTime }, // DateTime, yy-MM-dd hh:mm:ss
+            { new Regex(@"^(D(?![Uu]))"), CustomReplayNameSyntax.DateTime }, // DateTime, yy-MM-ddThhmmss
             { new Regex(@"^(du)"), CustomReplayNameSyntax.DurationShort }, // Duration, short format
             { new Regex(@"^(D[Uu])"), CustomReplayNameSyntax.DurationLong }, // Duration, long format
             { new Regex(@"^(F)"), CustomReplayNameSyntax.GameFormat }, // game format i.e. 1v1, 2v2, ... 

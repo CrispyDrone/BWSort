@@ -383,7 +383,7 @@
                                                     <ItemsControl.ItemTemplate>
                                                         <DataTemplate>
                                                             <StackPanel Orientation="Horizontal">
-                                                                <Image Source="/images/crown.png" Height="10px" Width="10px">
+                                                                <Image Source="/images/crown.png" Height="16px" Width="16px">
                                                                     <Image.Visibility>
                                                                         <MultiBinding Converter="{StaticResource PTWBConverter}">
                                                                             <Binding BindsDirectlyToSource="True"/>
@@ -391,7 +391,7 @@
                                                                         </MultiBinding>
                                                                     </Image.Visibility>
                                                                 </Image>
-                                                                <Image Source="/images/eye.png" Height="10px" Width="10px">
+                                                                <Image Source="/images/eye.png" Height="16px" Width="16px">
                                                                     <Image.Visibility>
                                                                         <MultiBinding Converter="{StaticResource PTOBConverter}">
                                                                             <Binding BindsDirectlyToSource="True"/>
@@ -419,8 +419,8 @@
                                             <StackPanel>
                                                 <Image 
                                                     Source="{Binding Path=Content.ReplayMap.MapName, Converter={StaticResource MTFConverter}}"
-                                                    Height="30px"
-                                                    Width="30px"
+                                                    Height="50px"
+                                                    Width="50px"
                                                  />
                                                 <Label Content="{Binding Path=Content.ReplayMap.MapName}"></Label>
                                             </StackPanel>

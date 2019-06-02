@@ -142,22 +142,45 @@ It is also possible at any point to always return to how the replays were named 
 ![Rename replays according to a custom format. You can rename in place or into an output directory. The output area shows how each filename has changed.](./imgs/rename-tab-in-place.png)
 
 #### Renaming syntax
-The current syntax is quite sensitive, so be careful to not include any unnecessary spaces anywhere. The syntax consists of:
-1. T[separator] with separator being a single character (for example `,` or `_` ). This will extract the teams from the replay and separate individual players per team using the separator.
-2. WT[separator] only extracts the winning team.
-3. LT[separator] only extracts the losing team.
-4. MU gets the match-up.
-5. M gets the map.
-6. DU gets the game length.
-7. D gets the date the game was played on.
-8. WR extracts the winning race.
-9. LR extracts the losing race.
+You can rename your replays by using special placeholders that start with the `/` character, currently BWSort supports the following placeholders:
++ `WR` or `Wr`: Stands for WinningRaces, which will be replaced by a comma separated list of the races of the winning players.
++ `LR` or `Lr`: Stands for LosingRaces, which will be replaced by a comma separated list of the races of the losing players.
++ `R` or `r`: Stands for Races, which will be replaced by a comma separated list of the races of all players (excluding observers).
++ `WT` or `Wt`: Stands for WinningTeam, which will be replaced by a comma separated list of all the names of the winning players.
++ `LT` or `Lt`: Stands for LosingTeams, which will be replaced by a comma separated list of all the names of the losing players. Each team will be surrounded by parantheses.
++ `T`: Stands for Teams, which will be replaced by a comma separated list of all the names of all players, exluding observers. Each team will be surrounded by parantheses.
++ `m`: Stands for map. This will print a short form i.e. the first letter of each word. This is sufficiently recognizable for most maps however some maps will have strange abbreviations.
++ `M`: Stands for map. This will print the long form i.e. the full map name.
++ `MU or Mu`: Stands for Match-up. This will be replaced by the match-up.
++ `d`: Stands for date. This will be replaced by the date in the year-month-day format.
++ `D`: Stands for datetime. This will be replaced by the datetime in a format that resembles ISO-8601, without the timezone information, an example would be `2019-05-25T160510` which means 5 minutes and 10 seconds past 4 in the afternoon on 25th of May, 2019.
++ `du`: Stands for duration. This wll be replaced by the duration of the replay in a short format, an example would be `01_05_15` which means 1 hour, 5 minutes and 15 seconds.
++ `DU or Du`: Stands for duration. This will be replaced by the duration of the replay in a longer format by writing out the time units (hours, minutes, seconds). An example would be `1 hour 5 minutes 15 seconds`.
++ `F`: Stands for game format. This will be replaced by the team grouping to give an indication of what kind of game it was i.e. 1v1, 2v2, 3v3...
++ `gt`: Stands for game type. This will be replaced by the actual game type as known by starcraft such as TopVsBottom (TvB), Melee (M), OneOnOne (OvO),... in an abbreviated form.
++ `GT or Gt`: Stands for game type. This will be replaced by the full name of the game type.
++ `P`: Stands for players. This will be replaced by a comma separated list of all players including observers.
++ `p`: Stands for players. This will be replaced by a comma separated list of all players excluding observers.
++ `<>`: Stands for player info block. In this block you can specify arguments that will be applied to all players of the replay.
+  + `p`: Stands for player. This will be replaced by the name of the player.
+  + `R:` Stands for race. This will be replaced by the full name of the race of the player.
+  + `r`: Stands for race. This will be replaced by the first letter of the race of the player.
+  + `W`: Stands for winstatus. This will be replaced by `Winner` or `Loser` depending on whether the player is a winner or loser.
+  + `w`: Stands for winstatus. This will be replaced by `W` or `L` depending on whether the player is a winner or loser.
++ `O`: Stands for original. This will be replaced by the original name of the replay.
++ The following placeholders allow you to specify a non-negative (natural) integer. This corresponds to the identifier a player has in the game, unfortunately these are unpredictable.
+  + `Px`: Stands for player x. This will be replaced by the name of the x'th player.
+  + `Rx`: Stands for race x. This will be replaced by the full name of the race of the x'th player.
+  + `rx`: Stands for race x. This will be replaced by the first letter of the race of the x'th player.
+  + `Wx`: Stands for winstatus x. This will be replaced by `Winner` or `Loser` depending on whether the x'th player is a winner or loser.
+  + `wx`: Stands for winstatus x. This will be replaced by `W` or `L` depending on whether the x'th player is a winner or loser.
 
-You have to use vertical bars `|` to separate arguments. 
+You can use these placeholders in an otherwise literally interpreted sentence: `Defiler tournament - /d - /Mu - /</p /r /w>` which would produce replays with names such as:
++ `Defiler tournament - 2019-05-03 - ZvZ - Jaedong Z W, CrispyDrone Z L`
++ `Defiler tournament - 2019-05-03 - PZvPZ - Bisu P W, Jaedong Z W, CrispyDrone Z L, AbstractDaddy P L`
 
 #### Examples
-1. `DU|M|WT[_]`: will give a replay of the format: `15min13sFightingSpirit(CrispyDrone_Jaedong).rep`
-2. `D|MU|M|DU`: will give a replay of the format: `11-03-19ZZvsTTFightingSpirit15min13s.rep`
+TODO
 
 ### Backup replays
 You can backup directories containing replays. First you will have to create a new database file; you can give it a name and create it in a specific directory, it will be automatically selected as the active database.
@@ -278,3 +301,6 @@ This project is licensed under the GNU GPLv3 license.
 
 ## Acknowledgements
 Many thanks to SimplySerenity for porting the replay parser to C#. You can find the original project here: <https://github.com/SimplySerenity/SCReplayFileParser>
+
+## Attributions
++ <div>Crown icon made by <a href="https://www.flaticon.com/authors/pixel-perfect" title="Pixel perfect">Pixel perfect</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a> is licensed by <a href="http://creativecommons.org/licenses/by/3.0/" title="Creative Commons BY 3.0" target="_blank">CC 3.0 BY</a>.</div>
