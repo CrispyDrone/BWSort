@@ -6,6 +6,7 @@ using System.Text;
 using System;
 using ReplayParser.ReplaySorter.IO;
 using System.Text.RegularExpressions;
+using System.IO;
 
 namespace ReplayParser.ReplaySorter.Renaming
 {
@@ -25,7 +26,10 @@ namespace ReplayParser.ReplaySorter.Renaming
 
         #region fields
 
-        private IReplay _replay;
+        private readonly File<IReplay> _replayFile;
+        private readonly IReplay _replay;
+        private static readonly Regex _ignoreMapNameParts = new Regex(@"iccup|\d+|\d+\.\d+", RegexOptions.IgnoreCase);
+        private static readonly Regex _digit = new Regex(@"\d");
 
         #endregion
 
@@ -81,7 +85,11 @@ namespace ReplayParser.ReplaySorter.Renaming
 
         private IPlayer GetPlayerX(string formatItem)
         {
-            var playerNumber = int.Parse(formatItem.Substring(formatItem.IndexOf('/') + 1), NumberStyles.None);
+            var firstDigitMatch = _digit.Match(formatItem);
+            if (!firstDigitMatch.Success)
+                throw new InvalidOperationException($"{nameof(formatItem)} does not contain a valid player identifier!");
+
+            var playerNumber = int.Parse(formatItem.Substring(firstDigitMatch.Index), NumberStyles.None);
             return _replay.Players.Where(p => p.Identifier == playerNumber).FirstOrDefault();
         }
 
@@ -146,7 +154,6 @@ namespace ReplayParser.ReplaySorter.Renaming
             return outputSb.ToString();
         }
 
-        private static Regex _ignoreMapNameParts = new Regex(@"iccup|\d+|\d+\.\d+", RegexOptions.IgnoreCase);
         private string GetMap(OutputFormat outputFormat)
         {
             var map = _replay.ReplayMap.MapName;
@@ -343,13 +350,19 @@ namespace ReplayParser.ReplaySorter.Renaming
             return outputFormat == OutputFormat.Short ? victoryStatusString.First().ToString() : victoryStatusString;
         }
 
+        private string GetOriginalName()
+        {
+            return Path.GetFileNameWithoutExtension(_replayFile.FilePath);
+        }
+
         #endregion
 
         #region constructor
 
-        private ReplayDecorator(IReplay replay)
+        private ReplayDecorator(File<IReplay> replayFile)
         {
-            _replay = replay;
+            _replayFile = replayFile;
+            _replay = replayFile.Content;
         }
 
         #endregion
@@ -362,10 +375,10 @@ namespace ReplayParser.ReplaySorter.Renaming
 
         #region constructor
 
-        public static ReplayDecorator Create(IReplay replay)
+        public static ReplayDecorator Create(File<IReplay> replayFile)
         {
-            if (replay == null) throw new NullReferenceException(nameof(replay));
-            return new ReplayDecorator(replay);
+            if (replayFile == null) throw new NullReferenceException(nameof(replayFile));
+            return new ReplayDecorator(replayFile);
         }
 
         #endregion
@@ -441,10 +454,13 @@ namespace ReplayParser.ReplaySorter.Renaming
                     return GetPlayersRaces(customReplayNameSyntaxItem.Item2, OutputFormat.Long);
 
                 case CustomReplayNameSyntax.PlayerXVictoryStatusShort:
-                    return GetPlayersVictoryStatus(customReplayNameSyntaxItem.Item2, OutputFormat.Long);
+                    return GetPlayersVictoryStatus(customReplayNameSyntaxItem.Item2, OutputFormat.Short);
 
                 case CustomReplayNameSyntax.PlayerXVictoryStatusLong:
                     return GetPlayersVictoryStatus(customReplayNameSyntaxItem.Item2, OutputFormat.Long);
+
+                case CustomReplayNameSyntax.OriginalName:
+                    return GetOriginalName();
 
                 default:
                     throw new InvalidOperationException();

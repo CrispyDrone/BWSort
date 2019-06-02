@@ -127,7 +127,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                     if (SortCriteriaParameters.ValidGameTypes[replay.Content.GameType] == true)
                     {
 
-                        var wrappedReplay = ReplayDecorator.Create(replay.Content);
+                        var wrappedReplay = ReplayDecorator.Create(replay);
                         var matchup = wrappedReplay.GetReplayItem(Tuple.Create(CustomReplayNameSyntax.Matchup, string.Empty));
                         IDictionary<int, IDictionary<RaceType, int>> EncodedMatchUp = new Dictionary<int, IDictionary<RaceType, int>>();
                         int team = 1;
@@ -237,7 +237,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                 {
                     if (SortCriteriaParameters.ValidGameTypes[replay.Content.GameType] == true)
                     {
-                        var wrappedReplay = ReplayDecorator.Create(replay.Content);
+                        var wrappedReplay = ReplayDecorator.Create(replay);
                         var matchup = wrappedReplay.GetReplayItem(Tuple.Create(CustomReplayNameSyntax.Matchup, string.Empty));
                         IDictionary<int, IDictionary<RaceType, int>> EncodedMatchUp = new Dictionary<int, IDictionary<RaceType, int>>();
                         int team = 1;
@@ -362,7 +362,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                 {
                     if (SortCriteriaParameters.ValidGameTypes[replay.Content.GameType] == true)
                     {
-                        var wrappedReplay = ReplayDecorator.Create(replay.Content);
+                        var wrappedReplay = ReplayDecorator.Create(replay);
                         var matchup = wrappedReplay.GetReplayItem(Tuple.Create(CustomReplayNameSyntax.Matchup, string.Empty));
                         IDictionary<int, IDictionary<RaceType, int>> EncodedMatchUp = new Dictionary<int, IDictionary<RaceType, int>>();
                         int team = 1;

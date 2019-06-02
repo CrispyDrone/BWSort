@@ -74,7 +74,7 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
                     replay.AddAfterCurrent(
                         (string.IsNullOrWhiteSpace(outputDirectory) ? Directory.GetParent(replay.FilePath).ToString() : outputDirectory ) + @"\" 
                         + 
-                        (restore ?  FileHandler.GetFileName(replay.OriginalFilePath) : ReplayHandler.GenerateReplayName(replay.Content, CustomReplayFormat) + ".rep")
+                        (restore ?  FileHandler.GetFileName(replay.OriginalFilePath) : ReplayHandler.GenerateReplayName(replay, CustomReplayFormat) + ".rep")
                     );
                     renamedReplays.Add(replay);
                 }

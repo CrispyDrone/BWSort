@@ -24,6 +24,7 @@
         PlayerXRaceShort = 524288,
         PlayerXRaceLong = 1048576,
         PlayerXVictoryStatusShort = 2097152,
-        PlayerXVictoryStatusLong = 4194304
+        PlayerXVictoryStatusLong = 4194304,
+        OriginalName = 8388608
     }
 }

@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using System;
 using ReplayParser.ReplaySorter.Extensions;
 using System.Text;
+using ReplayParser.ReplaySorter.IO;
 
 namespace ReplayParser.ReplaySorter.Renaming
 {
@@ -41,9 +42,9 @@ namespace ReplayParser.ReplaySorter.Renaming
             //TODO long, short form...
             { new Regex(@"^(W[Rr])"), CustomReplayNameSyntax.WinningRaces }, // Races of winners, comma separated list
             //TODO long, short form...
-            { new Regex(@"^(L[Rr])]"), CustomReplayNameSyntax.LosingRaces }, // Races of losers, comma separated list
+            { new Regex(@"^(L[Rr])"), CustomReplayNameSyntax.LosingRaces }, // Races of losers, comma separated list
             //TODO long, short form...
-            { new Regex(@"^([Rr])"), CustomReplayNameSyntax.Races }, // All races, comma separated list
+            { new Regex(@"^([Rr](?!\d+))"), CustomReplayNameSyntax.Races }, // All races, comma separated list
             { new Regex(@"^(W[Tt])"), CustomReplayNameSyntax.WinningTeams }, // Winning team, comma separated list of players
             { new Regex(@"^(L[Tt])"), CustomReplayNameSyntax.LosingTeams }, // Losing teams, comma separated list of players, each team surrounded by parentheses
             { new Regex(@"^(T)"), CustomReplayNameSyntax.Teams }, // Teams, comma separated list of players, each team surrounded by parentheses
@@ -64,7 +65,8 @@ namespace ReplayParser.ReplaySorter.Renaming
             { new Regex(@"^(r\d+)"), CustomReplayNameSyntax.PlayerXRaceShort }, // extract the x'th player's race, short form
             { new Regex(@"^(R\d+)"), CustomReplayNameSyntax.PlayerXRaceLong }, // extract the x'th player's race, long form
             { new Regex(@"^(w\d+)"), CustomReplayNameSyntax.PlayerXVictoryStatusShort }, // extract the the victory status of the x'th player, short form
-            { new Regex(@"^(W\d+)"), CustomReplayNameSyntax.PlayerXVictoryStatusLong } // extract the the victory status of the x'th player, long form
+            { new Regex(@"^(W\d+)"), CustomReplayNameSyntax.PlayerXVictoryStatusLong }, // extract the the victory status of the x'th player, long form
+            { new Regex(@"^(O)"), CustomReplayNameSyntax.OriginalName }, // extract the original name of the replay
             //TODO add players+observers option?
             // { new Regex(@""), CustomReplayNameSyntax. }, // 
         };
@@ -179,7 +181,7 @@ namespace ReplayParser.ReplaySorter.Renaming
         //     throw new NotImplementedException();
         // }
 
-        public string GenerateReplayName(IReplay replay)
+        public string GenerateReplayName(File<IReplay> replay)
         {
             // use replaywrapper object that has methods for each replay formatting item
             // replaywrapper needs to know the replay, the customreplaynamesyntax and in a few cases the actual regex itself for more information

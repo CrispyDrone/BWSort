@@ -22,7 +22,7 @@ namespace ReplayParser.ReplaySorter
             {
                 try
                 {
-                    DestinationFilePath = sortDirectory + @"\" + FolderName + @"\" + GenerateReplayName(replay.Content, CustomReplayFormat) + ".rep";
+                    DestinationFilePath = sortDirectory + @"\" + FolderName + @"\" + GenerateReplayName(replay, CustomReplayFormat) + ".rep";
                 }
                 catch(Exception ex)
                 {
@@ -83,7 +83,7 @@ namespace ReplayParser.ReplaySorter
             {
                 try
                 {
-                    DestinationFilePath = sortDirectory + @"\" + FolderName + @"\" + GenerateReplayName(replay.Content, CustomReplayFormat) + ".rep";
+                    DestinationFilePath = sortDirectory + @"\" + FolderName + @"\" + GenerateReplayName(replay, CustomReplayFormat) + ".rep";
                 }
                 catch (Exception ex)
                 {
@@ -222,7 +222,7 @@ namespace ReplayParser.ReplaySorter
         //     return CustomReplayNameString;
         // }
 
-        public static string GenerateReplayName(IReplay replay, CustomReplayFormat format)
+        public static string GenerateReplayName(File<IReplay> replay, CustomReplayFormat format)
         {
             if (replay == null) throw new ArgumentNullException(nameof(replay));
             if (format == null) throw new ArgumentNullException(nameof(format));

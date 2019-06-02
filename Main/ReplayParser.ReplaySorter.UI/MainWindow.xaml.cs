@@ -2135,7 +2135,7 @@ namespace ReplayParser.ReplaySorter.UI
             {
                 try
                 {
-                    replay.AddAfterCurrent(Path.GetDirectoryName(replay.FilePath) + @"\" + ReplayHandler.GenerateReplayName(replay.Content, customReplayFormat) + ".rep");
+                    replay.AddAfterCurrent(Path.GetDirectoryName(replay.FilePath) + @"\" + ReplayHandler.GenerateReplayName(replay, customReplayFormat) + ".rep");
                     ReplayHandler.MoveReplay(replay, true);
                     //TODO investigate whether there actually was a binding active between the displaymember and FilePath...
                     Binding b = new Binding("FilePath");
