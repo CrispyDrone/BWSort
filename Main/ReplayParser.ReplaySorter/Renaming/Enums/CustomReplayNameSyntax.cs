@@ -19,12 +19,13 @@
         GameTypeShort = 16384,
         GameTypeLong = 32768,
         PlayerInfo = 65536,
-        Players = 131072,
-        PlayerX = 262144,
-        PlayerXRaceShort = 524288,
-        PlayerXRaceLong = 1048576,
-        PlayerXVictoryStatusShort = 2097152,
-        PlayerXVictoryStatusLong = 4194304,
-        OriginalName = 8388608
+        PlayersWithObservers = 131072,
+        Players = 262144,
+        PlayerX = 524288,
+        PlayerXRaceShort = 1048576,
+        PlayerXRaceLong = 2097152,
+        PlayerXVictoryStatusShort = 4194304,
+        PlayerXVictoryStatusLong = 8388608,
+        OriginalName = 16777216
     }
 }

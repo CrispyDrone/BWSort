@@ -60,8 +60,9 @@ namespace ReplayParser.ReplaySorter.Renaming
             { new Regex(@"^(G[Tt])"), CustomReplayNameSyntax.GameTypeLong }, // game type i.e. melee, free for all, long form
             { new Regex($@"^(<({_playerInfoOption1}|{_playerInfoOption2}|{_playerInfoOption3}|{_playerInfoOption4}|{_playerInfoOption5}|{_playerInfoOption6}|{_playerInfoOption7}|{_playerInfoOption8}|{_playerInfoOption9}|{_playerInfoOption10}|{_playerInfoOption11}|{_playerInfoOption12}|{_playerInfoOption13}|{_playerInfoOption14}|{_playerInfoOption15})>)"), CustomReplayNameSyntax.PlayerInfo }, // player specific instructions
             // { new Regex(@"^(?:<(((/p|/[Rr]|/[Ww])(?:\s+)?)+)>)"), CustomReplayNameSyntax.PlayerInfo }, // player specific instructions
-            { new Regex(@"^(P)"), CustomReplayNameSyntax.Players }, // comma separated list of all players
-            { new Regex(@"^(p\d+)"), CustomReplayNameSyntax.PlayerX }, // extract the x'th player
+            { new Regex(@"^(P)"), CustomReplayNameSyntax.PlayersWithObservers }, // comma separated list of all players, including observers
+            { new Regex(@"^(p)"), CustomReplayNameSyntax.Players }, // comma separated list of all players, excluding observers
+            { new Regex(@"^(P\d+)"), CustomReplayNameSyntax.PlayerX }, // extract the x'th player
             { new Regex(@"^(r\d+)"), CustomReplayNameSyntax.PlayerXRaceShort }, // extract the x'th player's race, short form
             { new Regex(@"^(R\d+)"), CustomReplayNameSyntax.PlayerXRaceLong }, // extract the x'th player's race, long form
             { new Regex(@"^(w\d+)"), CustomReplayNameSyntax.PlayerXVictoryStatusShort }, // extract the the victory status of the x'th player, short form

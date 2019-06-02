@@ -314,12 +314,12 @@ namespace ReplayParser.ReplaySorter.Renaming
             return outputSb.ToString();
         }
 
-        private string GetPlayers(string formatItem = null)
+        private string GetPlayersWithObservers(string formatItem = null)
         {
             if (formatItem == null)
             {
                 var players = _replay.Players;
-                return players == null ? string.Empty : string.Join(",", players.Select(p => p.Name));
+                return players == null ? "NoPlayers" : string.Join(",", players.Select(p => p.Name));
             }
             else
             {
@@ -329,6 +329,12 @@ namespace ReplayParser.ReplaySorter.Renaming
 
                 return player.Name;
             }
+        }
+
+        private string GetPlayers()
+        {
+            var playersWithoutObservers = _replay.Players.Except(_replay.Observers);
+            return playersWithoutObservers == null ? "NoPlayers" : string.Join(",", playersWithoutObservers.Select(p => p.Name));
         }
 
         private string GetPlayersRaces(string formatItem, OutputFormat outputFormat)
@@ -441,11 +447,14 @@ namespace ReplayParser.ReplaySorter.Renaming
                 case CustomReplayNameSyntax.PlayerInfo:
                     return GetPlayerInfo(customReplayNameSyntaxItem.Item2);
 
+                case CustomReplayNameSyntax.PlayersWithObservers:
+                    return GetPlayersWithObservers();
+
                 case CustomReplayNameSyntax.Players:
                     return GetPlayers();
 
                 case CustomReplayNameSyntax.PlayerX:
-                    return GetPlayers(customReplayNameSyntaxItem.Item2);
+                    return GetPlayersWithObservers(customReplayNameSyntaxItem.Item2);
 
                 case CustomReplayNameSyntax.PlayerXRaceShort:
                     return GetPlayersRaces(customReplayNameSyntaxItem.Item2, OutputFormat.Short);

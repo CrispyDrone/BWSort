@@ -16,6 +16,7 @@
     <Window.Resources>
         <cvt:FramesToTimeSpanInSecondsConverter x:Key="FTSConverter" />
         <cvt:PlayerToVisibilityConverter x:Key="PTWBConverter" />
+        <cvt:ObserverToVisibilityConverter x:Key="PTOBConverter" />
         <cvt:MapToFileNameConverter x:Key="MTFConverter" />
         <cvt:PlayerRaceToImagePathConverter x:Key="RTIConverter" />
         <cvt:FeedbackToColorConverter x:Key="FTCConverter" />
@@ -385,6 +386,14 @@
                                                                 <Image Source="/images/crown.png" Height="10px" Width="10px">
                                                                     <Image.Visibility>
                                                                         <MultiBinding Converter="{StaticResource PTWBConverter}">
+                                                                            <Binding BindsDirectlyToSource="True"/>
+                                                                            <Binding Path="DataContext" RelativeSource="{RelativeSource AncestorType={x:Type ItemsControl}, AncestorLevel=2}"/>
+                                                                        </MultiBinding>
+                                                                    </Image.Visibility>
+                                                                </Image>
+                                                                <Image Source="/images/eye.png" Height="10px" Width="10px">
+                                                                    <Image.Visibility>
+                                                                        <MultiBinding Converter="{StaticResource PTOBConverter}">
                                                                             <Binding BindsDirectlyToSource="True"/>
                                                                             <Binding Path="DataContext" RelativeSource="{RelativeSource AncestorType={x:Type ItemsControl}, AncestorLevel=2}"/>
                                                                         </MultiBinding>
