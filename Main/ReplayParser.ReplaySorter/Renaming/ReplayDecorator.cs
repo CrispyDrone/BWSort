@@ -396,6 +396,9 @@ namespace ReplayParser.ReplaySorter.Renaming
             var customReplayNameSyntax = customReplayNameSyntaxItem.Item1;
             switch (customReplayNameSyntax)
             {
+                case CustomReplayNameSyntax.None:
+                    return customReplayNameSyntaxItem.Item2;
+
                 case CustomReplayNameSyntax.WinningRaces:
                     return GetWinningRaces();
 
@@ -470,6 +473,9 @@ namespace ReplayParser.ReplaySorter.Renaming
 
                 case CustomReplayNameSyntax.OriginalName:
                     return GetOriginalName();
+
+                case CustomReplayNameSyntax.Counter:
+                    return $"{{{CustomReplayNameSyntax.Counter}}}";
 
                 default:
                     throw new InvalidOperationException();

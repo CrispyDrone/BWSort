@@ -2,6 +2,7 @@
 {
     public enum CustomReplayNameSyntax
     {
+        None= 0,
         WinningRaces = 1,
         LosingRaces = 2,
         Races = 4,
@@ -26,6 +27,7 @@
         PlayerXRaceLong = 2097152,
         PlayerXVictoryStatusShort = 4194304,
         PlayerXVictoryStatusLong = 8388608,
-        OriginalName = 16777216
+        OriginalName = 16777216,
+        Counter = 33554432
     }
 }

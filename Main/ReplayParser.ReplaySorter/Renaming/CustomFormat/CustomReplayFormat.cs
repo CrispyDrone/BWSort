@@ -10,6 +10,11 @@ using ReplayParser.ReplaySorter.IO;
 
 namespace ReplayParser.ReplaySorter.Renaming
 {
+    /// <summary>
+    /// Custom format for replays. Use either the static factory to get an instance at risk of throwing an invalid argument exception in case the format is bad, or use the TryPasre
+    /// method, which will return null for an invalid format instead. This class also keeps track of how many replays have been renamed according to this format. This is used for
+    /// generating the appropriate counters when using the Counter renaming format item.
+    /// </summary>
     public class CustomReplayFormat
     {
         #region private
@@ -68,6 +73,7 @@ namespace ReplayParser.ReplaySorter.Renaming
             { new Regex(@"^(w\d+)"), CustomReplayNameSyntax.PlayerXVictoryStatusShort }, // extract the the victory status of the x'th player, short form
             { new Regex(@"^(W\d+)"), CustomReplayNameSyntax.PlayerXVictoryStatusLong }, // extract the the victory status of the x'th player, long form
             { new Regex(@"^(O)"), CustomReplayNameSyntax.OriginalName }, // extract the original name of the replay
+            { new Regex(@"^(C)"), CustomReplayNameSyntax.Counter } // counter that will increment for each replay being renamed
             //TODO add players+observers option?
             // { new Regex(@""), CustomReplayNameSyntax. }, // 
         };
@@ -77,8 +83,13 @@ namespace ReplayParser.ReplaySorter.Renaming
 
         #endregion
 
+        #region instance
+
         private readonly string _customFormat;
         private readonly List<Tuple<CustomReplayNameSyntax, string>> _customFormatSections;
+        private int _counter;
+
+        #endregion
 
         #endregion
 
@@ -111,6 +122,7 @@ namespace ReplayParser.ReplaySorter.Renaming
         #region properties
 
         public string CustomFormat => _customFormat;
+        public int Counter => _counter;
 
         #endregion
 
@@ -159,7 +171,8 @@ namespace ReplayParser.ReplaySorter.Renaming
                     return false;
                 }
                 var formatSpecifier = formatRegex.Key.Match(stringContainingFormatSpecifier).Groups[1].Value;
-                customFormatStringBuilder.Append($"{literalFormat}{{{matchCounter++}}}");
+                customFormatStringBuilder.Append($"{{{matchCounter++}}}{{{matchCounter++}}}");
+                customReplayFormatSections.Add(Tuple.Create(CustomReplayNameSyntax.None, literalFormat));
                 customReplayFormatSections.Add(Tuple.Create(formatRegex.Value, formatSpecifier));
                 previousMatchIndexEnd = matchIndex + 1 + formatSpecifier.Length;
                 match = match.NextMatch();
@@ -177,11 +190,6 @@ namespace ReplayParser.ReplaySorter.Renaming
 
         #region instance
 
-        // public Dictionary<CustomReplayNameSyntax, string> GenerateReplayNameSections(IReplay replay)
-        // {
-        //     throw new NotImplementedException();
-        // }
-
         public string GenerateReplayName(File<IReplay> replay)
         {
             // use replaywrapper object that has methods for each replay formatting item
@@ -194,7 +202,8 @@ namespace ReplayParser.ReplaySorter.Renaming
                 customReplayNameSectionsReplacements[i] = replayWrapper.GetReplayItem(_customFormatSections[i]);
             }
 
-            return string.Format(_customFormat, customReplayNameSectionsReplacements);
+            _counter++;
+            return string.Format(_customFormat, customReplayNameSectionsReplacements).Replace($"{{{CustomReplayNameSyntax.Counter.ToString()}}}", _counter.ToString());
         }
 
         public override string ToString()
