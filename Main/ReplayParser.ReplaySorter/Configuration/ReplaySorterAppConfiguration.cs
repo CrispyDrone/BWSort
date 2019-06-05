@@ -1,7 +1,6 @@
-﻿using System;
-using System.Collections.Specialized;
-using System.IO;
+﻿using System.IO;
 using System.Text.RegularExpressions;
+using System;
 
 namespace ReplayParser.ReplaySorter.Configuration
 {
@@ -55,8 +54,8 @@ namespace ReplayParser.ReplaySorter.Configuration
 
         public string RepositoryUrl => "https://www.github.com/crispydrone/bwsort";
         public string GithubAPIRepoUrl => "https://api.github.com/repos/crispydrone/bwsort";
-        public string Version => "v1.0";
-        public Regex VersionRegex => new Regex("\"tag_name\":\\s*\"(.*?)\"", RegexOptions.IgnoreCase);
+        public string Version => "1.0";
+        public Regex VersionRegex => new Regex("\"tag_name\"\\s*:\\s*\"v(.*?)\"", RegexOptions.IgnoreCase);
         public string LogDirectory
         {
             get
@@ -66,7 +65,8 @@ namespace ReplayParser.ReplaySorter.Configuration
                     var logDirectorySetting = Properties.Settings.Default.LOGDIRECTORY;
                     if (string.IsNullOrWhiteSpace(logDirectorySetting))
                     {
-                        LogDirectory = AppDomain.CurrentDomain.BaseDirectory;
+                        logDirectorySetting = AppDomain.CurrentDomain.BaseDirectory;
+                        return LogDirectory = logDirectorySetting;
                     }
                     else
                     {

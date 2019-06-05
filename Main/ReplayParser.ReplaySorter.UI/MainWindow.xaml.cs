@@ -110,10 +110,12 @@ namespace ReplayParser.ReplaySorter.UI
                         client.DefaultRequestHeaders.UserAgent.Add(new System.Net.Http.Headers.ProductInfoHeaderValue("BWSort", _replaySorterConfiguration.Version));
                         string responseBody = await client.GetStringAsync(_replaySorterConfiguration.GithubAPIRepoUrl + @"/releases/latest");
                         var versionTag = _replaySorterConfiguration.VersionRegex.Match(responseBody).Groups[1].Value;
-                        if (versionTag != _replaySorterConfiguration.Version)
+                        var remoteVersion = double.Parse(versionTag);
+                        var localVersion = double.Parse(_replaySorterConfiguration.Version);
+                        if (localVersion < remoteVersion)
                             MessageBox.Show($"A new version is available at {_replaySorterConfiguration.RepositoryUrl}");
                     }
-                    catch (HttpRequestException ex)
+                    catch (Exception ex)
                     {
                         statusBarErrors.Content = "Failed to check for updates.";
                         ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - Failed to check for updates.", ex: ex);
