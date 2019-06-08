@@ -112,21 +112,21 @@ For each of the following filters you can combine different conditions by using 
   Finally, same as for the duration filter, you can use the `between x and y` construct to filter replays between 2 dates. `x` and `y` can be any format previously described. Note that `between` works __inclusively__ which means that it acts as if you stated `>= date1 and <= date2`.
 
 #### Some additional examples
-+ ![The between construct filters between 2 dates, inclusively.](./imgs/search-tab-filter-date-between-inclusively.png)
++ The between construct filters between 2 dates, inclusively.
 
-  The between construct filters between 2 dates, inclusively.
+  ![The between construct filters between 2 dates, inclusively.](./imgs/search-tab-filter-date-between-inclusively.png)
 
-+ ![Use the greater than or equal operator to specify that you want all replays later than the point in time that follows it.](./imgs/search-tab-filter-date-greater-than-or-equal-ago.png)
++ Use the greater than or equal operator to specify that you want all replays later than the point in time that follows it. **Note** As mentioned before, this might be confusing at first, so it's best to think of `>` as "later than" and `<` as earlier than.
 
-  Use the greater than or equal operator to specify that you want all replays later than the point in time that follows it. **Note** As mentioned before, this might be confusing at first, so it's best to think of `>` as "later than" and `<` as earlier than.
+  ![Use the greater than or equal operator to specify that you want all replays later than the point in time that follows it.](./imgs/search-tab-filter-date-greater-than-or-equal-ago.png)
 
-+ ![Use the less than operator to specify that you want all replays earlier than the point in time that follows it.](./imgs/search-tab-filter-date-less-than-ago.png)
++ Use the less than operator to specify that you want all replays earlier than the point in time that follows it. **Note** As mentioned before, this might be confusing at first, so it's best to think of `>` as "later than" and `<` as earlier than.
 
-  Use the less than operator to specify that you want all replays earlier than the point in time that follows it. **Note** As mentioned before, this might be confusing at first, so it's best to think of `>` as "later than" and `<` as earlier than.
+  ![Use the less than operator to specify that you want all replays earlier than the point in time that follows it.](./imgs/search-tab-filter-date-less-than-ago.png)
 
-+ ![Use previous if you want to find all replays of the previous X days, weeks, months or years excluding the current day, week, month, or year.](./imgs/search-tab-filter-date-previous.png)
++ Use previous if you want to find all replays of the previous X days, weeks, months or years excluding the current day, week, month, or year. So for example, the previous 2 weeks would find all replays between Monday of 2 weeks ago and Sunday of last week.
 
-  Use previous if you want to find all replays of the previous X days, weeks, months or years excluding the current day, week, month, or year. So for example, the previous 2 weeks would find all replays between Monday of 2 weeks ago and Sunday of last week.
+  ![Use previous if you want to find all replays of the previous X days, weeks, months or years excluding the current day, week, month, or year.](./imgs/search-tab-filter-date-previous.png)
 
 ### Sorting replays
 After parsing, you have the option to sort or categorize your replays to an output directory of your choice. You can either decide to sort the entire set of replays you've parsed, or to first filter them appropriately and then selecting the `Select as input` checkbox.
@@ -191,13 +191,13 @@ You can use these placeholders in an otherwise literally interpreted sentence: `
 + `Defiler tournament - 2019-05-03 - PZvPZ - Bisu P W, Jaedong Z W, CrispyDrone Z L, AbstractDaddy P L`
 
 #### Examples
-+ ![Example using the `/C` construct that allows numbering of replays.](./imgs/rename-tab-example-01.png)
++ Example using the `/C` construct that allows numbering of replays.
 
-  Example using the `/C` construct that allows numbering of replays.
+  ![Example using the `/C` construct that allows numbering of replays.](./imgs/rename-tab-example-01.png)
 
-+ ![Example using the `/p` construct which extracts all players excluding observers.](./imgs/rename-tab-example-02.png)
++ Example using the `/p` construct which extracts all players excluding observers.
 
-  Example using the `/p` construct which extracts all players excluding observers.
+  ![Example using the `/p` construct which extracts all players excluding observers.](./imgs/rename-tab-example-02.png)
 
 ### Backup replays
 You can backup directories containing replays. First you will have to create a new database file; you can give it a name and create it in a specific directory, it will be automatically selected as the active database.
