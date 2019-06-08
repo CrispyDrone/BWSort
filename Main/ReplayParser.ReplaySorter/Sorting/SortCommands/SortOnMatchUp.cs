@@ -1,142 +1,60 @@
-﻿using System;
+﻿using ReplayParser.Interfaces;
+using ReplayParser.ReplaySorter.Diagnostics;
+using ReplayParser.ReplaySorter.IO;
+using ReplayParser.ReplaySorter.Renaming;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Text;
-using ReplayParser.ReplaySorter.ReplayRenamer;
-using System.IO;
-using ReplayParser.Interfaces;
-using ReplayParser.ReplaySorter.Diagnostics;
-using System.ComponentModel;
+using System;
 
 namespace ReplayParser.ReplaySorter.Sorting.SortCommands
 {
     public class SortOnMatchUp : ISortCommand
     {
-        public SortOnMatchUp(SortCriteriaParameters sortcriteriaparameters, bool keeporiginalreplaynames, Sorter sorter)
+
+        #region private
+
+        #region methods
+
+        private IEnumerable<string> GetTeamRaces(string matchup)
         {
-            SortCriteriaParameters = sortcriteriaparameters;
-            KeepOriginalReplayNames = keeporiginalreplaynames;
-            Sorter = sorter;
-        }
-        public bool KeepOriginalReplayNames { get; set; }
-        public SortCriteriaParameters SortCriteriaParameters { get; set; }
-        public Criteria SortCriteria { get { return Criteria.MATCHUP; } }
-        public bool IsNested { get; set; }
-        public Sorter Sorter { get; set; }
-        public IDictionary<string, IDictionary<string, IReplay>> Sort()
-        {
-            // Dictionary<directory, dictionary<file, replay>>
-            IDictionary<string, IDictionary<string, IReplay>> DirectoryFileReplay = new Dictionary<string, IDictionary<string, IReplay>>();
-
-            // get all matchups from the replays
-            // allow the ignoring of specific game types
-
-            // you could pass the IEquality comparer to the constructor of the dictionary
-            MatchUpEqualityComparer MatchUpEq = new MatchUpEqualityComparer();
-            //IDictionary<int, IDictionary<RaceType, int>> MatchUps = new Dictionary<int, IDictionary<RaceType, int>>();
-            IDictionary<IDictionary<int, IDictionary<RaceType, int>>, IList<Interfaces.IReplay>> ReplayMatchUp = new Dictionary<IDictionary<int, IDictionary<RaceType, int>>, IList<Interfaces.IReplay>>(MatchUpEq);
-
-            foreach (var replay in Sorter.ListReplays)
+            var teamRaceBuilder = new StringBuilder();
+            int skip = 0;
+            int matchupLength = matchup.Length;
+            for (int i = 0; i < matchupLength; i++)
             {
-                try
+                if (skip > 0)
                 {
-                    if (SortCriteriaParameters.ValidGameTypes[replay.GameType] == true)
-                    {
-                        Team Team = new Team(replay);
-                        MatchUp MatchUp = new MatchUp(replay, Team);
-                        // int => team
-                        IDictionary<int, IDictionary<RaceType, int>> EncodedMatchUp = new Dictionary<int, IDictionary<RaceType, int>>();
-                        int team = 1;
-                        foreach (var RaceCombination in MatchUp.TeamRaces)
-                        {
-                            var RaceFrequency = EncodeRacesFrequency(RaceCombination);
-                            EncodedMatchUp.Add(new KeyValuePair<int, IDictionary<RaceType, int>>(team, RaceFrequency));
-                            team++;
-                        }
-                        //MatchUps.Add(EncodedMatchUp);
-                        if (!ReplayMatchUp.ContainsKey(EncodedMatchUp))
-                        {
-                            ReplayMatchUp.Add(new KeyValuePair<IDictionary<int, IDictionary<RaceType, int>>, IList<Interfaces.IReplay>>(EncodedMatchUp, new List<Interfaces.IReplay> { replay }));
-                        }
-                        else
-                        {
-                            ReplayMatchUp[EncodedMatchUp].Add(replay);
-                        }
-                    }
-                }
-                catch (NullReferenceException nullex)
-                {
-                    ErrorLogger.LogError($"SortOnMatchUp NullReferenceException: Encoding matchups, file: {Sorter.Files.ElementAt(Sorter.ListReplays.IndexOf(replay))}", Sorter.OriginalDirectory + @"\LogErrors", nullex);
-                    //Console.WriteLine(nullex.Message);
+                    skip--;
+                    continue;
                 }
 
-            }
-
-            string sortDirectory = Sorter.CurrentDirectory + @"\" + Sorter.SortCriteria.ToString();
-            sortDirectory = Sorter.CreateDirectory(sortDirectory);
-
-            
-            foreach (var matchup in /*MatchUps.Distinct(MatchUpEq)*/ReplayMatchUp.Keys)
-            {
-                // make directory per matchup
-                var MatchUpName = MatchUpToString(matchup);
-                Directory.CreateDirectory(sortDirectory + @"\" + MatchUpName);
-
-                IDictionary<string, IReplay> FileReplays = new Dictionary<string, IReplay>();
-                DirectoryFileReplay.Add(new KeyValuePair<string, IDictionary<string, IReplay>>(sortDirectory + @"\" + MatchUpName, FileReplays));
-
-                // write all associated replays to this directory
-                var MatchUpReplays = ReplayMatchUp[matchup];
-                foreach (var replay in MatchUpReplays)
+                if (char.ToLower(matchup[i]) == 'v')
                 {
-                    try
+                    var nextCharIndex = i + 1;
+                    if (nextCharIndex < matchupLength && char.ToLower(matchup[nextCharIndex]) == 's')
                     {
-                        string File = string.Empty;
-                        if (IsNested == false)
-                        {
-                            File = ReplayHandler.CopyReplay(Sorter.ListReplays, replay, Sorter.Files, sortDirectory, MatchUpName, KeepOriginalReplayNames, Sorter.CustomReplayFormat);
-                        }
-                        else
-                        {
-                            File = ReplayHandler.MoveReplay(Sorter.ListReplays, replay, Sorter.Files, sortDirectory, MatchUpName, KeepOriginalReplayNames, Sorter.CustomReplayFormat);
-                        }
-                        
-                        FileReplays.Add(new KeyValuePair<string, IReplay>(/*Sorter.Files.ElementAt(Sorter.ListReplays.IndexOf(replay))*/File, replay));
+                        skip = 1;
                     }
-                    catch (IOException IOex)
-                    {
-                        ErrorLogger.LogError($"SortOnMatchUp IOException", Sorter.OriginalDirectory + @"\LogErrors", IOex);
-                        //Console.WriteLine(IOex.Message);
-                    }
-                    catch (NotSupportedException NSE)
-                    {
-                        ErrorLogger.LogError($"SortOnMatchUp NotSupportedException", Sorter.OriginalDirectory + @"\LogErrors", NSE);
-                        //Console.WriteLine(NSE.Message);
-                    }
-                    catch (NullReferenceException nullex)
-                    {
-                        ErrorLogger.LogError($"SortOnMatchUp NullReferenceException", Sorter.OriginalDirectory + @"\LogErrors", nullex);
-                        //Console.WriteLine(nullex.Message);
-                    }
-                    catch (ArgumentException AEX)
-                    {
-                        ErrorLogger.LogError($"SortOnMatchUp ArgumentException", Sorter.OriginalDirectory + @"\LogErrors", AEX);
-                        //Console.WriteLine(AEX.Message);
-                    }
-                    catch (Exception ex)
-                    {
-                        ErrorLogger.LogError($"SortOnMatchUp Exception", Sorter.OriginalDirectory + @"\LogErrors", ex);
-                        //Console.WriteLine(ex.Message);
-                    }
+                    yield return teamRaceBuilder.ToString();
+                    teamRaceBuilder.Clear();
+                }
+                else
+                {
+                    teamRaceBuilder.Append(matchup[i]);
                 }
             }
-            // not implemented yet
-            return DirectoryFileReplay;
+            if (teamRaceBuilder.Length != 0)
+                yield return teamRaceBuilder.ToString();
         }
+
         private IDictionary<RaceType, int> EncodeRacesFrequency(string raceCombination)
         {
             IDictionary<RaceType, int> EncodedRacesFrequency = new Dictionary<RaceType, int>();
 
+            //TODO what about random??
             foreach (var Race in Enum.GetNames(typeof(RaceType)))
             {
                 int RaceFrequency = raceCombination.Select((r, i) => r == Race.First() ? i : -1).Where(i => i != -1).Count();
@@ -156,43 +74,197 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                 }
                 MatchUpString.Append("vs");
             }
-            MatchUpString.Remove(MatchUpString.Length - 2, 2);
+            if (MatchUpString.Length >= 2)
+                MatchUpString.Remove(MatchUpString.Length - 2, 2);
+
             return MatchUpString.ToString();
         }
 
-        public IDictionary<string, IDictionary<string, IReplay>> SortAsync(BackgroundWorker worker_ReplaySorter, int currentCriteria, int numberOfCriteria, int currentPositionNested, int numberOfPositions)
+        #endregion
+
+        #endregion
+
+        #region public
+
+        #region constructor
+
+        public SortOnMatchUp(SortCriteriaParameters sortcriteriaparameters, bool keeporiginalreplaynames, Sorter sorter)
+        {
+            SortCriteriaParameters = sortcriteriaparameters;
+            KeepOriginalReplayNames = keeporiginalreplaynames;
+            Sorter = sorter;
+        }
+
+        #endregion
+
+        #region properties
+
+        public bool KeepOriginalReplayNames { get; set; }
+        public SortCriteriaParameters SortCriteriaParameters { get; set; }
+        public Criteria SortCriteria { get { return Criteria.MATCHUP; } }
+        public bool IsNested { get; set; }
+        public Sorter Sorter { get; set; }
+
+        #endregion
+
+        #region methods
+
+        public IDictionary<string, List<File<IReplay>>> Sort(List<string> replaysThrowingExceptions)
         {
             // Dictionary<directory, dictionary<file, replay>>
-            IDictionary<string, IDictionary<string, IReplay>> DirectoryFileReplay = new Dictionary<string, IDictionary<string, IReplay>>();
+            IDictionary<string, List<File<IReplay>>> DirectoryFileReplay = new Dictionary<string, List<File<IReplay>>>();
 
             // get all matchups from the replays
             // allow the ignoring of specific game types
 
-            // you could pass the IEquality comparer to the constructor of the dictionary
             MatchUpEqualityComparer MatchUpEq = new MatchUpEqualityComparer();
-            //IDictionary<int, IDictionary<RaceType, int>> MatchUps = new Dictionary<int, IDictionary<RaceType, int>>();
-            IDictionary<IDictionary<int, IDictionary<RaceType, int>>, IList<Interfaces.IReplay>> ReplayMatchUp = new Dictionary<IDictionary<int, IDictionary<RaceType, int>>, IList<Interfaces.IReplay>>(MatchUpEq);
+            IDictionary<IDictionary<int, IDictionary<RaceType, int>>, IList<File<IReplay>>> ReplayMatchUps = new Dictionary<IDictionary<int, IDictionary<RaceType, int>>, IList<File<IReplay>>>(MatchUpEq);
 
+            int counter = 0;
             foreach (var replay in Sorter.ListReplays)
             {
                 try
                 {
-                    if (SortCriteriaParameters.ValidGameTypes[replay.GameType] == true)
+                    if (SortCriteriaParameters.ValidGameTypes[replay.Content.GameType] == true)
                     {
-                        Team Team = new Team(replay);
-                        MatchUp MatchUp = new MatchUp(replay, Team);
-                        // int => team
+
+                        var wrappedReplay = ReplayDecorator.Create(replay);
+                        var matchup = wrappedReplay.GetReplayItem(Tuple.Create(CustomReplayNameSyntax.Matchup, string.Empty), ++counter);
                         IDictionary<int, IDictionary<RaceType, int>> EncodedMatchUp = new Dictionary<int, IDictionary<RaceType, int>>();
                         int team = 1;
-                        foreach (var RaceCombination in MatchUp.TeamRaces)
+                        foreach (var raceCombination in GetTeamRaces(matchup))
                         {
-                            var RaceFrequency = EncodeRacesFrequency(RaceCombination);
+                            var RaceFrequency = EncodeRacesFrequency(raceCombination);
                             EncodedMatchUp.Add(new KeyValuePair<int, IDictionary<RaceType, int>>(team, RaceFrequency));
                             team++;
+
                         }
+
+                        // Teams Team = new Teams(replay.Content);
+                        // MatchUp MatchUp = new MatchUp(replay.Content, Team);
+                        // // int => team
+                        // IDictionary<int, IDictionary<RaceType, int>> EncodedMatchUp = new Dictionary<int, IDictionary<RaceType, int>>();
+                        // int team = 1;
+                        // foreach (var RaceCombination in MatchUp.TeamRaces)
+                        // {
+                        //     var RaceFrequency = EncodeRacesFrequency(RaceCombination);
+                        //     EncodedMatchUp.Add(new KeyValuePair<int, IDictionary<RaceType, int>>(team, RaceFrequency));
+                        //     team++;
+                        // }
+                        if (!ReplayMatchUps.ContainsKey(EncodedMatchUp))
+                        {
+                            ReplayMatchUps.Add(new KeyValuePair<IDictionary<int, IDictionary<RaceType, int>>, IList<File<IReplay>>>(EncodedMatchUp, new List<File<IReplay>> { replay }));
+                        }
+                        else
+                        {
+                            ReplayMatchUps[EncodedMatchUp].Add(replay);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - SortOnMatchUp exception: Encoding matchups, file: {replay.OriginalFilePath}", ex: ex);
+                }
+            }
+
+            string sortDirectory = Sorter.CurrentDirectory;
+            if (!(IsNested && !Sorter.GenerateIntermediateFolders))
+            {
+                if (IsNested)
+                {
+                    sortDirectory = Sorter.CurrentDirectory + @"\" + SortCriteria;
+                }
+                else
+                {
+                    sortDirectory = Sorter.CurrentDirectory + @"\" + string.Join(",", Sorter.CriteriaStringOrder);
+                }
+                sortDirectory = FileHandler.CreateDirectory(sortDirectory);
+            }
+            
+            foreach (var matchup in /*MatchUps.Distinct(MatchUpEq)*/ReplayMatchUps.Keys)
+            {
+                // make directory per matchup
+                var MatchUpName = MatchUpToString(matchup);
+
+                if (string.IsNullOrWhiteSpace(MatchUpName))
+                    MatchUpName = "NoPlayers";
+
+                Directory.CreateDirectory(sortDirectory + @"\" + MatchUpName);
+
+                var FileReplays = new List<File<IReplay>>();
+                DirectoryFileReplay.Add(new KeyValuePair<string, List<File<IReplay>>>(sortDirectory + @"\" + MatchUpName, FileReplays));
+
+                // write all associated replays to this directory
+                var MatchUpReplays = ReplayMatchUps[matchup];
+                foreach (var replay in MatchUpReplays)
+                {
+                    try
+                    {
+                        if (IsNested == false)
+                        {
+                            ReplayHandler.CopyReplay(replay, sortDirectory, MatchUpName, KeepOriginalReplayNames, Sorter.CustomReplayFormat);
+                        }
+                        else
+                        {
+                            ReplayHandler.MoveReplay(replay, sortDirectory, MatchUpName, KeepOriginalReplayNames, Sorter.CustomReplayFormat);
+                        }
+                        
+                        FileReplays.Add(replay);
+                    }
+                    catch (Exception ex)
+                    {
+                        replaysThrowingExceptions.Add(replay.OriginalFilePath);
+                        ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - SortOnMatchUp Exception", ex: ex);
+                    }
+                }
+            }
+            return DirectoryFileReplay;
+        }
+
+        public IDictionary<string, List<File<IReplay>>> SortAsync(List<string> replaysThrowingExceptions, BackgroundWorker worker_ReplaySorter, int currentCriteria, int numberOfCriteria, int currentPositionNested, int numberOfPositions)
+        {
+            // Dictionary<directory, dictionary<file, replay>>
+            IDictionary<string, List<File<IReplay>>> DirectoryFileReplay = new Dictionary<string, List<File<IReplay>>>();
+
+            // get all matchups from the replays
+            // allow the ignoring of specific game types
+
+            MatchUpEqualityComparer MatchUpEq = new MatchUpEqualityComparer();
+            IDictionary<IDictionary<int, IDictionary<RaceType, int>>, IList<File<IReplay>>> ReplayMatchUp = new Dictionary<IDictionary<int, IDictionary<RaceType, int>>, IList<File<IReplay>>>(MatchUpEq);
+
+            var counter = 0;
+            foreach (var replay in Sorter.ListReplays)
+            {
+                try
+                {
+                    if (SortCriteriaParameters.ValidGameTypes[replay.Content.GameType] == true)
+                    {
+                        var wrappedReplay = ReplayDecorator.Create(replay);
+                        var matchup = wrappedReplay.GetReplayItem(Tuple.Create(CustomReplayNameSyntax.Matchup, string.Empty), ++counter);
+                        IDictionary<int, IDictionary<RaceType, int>> EncodedMatchUp = new Dictionary<int, IDictionary<RaceType, int>>();
+                        int team = 1;
+                        foreach (var raceCombination in GetTeamRaces(matchup))
+                        {
+                            var RaceFrequency = EncodeRacesFrequency(raceCombination);
+                            EncodedMatchUp.Add(new KeyValuePair<int, IDictionary<RaceType, int>>(team, RaceFrequency));
+                            team++;
+
+                        }
+
+                        // Teams Team = new Teams(replay.Content);
+                        // MatchUp MatchUp = new MatchUp(replay.Content, Team);
+                        // int => team
+                        // IDictionary<int, IDictionary<RaceType, int>> EncodedMatchUp = new Dictionary<int, IDictionary<RaceType, int>>();
+                        // int team = 1;
+                        // foreach (var RaceCombination in MatchUp.TeamRaces)
+                        // {
+                        //     var RaceFrequency = EncodeRacesFrequency(RaceCombination);
+                        //     EncodedMatchUp.Add(new KeyValuePair<int, IDictionary<RaceType, int>>(team, RaceFrequency));
+                        //     team++;
+                        // }
                         if (!ReplayMatchUp.ContainsKey(EncodedMatchUp))
                         {
-                            ReplayMatchUp.Add(new KeyValuePair<IDictionary<int, IDictionary<RaceType, int>>, IList<Interfaces.IReplay>>(EncodedMatchUp, new List<Interfaces.IReplay> { replay }));
+                            ReplayMatchUp.Add(new KeyValuePair<IDictionary<int, IDictionary<RaceType, int>>, IList<File<IReplay>>>(EncodedMatchUp, new List<File<IReplay>> { replay }));
                         }
                         else
                         {
@@ -200,15 +272,26 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                         }
                     }
                 }
-                catch (NullReferenceException nullex)
+                catch (Exception ex)
                 {
-                    ErrorLogger.LogError($"SortOnMatchUp NullReferenceException: Encoding matchups, file: {Sorter.Files.ElementAt(Sorter.ListReplays.IndexOf(replay))}", Sorter.OriginalDirectory + @"\LogErrors", nullex);
+                    ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - SortOnMatchUp exception: Encoding matchups, file: {replay.OriginalFilePath}", ex: ex);
                 }
-
             }
 
-            string sortDirectory = Sorter.CurrentDirectory + @"\" + Sorter.SortCriteria.ToString();
-            sortDirectory = Sorter.CreateDirectory(sortDirectory, true);
+            string sortDirectory = Sorter.CurrentDirectory;
+            if (!(IsNested && !Sorter.GenerateIntermediateFolders))
+            {
+                if (IsNested)
+                {
+                    sortDirectory = Sorter.CurrentDirectory + @"\" + SortCriteria;
+                }
+                else
+                {
+                    sortDirectory = Sorter.CurrentDirectory + @"\" + string.Join(",", Sorter.CriteriaStringOrder);
+                }
+                sortDirectory = FileHandler.CreateDirectory(sortDirectory);
+            }
+
             int currentPosition = 0;
             int progressPercentage = 0;
 
@@ -216,10 +299,14 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
             {
                 // make directory per matchup
                 var MatchUpName = MatchUpToString(matchup);
+
+                if (string.IsNullOrWhiteSpace(MatchUpName))
+                    MatchUpName = "NoPlayers";
+
                 Directory.CreateDirectory(sortDirectory + @"\" + MatchUpName);
 
-                IDictionary<string, IReplay> FileReplays = new Dictionary<string, IReplay>();
-                DirectoryFileReplay.Add(new KeyValuePair<string, IDictionary<string, IReplay>>(sortDirectory + @"\" + MatchUpName, FileReplays));
+                var FileReplays = new List<File<IReplay>>();
+                DirectoryFileReplay.Add(new KeyValuePair<string, List<File<IReplay>>>(sortDirectory + @"\" + MatchUpName, FileReplays));
 
                 // write all associated replays to this directory
                 var MatchUpReplays = ReplayMatchUp[matchup];
@@ -230,7 +317,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                         return null;
                     }
                     currentPosition++;
-                    if (this.IsNested == false)
+                    if (IsNested == false)
                     {
                         progressPercentage = Convert.ToInt32(((double)currentPosition / Sorter.ListReplays.Count) * 1 / numberOfCriteria * 100);
                     }
@@ -242,42 +329,151 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                     worker_ReplaySorter.ReportProgress(progressPercentage, "sorting on matchup...");
                     try
                     {
-                        string File = string.Empty;
                         if (IsNested == false)
                         {
-                            File = ReplayHandler.CopyReplay(Sorter.ListReplays, replay, Sorter.Files, sortDirectory, MatchUpName, KeepOriginalReplayNames, Sorter.CustomReplayFormat);
+                            ReplayHandler.CopyReplay(replay, sortDirectory, MatchUpName, KeepOriginalReplayNames, Sorter.CustomReplayFormat);
                         }
                         else
                         {
-                            File = ReplayHandler.MoveReplay(Sorter.ListReplays, replay, Sorter.Files, sortDirectory, MatchUpName, KeepOriginalReplayNames, Sorter.CustomReplayFormat);
+                            ReplayHandler.MoveReplay(replay, sortDirectory, MatchUpName, KeepOriginalReplayNames, Sorter.CustomReplayFormat);
                         }
 
-                        FileReplays.Add(new KeyValuePair<string, IReplay>(/*Sorter.Files.ElementAt(Sorter.ListReplays.IndexOf(replay))*/File, replay));
-                    }
-                    catch (IOException IOex)
-                    {
-                        ErrorLogger.LogError($"SortOnMatchUp IOException", Sorter.OriginalDirectory + @"\LogErrors", IOex);
-                    }
-                    catch (NotSupportedException NSE)
-                    {
-                        ErrorLogger.LogError($"SortOnMatchUp NotSupportedException", Sorter.OriginalDirectory + @"\LogErrors", NSE);
-                    }
-                    catch (NullReferenceException nullex)
-                    {
-                        ErrorLogger.LogError($"SortOnMatchUp NullReferenceException", Sorter.OriginalDirectory + @"\LogErrors", nullex);
-                    }
-                    catch (ArgumentException AEX)
-                    {
-                        ErrorLogger.LogError($"SortOnMatchUp ArgumentException", Sorter.OriginalDirectory + @"\LogErrors", AEX);
+                        FileReplays.Add(replay);
                     }
                     catch (Exception ex)
                     {
-                        ErrorLogger.LogError($"SortOnMatchUp Exception", Sorter.OriginalDirectory + @"\LogErrors", ex);
+                        replaysThrowingExceptions.Add(replay.OriginalFilePath);
+                        ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - SortOnMatchUp Exception", ex: ex);
                     }
                 }
             }
-            // not implemented yet
             return DirectoryFileReplay;
         }
+
+        //TODO if you want you could incorporate preview into the regular sort methods, but it's annoying to adjust
+        public IDictionary<string, List<File<IReplay>>> PreviewSort(List<string> replaysThrowingExceptions, BackgroundWorker worker_ReplaySorter, int currentCriteria, int numberOfCriteria, int currentPositionNested = 0, int numberOfPositions = 0)
+        {
+            IDictionary<string, List<File<IReplay>>> DirectoryFileReplay = new Dictionary<string, List<File<IReplay>>>();
+
+            MatchUpEqualityComparer MatchUpEq = new MatchUpEqualityComparer();
+            IDictionary<IDictionary<int, IDictionary<RaceType, int>>, IList<File<IReplay>>> ReplayMatchUp = new Dictionary<IDictionary<int, IDictionary<RaceType, int>>, IList<File<IReplay>>>(MatchUpEq);
+
+            var counter = 0;
+            foreach (var replay in Sorter.ListReplays)
+            {
+                try
+                {
+                    if (SortCriteriaParameters.ValidGameTypes[replay.Content.GameType] == true)
+                    {
+                        var wrappedReplay = ReplayDecorator.Create(replay);
+                        var matchup = wrappedReplay.GetReplayItem(Tuple.Create(CustomReplayNameSyntax.Matchup, string.Empty), ++counter);
+                        IDictionary<int, IDictionary<RaceType, int>> EncodedMatchUp = new Dictionary<int, IDictionary<RaceType, int>>();
+                        int team = 1;
+                        foreach (var raceCombination in GetTeamRaces(matchup))
+                        {
+                            var RaceFrequency = EncodeRacesFrequency(raceCombination);
+                            EncodedMatchUp.Add(new KeyValuePair<int, IDictionary<RaceType, int>>(team, RaceFrequency));
+                            team++;
+
+                        }
+                        // Teams Team = new Teams(replay.Content);
+                        // MatchUp MatchUp = new MatchUp(replay.Content, Team);
+                        // // int => team
+                        // IDictionary<int, IDictionary<RaceType, int>> EncodedMatchUp = new Dictionary<int, IDictionary<RaceType, int>>();
+                        // int team = 1;
+                        // foreach (var RaceCombination in MatchUp.TeamRaces)
+                        // {
+                        //     var RaceFrequency = EncodeRacesFrequency(RaceCombination);
+                        //     EncodedMatchUp.Add(new KeyValuePair<int, IDictionary<RaceType, int>>(team, RaceFrequency));
+                        //     team++;
+                        // }
+                        if (!ReplayMatchUp.ContainsKey(EncodedMatchUp))
+                        {
+                            ReplayMatchUp.Add(new KeyValuePair<IDictionary<int, IDictionary<RaceType, int>>, IList<File<IReplay>>>(EncodedMatchUp, new List<File<IReplay>> { replay }));
+                        }
+                        else
+                        {
+                            ReplayMatchUp[EncodedMatchUp].Add(replay);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - SortOnMatchUp exception: Encoding matchups, file: {replay.OriginalFilePath}", ex: ex);
+                }
+
+            }
+
+            string sortDirectory = Sorter.CurrentDirectory;
+            if (!(IsNested && !Sorter.GenerateIntermediateFolders))
+            {
+                if (IsNested)
+                {
+                    sortDirectory = Sorter.CurrentDirectory + @"\" + SortCriteria;
+                }
+                else
+                {
+                    sortDirectory = Sorter.CurrentDirectory + @"\" + string.Join(",", Sorter.CriteriaStringOrder);
+                }
+                sortDirectory = FileHandler.AdjustName(sortDirectory, true);
+            }
+
+            int currentPosition = 0;
+            int progressPercentage = 0;
+
+            foreach (var matchup in ReplayMatchUp.Keys)
+            {
+                var MatchUpName = MatchUpToString(matchup);
+
+                if (string.IsNullOrWhiteSpace(MatchUpName))
+                    MatchUpName = "NoPlayers";
+
+                var FileReplays = new List<File<IReplay>>();
+                DirectoryFileReplay.Add(new KeyValuePair<string, List<File<IReplay>>>(sortDirectory + @"\" + MatchUpName, FileReplays));
+                var MatchUpReplays = ReplayMatchUp[matchup];
+
+                foreach (var replay in MatchUpReplays)
+                {
+                    if (worker_ReplaySorter.CancellationPending == true)
+                    {
+                        return null;
+                    }
+                    currentPosition++;
+                    if (IsNested == false)
+                    {
+                        progressPercentage = Convert.ToInt32(((double)currentPosition / Sorter.ListReplays.Count) * 1 / numberOfCriteria * 100);
+                    }
+                    else
+                    {
+                        progressPercentage = Convert.ToInt32((((double)currentPosition / Sorter.ListReplays.Count) * 1 / numberOfPositions * 100 + ((currentPositionNested - 1) * 100 / numberOfPositions)) * ((double)1 / numberOfCriteria));
+                        progressPercentage += (currentCriteria - 1) * 100 / numberOfCriteria;
+                    }
+                    worker_ReplaySorter.ReportProgress(progressPercentage, "sorting on matchup...");
+                    try
+                    {
+                        if (IsNested == false)
+                        {
+                            ReplayHandler.CopyReplay(replay, sortDirectory, MatchUpName, KeepOriginalReplayNames, Sorter.CustomReplayFormat, true);
+                        }
+                        else
+                        {
+                            ReplayHandler.MoveReplay(replay, sortDirectory, MatchUpName, KeepOriginalReplayNames, Sorter.CustomReplayFormat, true);
+                        }
+
+                        FileReplays.Add(replay);
+                    }
+                    catch (Exception ex)
+                    {
+                        replaysThrowingExceptions.Add(replay.OriginalFilePath);
+                        ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - SortOnMatchUp Exception", ex: ex);
+                    }
+                }
+            }
+            return DirectoryFileReplay;
+        }
+
+        #endregion
+
+        #endregion
     }
 }

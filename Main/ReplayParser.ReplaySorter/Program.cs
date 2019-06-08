@@ -12,6 +12,9 @@ using System.Diagnostics;
 using ReplayParser.ReplaySorter.UserInput;
 using ReplayParser.Interfaces;
 using ReplayParser.ReplaySorter.Diagnostics;
+using ReplayParser.ReplaySorter.Configuration;
+using ReplayParser.ReplaySorter.IO;
+using ReplayParser.ReplaySorter.Renaming;
 
 namespace ReplayParser.ReplaySorter
 {
@@ -59,8 +62,13 @@ namespace ReplayParser.ReplaySorter
 
 
             // for your UI, you should be able to put these things in a separate class and methods so you can make use of them instead of having to rewrite this...
+
+            IReplaySorterConfiguration replaySorterConfiguration = new ReplaySorterAppConfiguration();
+            if (ErrorLogger.GetInstance(replaySorterConfiguration) == null)
+                Console.WriteLine("Issue intializing logger. Logging will be disabled.");
+
             var searchDirectory = (SearchDirectory)User.AskDirectory(typeof(SearchDirectory));
-            List<IReplay> ListReplays = new List<IReplay>();
+            List<File<IReplay>> ListReplays = new List<File<IReplay>>();
             IEnumerable<string> files = Directory.EnumerateFiles(searchDirectory.Directory, "*.rep", searchDirectory.SearchOption);
 
             while (files.Count() == 0)
@@ -90,7 +98,7 @@ namespace ReplayParser.ReplaySorter
                 try
                 {
                     var ParsedReplay = ReplayLoader.LoadReplay(replay);
-                    ListReplays.Add(ParsedReplay);
+                    ListReplays.Add(File<IReplay>.Create(ParsedReplay, replay));
                     //WriteUncompressedReplay(@"C:\testreplays\UncompressedReplays", replay);
                 }
                 catch (Exception ex)
@@ -152,7 +160,7 @@ namespace ReplayParser.ReplaySorter
                         {
                             ReplayHandler.RemoveBadReplay(BadReplaysOutputDirectory.Directory + @"\BadReplays", replay);
                         }
-                        ReplayHandler.LogBadReplays(ReplaysThrowingExceptions, BadReplaysOutputDirectory.Directory + @"\BadReplays");
+                        ReplayHandler.LogBadReplays(ReplaysThrowingExceptions, replaySorterConfiguration.LogDirectory, $"{DateTime.Now} - Error while parsing replay: {{0}}");
                         
                     }
                 }
@@ -162,7 +170,8 @@ namespace ReplayParser.ReplaySorter
                     return;
                 }
                 // remove bad replay from files
-                files = files.Where(x => !ReplaysThrowingExceptions.Contains(x));
+                // not necessary anymore since I use ReplayFile now
+                // files = files.Where(x => !ReplaysThrowingExceptions.Contains(x));
             }
 
             // you might want to extract information and put everything into some sort of data structure, so you don't have to go through the list of replays for each
@@ -208,7 +217,8 @@ namespace ReplayParser.ReplaySorter
             Console.WriteLine("Please enter criteria to sort replays on.");
             Console.WriteLine("Provide a space separated list of criteria.");
             var SortCriteria = User.AskCriteria();
-            Sorter sorter = new Sorter();
+            Sorter sorter = new Sorter(SortResultOutputDirectory.Directory, ListReplays);
+            List<string> replaysThrowingExceptions = new List<string>();
             while (SortCriteria.StopProgram != null)
             {
                 if ((bool)!SortCriteria.StopProgram)
@@ -221,14 +231,14 @@ namespace ReplayParser.ReplaySorter
                     {
                         if ((bool)!KeepOriginalReplayNames.Yes)
                         {
-                            CustomReplayFormat aCustomReplayFormat = new CustomReplayFormat();
-                            while (aCustomReplayFormat.CustomFormat == null)
+                            CustomReplayFormat aCustomReplayFormat = null;
+                            while (aCustomReplayFormat == null)
                             {
                                 Console.WriteLine("Custom format?");
                                 string customformat = Console.ReadLine();
                                 try
                                 {
-                                    aCustomReplayFormat.CustomFormat = customformat;
+                                    aCustomReplayFormat = CustomReplayFormat.Create(customformat);
                                     sorter.CustomReplayFormat = aCustomReplayFormat;
                                 }
                                 catch (Exception)
@@ -245,17 +255,14 @@ namespace ReplayParser.ReplaySorter
                     }
 
                     sorter.CurrentDirectory = SortResultOutputDirectory.Directory;
-                    // I lose currentdirectory because I only use one sorter
-                    sorter.OriginalDirectory = SortResultOutputDirectory.Directory;
-                    sorter.Files = files;
-                    sorter.ListReplays = ListReplays;
                     sorter.SortCriteria = SortCriteria.ChosenCriteria;
                     sorter.CriteriaStringOrder = SortCriteria.CriteriaStringOrder;
                     try
                     {
                         // use SortCriteriaParameters
-                        sorter.ExecuteSort(CriteriaParameters.SortCriteriaParameters, (bool)KeepOriginalReplayNames.Yes);
+                        sorter.ExecuteSort(CriteriaParameters.SortCriteriaParameters, (bool)KeepOriginalReplayNames.Yes, replaysThrowingExceptions);
                         Console.WriteLine("Sort finished.");
+                        ReplayHandler.LogBadReplays(replaysThrowingExceptions, replaySorterConfiguration.LogDirectory, $"{DateTime.Now} - Error while sorting replay: {{0}} using arguments: {sorter.ToString()}");
                     }
                     catch (Exception ex)
                     {
@@ -270,6 +277,7 @@ namespace ReplayParser.ReplaySorter
                 }
                 else
                     return;
+
             }
             Console.WriteLine("Stop Program can not be null");
             return;

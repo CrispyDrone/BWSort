@@ -4,13 +4,42 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ReplayParser.ReplaySorter.UI"
+        xmlns:cvt="clr-namespace:ReplayParser.ReplaySorter.UI.Converters"
+        xmlns:scm="clr-namespace:System.ComponentModel;assembly=WindowsBase"
+        xmlns:file="clr-namespace:ReplayParser.ReplaySorter.IO;assembly=ReplayParser.ReplaySorter"
+        xmlns:sort="clr-namespace:ReplayParser.ReplaySorter.Sorting.SortResult;assembly=ReplayParser.ReplaySorter"
+        xmlns:custom="clr-namespace:ReplayParser.ReplaySorter.UI.Customization"
         mc:Ignorable="d"
-        Title="BWSort" Height="500" Width="750"
-        Closing="Window_Closing">
+        Title="BWSort" Width="750" Height="500" MinHeight="500" MinWidth="750"
+        Closing="Window_Closing"
+        Loaded="Window_Loaded">
+    <Window.Resources>
+        <cvt:FramesToTimeSpanInSecondsConverter x:Key="FTSConverter" />
+        <cvt:PlayerToVisibilityConverter x:Key="PTWBConverter" />
+        <cvt:ObserverToVisibilityConverter x:Key="PTOBConverter" />
+        <cvt:MapToFileNameConverter x:Key="MTFConverter" />
+        <cvt:PlayerRaceToImagePathConverter x:Key="RTIConverter" />
+        <cvt:FeedbackToColorConverter x:Key="FTCConverter" />
+        <cvt:PathToFilenameConverter x:Key="PTFConverter" />
+        <cvt:RenamingOutputConverter x:Key="ROConverter"/>
+        <cvt:DivideByParamConverter x:Key="DBPConverter"/>
+        <HierarchicalDataTemplate x:Key="DirectoryTemplate" DataType="{x:Type sort:DirectoryFileTreeNode}"  ItemsSource="{Binding Path=Children}">
+            <Border BorderBrush="Black" BorderThickness="1" CornerRadius="5" Margin="3">
+                <Label Content="{Binding Path=Name}" FontWeight="DemiBold" FontSize="14"/>
+            </Border>
+        </HierarchicalDataTemplate>
+        <HierarchicalDataTemplate x:Key="FileTemplate" DataType="{x:Type sort:DirectoryFileTreeNode}"  ItemsSource="{Binding Path=Children}">
+            <Label Content="{Binding Path=Name}"/>
+        </HierarchicalDataTemplate>
+        <custom:TreeViewItemDataTemplateSelector x:Key="TreeViewDataTemplateSelector" DirectoryTemplate="{StaticResource DirectoryTemplate}" FileTemplate="{StaticResource FileTemplate}"/>
+        <Style x:Key="DirectoryStyle" TargetType="{x:Type TreeViewItem}">
+            <Setter Property="IsExpanded" Value="True"/>
+        </Style>
+    </Window.Resources>
     <DockPanel>
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="Menu">
-                <MenuItem Header="History">
+                <MenuItem IsEnabled="false" Header="History">
                     <StackPanel>
                         <Label Content="Saved Searches/Pools"></Label>
                         <ListBox></ListBox>
@@ -18,7 +47,7 @@
                 </MenuItem>
                 <MenuItem x:Name="MenuItemClose" Header="Close" Click="MenuItemClose_Click"></MenuItem>
             </MenuItem>
-            <MenuItem Header="Edit">
+            <MenuItem IsEnabled="False" Header="Edit">
                 <MenuItem Header="Cut" Command="Cut"></MenuItem>
                 <MenuItem Header="Copy" Command="Copy"></MenuItem>
                 <MenuItem Header="Paste" Command="Paste"></MenuItem>
@@ -30,119 +59,460 @@
                     <MenuItem x:Name="setReplayDirectoryMenuItem" Header="Select directory" Click="setReplayDirectoryMenuItem_Click"></MenuItem>
                     <MenuItem x:Name="replayIncludeSubDirectoriesMenuItem" Header="Include subdirectories" IsCheckable="True" IsChecked="{Binding ElementName=includeSubdirectoriesCheckbox, Path=IsChecked, Mode=TwoWay}"></MenuItem>
                 </MenuItem>
-                <MenuItem Header="Output directory...">
+                <MenuItem Header="Sorting output directory...">
                     <MenuItem x:Name="setSortOutputDirectoryMenuItem" Header="Select directory" Click="setSortOutputDirectoryMenuItem_Click"></MenuItem>
                     <MenuItem Header="Always write to new folder" IsCheckable="True"></MenuItem>
                 </MenuItem>
                 <MenuItem x:Name="moveBadReplaysDirectoryMenuItem" Header="Set bad replay directory..." Click="moveBadReplaysDirectoryMenuItem_Click"></MenuItem>
-                <MenuItem Header="Advanced Settings"></MenuItem>
+                <MenuItem x:Name="setLoggingDirectoryMenuItem" Header="Set log directory" Click="SetLoggingDirectoryMenuItem_Click"></MenuItem>
+                <MenuItem x:Name="setAdvancedSettingsMenuItem" Header="Advanced Settings" Click="SetAdvancedSettingsMenuItem_Click"></MenuItem>
             </MenuItem>
-            <MenuItem Header="Help"></MenuItem>
+            <MenuItem IsEnabled="false" Header="Help"></MenuItem>
         </Menu>
         <StatusBar DockPanel.Dock="Bottom">
-            <StatusBarItem x:Name="statusBarOutputDir" DockPanel.Dock="Right" Content="{Binding ElementName=sortOutputDirectoryTextBox, Path=Text, Mode=OneWay}" ContentStringFormat="Sort output: {0}"></StatusBarItem>
-            <StatusBarItem x:Name="statusBarAction" DockPanel.Dock="Left"></StatusBarItem>
-            <StatusBarItem x:Name="statusBarErrors" DockPanel.Dock="Left"></StatusBarItem>
-            <StatusBarItem x:Name="statusBarCurrentDir" Content="{Binding ElementName=replayDirectoryTextBox, Path=Text, Mode=OneWay}" ContentStringFormat="Parsing directory: {0}"></StatusBarItem>
+            <StatusBar.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"></RowDefinition>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"></ColumnDefinition>
+                            <ColumnDefinition Width="3*"></ColumnDefinition>
+                        </Grid.ColumnDefinitions>
+                    </Grid>
+                </ItemsPanelTemplate>
+            </StatusBar.ItemsPanel>
+            <StatusBarItem x:Name="statusBarAction" Grid.Row="1" Grid.Column="0" Content="Waiting to parse..."></StatusBarItem>
+            <StatusBarItem x:Name="statusBarErrors" Grid.Row="1" Grid.Column="1"></StatusBarItem>
         </StatusBar>
         <TabControl DockPanel.Dock="Top">
             <TabItem Header="Parse">
-                <DockPanel>
-                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="10 10 10 0">
-                        <TextBox x:Name="replayDirectoryTextBox" Text="" HorizontalAlignment="Stretch" MinWidth="300"></TextBox>
-                        <Button x:Name="replayDirectoryButton" Content="Set directory" Click="replayDirectoryButton_Click" Margin="10 0 10 0"></Button>
-                    </StackPanel>
-                    <StackPanel DockPanel.Dock="Bottom">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"></ColumnDefinition>
+                        <ColumnDefinition Width="*"></ColumnDefinition>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"></RowDefinition>
+                        <RowDefinition Height="Auto"></RowDefinition>
+                        <RowDefinition Height="Auto"></RowDefinition>
+                        <RowDefinition Height="Auto"></RowDefinition>
+                        <RowDefinition Height="Auto"></RowDefinition>
+                        <RowDefinition Height="*"></RowDefinition>
+                        <RowDefinition Height="Auto"></RowDefinition>
+                    </Grid.RowDefinitions>
+                    <DockPanel Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" VerticalAlignment="Center" Margin="10 0" >
+                        <Button x:Name="clearFoundReplayFilesButton" DockPanel.Dock="Right" Content="Clear" Margin="10 10 0 10" MinWidth="70" Click="ClearFoundReplayFilesButton_Click"></Button>
+                        <Button x:Name="addNewReplayFilesButton" DockPanel.Dock="Right" Content="Add" Margin="0 10" MinWidth="70" Click="AddNewReplayFilesButton_Click"></Button>
+                        <Label Content="Replays found:" Margin="0 10"></Label>
+                    </DockPanel>
+                    <DockPanel Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2" VerticalAlignment="Center">
+                        <Button x:Name="cancelParsingButton" DockPanel.Dock="Right" Content="Cancel" Click="cancelParsingButton_Click" Margin="10" MinWidth="70"></Button>
+                        <Button x:Name="parseReplaysButton" DockPanel.Dock="Right" Content="Parse" Click="parseReplaysButton_Click" Margin="10" MinWidth="70"></Button>
                         <Grid>
-                            <ProgressBar x:Name="progressBarParsingReplays" Minimum="0" Maximum="100"></ProgressBar>
-                            <Label x:Name="progressBarLabel" Content="{Binding ElementName=progressBarParsingReplays, Path=Value, StringFormat={}{0:0}%}" HorizontalAlignment="Center"></Label>
+                            <ProgressBar x:Name="progressBarParsingReplays" Minimum="0" Maximum="100" Margin="10 0" VerticalAlignment="Center" MinHeight="25"></ProgressBar>
+                            <Label x:Name="progressBarLabel" Content="{Binding ElementName=progressBarParsingReplays, Path=Value, StringFormat={}{0:0}%}" HorizontalAlignment="Center" VerticalAlignment="Center"></Label>
                         </Grid>
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                            <Button x:Name="parseReplaysButton" Content="Go" Click="parseReplaysButton_Click" Margin="10" Width="60"></Button>
-                            <Button x:Name="cancelParsingButton" Content="Break" Click="cancelParsingButton_Click" Margin="10" Width="60"></Button>
-                        </StackPanel>
-                    </StackPanel>
-                    <StackPanel Margin="0 10">
-                        <CheckBox x:Name="includeSubdirectoriesCheckbox" Content="Include subdirectories" Margin="10 10 10 0"></CheckBox>
-                        <StackPanel Orientation="Horizontal"  Margin="0 0 ">
-                            <CheckBox Content="Ignore specific files and directories" Margin="10"></CheckBox>
-                            <TextBox Text="" MinWidth="100" VerticalContentAlignment="Center" VerticalAlignment="Center" Margin="0 0 10 0"></TextBox>
-                            <Button Content="Use ignore file" VerticalAlignment="Center"></Button>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal"  Margin="0">
-                            <CheckBox x:Name="moveBadReplaysCheckBox" Content="Move bad replays to: " Margin="10"></CheckBox>
-                            <TextBox x:Name="moveBadReplaysDirectory" Text="" MinWidth="100" VerticalContentAlignment="Center" VerticalAlignment="Center" Margin="0 0 10 0"></TextBox>
-                            <Button x:Name="badReplayDirectory" Content="Set directory" VerticalAlignment="Center" Click="badReplayDirectory_Click"></Button>
-                        </StackPanel>
-                    </StackPanel>
-                </DockPanel>
+                    </DockPanel>
+                    <ListBox x:Name="replayFilesFoundListBox" Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" SelectionMode="Extended" Margin="10 0">
+                        <ListBox.Resources>
+                            <ContextMenu x:Key="lbCm">
+                                <MenuItem x:Name="removeFoundReplay" Header="Remove file" Click="RemoveFoundReplay_Click" />
+                            </ContextMenu>
+                        </ListBox.Resources>
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="{x:Type ListBoxItem}">
+                                <Setter Property="ContextMenu" Value="{StaticResource lbCm}"/>
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <Rectangle Stroke="Black" Width="20" Height="20" Fill="{Binding Path=Feedback, Converter={StaticResource FTCConverter}}"></Rectangle>
+                                    <Label Content="{Binding Path=Path}"></Label>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                    <Grid Grid.Column="1" Grid.Row="0" Grid.RowSpan="3" Margin="0 10 10 10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"></ColumnDefinition>
+                            <ColumnDefinition Width="*"></ColumnDefinition>
+                            <ColumnDefinition Width="Auto"></ColumnDefinition>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"></RowDefinition>
+                            <RowDefinition Height="Auto"></RowDefinition>
+                            <RowDefinition Height="Auto"></RowDefinition>
+                            <RowDefinition Height="Auto"></RowDefinition>
+                        </Grid.RowDefinitions>
+                        <Label Grid.Row="0" Grid.Column="0" Content="Find replays in:" VerticalAlignment="Center" Margin="10"></Label>
+                        <TextBox Grid.Row="0" Grid.Column="1" x:Name="replayDirectoryTextBox" Margin="10"></TextBox>
+                        <Button Grid.Row="0" Grid.Column="2" x:Name="replayDirectoryButton" Content="Set directory" Click="replayDirectoryButton_Click" Margin="10 10 0 10"></Button>
+                        <CheckBox Grid.Row="1" Grid.Column="0" x:Name="includeSubdirectoriesCheckbox" Content="Include subdirectories" Margin="10"></CheckBox>
+                        <CheckBox x:Name="applyIgnoreFilesCheckbox" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Content="Ignore specific files and directories" Margin="10"></CheckBox>
+                        <Button x:Name="createNewIgnoreFile" Grid.Row="2" Grid.Column="2" Content="Create - Edit" Margin="10 10 0 10" Click="CreateNewIgnoreFile_Click"></Button>
+                        <CheckBox Grid.Row="3" Grid.Column="0" x:Name="moveBadReplaysCheckBox" Content="Move bad replays to:" VerticalAlignment="Center" Margin="10"></CheckBox>
+                        <TextBox Grid.Row="3" Grid.Column="1" x:Name="moveBadReplaysDirectory" VerticalContentAlignment="Center" VerticalAlignment="Center" Margin="10"></TextBox>
+                        <Button Grid.Row="3" Grid.Column="2" x:Name="badReplayDirectory" Content="Set directory" VerticalAlignment="Center" Click="badReplayDirectory_Click" Margin="10 10 0 10"></Button>
+                    </Grid>
+                </Grid>
             </TabItem>
             <TabItem Header="Sort">
-                <DockPanel>
-                    <Grid x:Name="gridContainingSortCriteriaComboBoxes" DockPanel.Dock="Top">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition></ColumnDefinition>
-                            <ColumnDefinition></ColumnDefinition>
-                            <ColumnDefinition></ColumnDefinition>
-                            <ColumnDefinition></ColumnDefinition>
-                            <ColumnDefinition></ColumnDefinition>
-                        </Grid.ColumnDefinitions>
-                        <StackPanel Orientation="Horizontal" Grid.Column="0" Margin="10">
-                            <Label>1.</Label>
-                            <ComboBox x:Name="sortCriteriaOneComboBox"></ComboBox>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" Grid.Column="1" Margin="10">
-                            <Label>2.</Label>
-                            <ComboBox x:Name="sortCriteriaTwoComboBox"></ComboBox>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" Grid.Column="2" Margin="10">
-                            <Label>3.</Label>
-                            <ComboBox x:Name="sortCriteriaThreeComboBox"></ComboBox>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" Grid.Column="3" Margin="10">
-                            <Label>4.</Label>
-                            <ComboBox x:Name="sortCriteriaFourComboBox"></ComboBox>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" Grid.Column="4" Margin="10">
-                            <Label>5.</Label>
-                            <ComboBox x:Name="sortCriteriaFiveComboBox"></ComboBox>
-                        </StackPanel>
-                    </Grid>
-                    <StackPanel DockPanel.Dock="Top">
-                        <StackPanel x:Name="sortCriteriaParameters" Orientation="Horizontal"></StackPanel>
-                        <StackPanel x:Name="keepOriginalReplayNamesPanel" Orientation="Vertical">
-                            <CheckBox x:Name="keepOriginalReplayNamesCheckBox" Content="Keep original replay names" Margin="10 10 0 0" IsChecked="True" Click="keepOriginalReplayNamesCheckBox_Click"></CheckBox>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="10 10 10 0">
-                            <TextBox x:Name="sortOutputDirectoryTextBox" Text="" HorizontalAlignment="Stretch" MinWidth="200"></TextBox>
-                            <Button x:Name="sortOutputDirectoryButton" Content="Set directory" Click="sortOutputDirectoryButton_Click" Margin="10 0 10 0"></Button>
-                        </StackPanel>
+                <Grid Margin="10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"></ColumnDefinition>
+                        <ColumnDefinition Width="*"></ColumnDefinition>
+                        <ColumnDefinition Width="Auto"></ColumnDefinition>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"></RowDefinition>
+                        <RowDefinition Height="Auto"></RowDefinition>
+                        <RowDefinition Height="Auto"></RowDefinition>
+                        <RowDefinition Height="Auto"></RowDefinition>
+                        <RowDefinition Height="Auto"></RowDefinition>
+                        <RowDefinition Height="Auto"></RowDefinition>
+                        <RowDefinition Height="Auto"></RowDefinition>
+                        <RowDefinition Height="*"></RowDefinition>
+                        <RowDefinition Height="Auto"></RowDefinition>
+                    </Grid.RowDefinitions>
+                    <Label Grid.Row="0" Grid.Column="0" Content="Sort replays into:" VerticalAlignment="Center"/>
+                    <TextBox Grid.Row="0" Grid.Column="1" x:Name="sortOutputDirectoryTextBox" Margin="0 10"></TextBox>
+                    <Button  Grid.Row="0" Grid.Column="2" x:Name="sortOutputDirectoryButton" Content="Set directory" Click="sortOutputDirectoryButton_Click" Margin="10 10 0 10"></Button>
+                    <Label Grid.Row="1" Grid.Column="0" Content="Sort criteria:" VerticalAlignment="Top" Margin="3"/>
+                    <ListBox Grid.Row="1" Grid.Column="1" x:Name="sortCriteriaListBox" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" SelectionMode="Multiple" SelectionChanged="SortCriteriaListBox_SelectionChanged">
+                        <ListBox.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel></StackPanel>
+                            </ItemsPanelTemplate>
+                        </ListBox.ItemsPanel>
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="{x:Type ListBoxItem}">
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="ListBoxItem">
+                                            <Border Name="Border" SnapsToDevicePixels="true" BorderBrush="Black" BorderThickness="1" Margin="3" Padding="3" Background="{TemplateBinding Background}">
+                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsSelected" Value="true">
+                                                    <Setter TargetName="Border" Property="Background" Value="LightBlue"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                                <Setter Property="MinWidth" Value="140"/>
+                                <Setter Property="MaxWidth" Value="280"/>
+                                <Setter Property="AllowDrop" Value="True"/>
+                                <EventSetter Event="PreviewMouseMove" Handler="sortCriteriaListBoxItem_PreviewMouseMove"/>
+                                <EventSetter Event="Drop" Handler="sortCriteriaListBoxItem_Drop"/>
+                                <EventSetter Event="MouseLeftButtonDown" Handler="ListBoxItem_MouseLeftButtonDown"/>
+                                <EventSetter Event="PreviewMouseLeftButtonDown" Handler="ListBoxItem_MouseLeftButtonDown"/>
+                                <EventSetter Event="PreviewMouseUp" Handler="ListBoxItem_PreviewMouseUp"/>
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+                        <ListBox.Style>
+                            <Style TargetType="ListBox">
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Setter Property="BorderBrush" Value="Transparent"/>
+                            </Style>
+                        </ListBox.Style>
+                        <ListBoxItem Content="PLAYERNAME"></ListBoxItem>
+                        <ListBoxItem Content="MAP"></ListBoxItem>
+                        <ListBoxItem Content="DURATION"></ListBoxItem>
+                        <ListBoxItem Content="MATCHUP"></ListBoxItem>
+                        <ListBoxItem Content="GAMETYPE"></ListBoxItem>
+                    </ListBox>
+                    <StackPanel Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="4" x:Name="sortCriteriaParameters" Orientation="Horizontal"></StackPanel>
+                    <StackPanel Grid.Row="4" Grid.Column="0" x:Name="keepOriginalReplayNamesPanel" Orientation="Vertical">
+                        <CheckBox x:Name="keepOriginalReplayNamesCheckBox" Content="Keep original replay names" Click="keepOriginalReplayNamesCheckBox_Click" IsChecked="True"></CheckBox>
                     </StackPanel>
-                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Bottom" HorizontalAlignment="Center">
-                        <Button x:Name="executeSortButton"  Content="Execute sort" Margin="10" HorizontalAlignment="Center" Padding="10 0 10 0" Click="executeSortButton_Click"></Button>
-                        <Button x:Name="cancelSortButton" Content="Cancel" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="10 0 10 0" Click="cancelSortButton_Click"></Button>
+                    <CheckBox Grid.Row="5" Grid.Column="0" x:Name="sortInPlaceCheckBox" Content="Sort in place" IsEnabled="False" IsChecked="False"></CheckBox>
+                    <CheckBox Grid.Row="6" Grid.Column="0" x:Name="sortIsPreview" Content="Preview" IsChecked="False"></CheckBox>
+                    <TreeView Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="4" x:Name="sortOutputTreeView" ItemTemplateSelector="{StaticResource TreeViewDataTemplateSelector}" ItemContainerStyle="{StaticResource DirectoryStyle}" Margin="0 10 0 0">
+                    </TreeView>
+                    <DockPanel Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="4">
+                        <Button DockPanel.Dock="Right" x:Name="cancelSortButton" Content="Cancel" Click="cancelSortButton_Click" MinWidth="70" Margin="10 10 0 10"></Button>
+                        <Button DockPanel.Dock="Right" x:Name="executeSortButton"  Content="Sort" Click="executeSortButton_Click" MinWidth="70" Margin="10"></Button>
+                        <Grid DockPanel.Dock="Left" Margin="0 10 10 10">
+                            <ProgressBar x:Name="progressBarSortingReplays" Minimum="0" Maximum="100"></ProgressBar>
+                            <Label x:Name="progressBarSortingReplaysLabel" Content="{Binding ElementName=progressBarSortingReplays, Path=Value, StringFormat={}{0:0}%}" HorizontalAlignment="Center"></Label>
+                        </Grid>
+                    </DockPanel>
+                </Grid>
+            </TabItem>
+            <TabItem Header="Rename">
+                <Grid Margin="10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"></ColumnDefinition>
+                        <ColumnDefinition Width="*"></ColumnDefinition>
+                        <ColumnDefinition Width="Auto"></ColumnDefinition>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"></RowDefinition>
+                        <RowDefinition Height="Auto"></RowDefinition>
+                        <RowDefinition Height="Auto"></RowDefinition>
+                        <RowDefinition Height="Auto"></RowDefinition>
+                        <RowDefinition Height="Auto"></RowDefinition>
+                        <RowDefinition Height="*"></RowDefinition>
+                        <RowDefinition Height="Auto"></RowDefinition>
+                    </Grid.RowDefinitions>
+                    <Label Grid.Row="0" Grid.Column="0" Content="Rename replays into:" VerticalAlignment="Center"/>
+                    <TextBox Grid.Row="0" Grid.Column="1" x:Name="replayRenamingOutputDirectoryTextBox" Margin="10"></TextBox>
+                    <Button Grid.Row="0" Grid.Column="2" x:Name="replayRenamingOutputDirectoryButton" Content="Set directory" Click="replayRenamingOutputDirectoryButton_Click" Margin="10 10 0 10"></Button>
+                    <Label Grid.Row="1" Grid.Column="0" x:Name="replayRenamingSyntaxLabel" Content="Renaming expression" VerticalAlignment="Center"></Label>
+                    <TextBox Grid.Row="1" Grid.Column="1" x:Name="replayRenamingSyntaxTextBox" Margin="10"></TextBox>
+                    <CheckBox Grid.Row="2" x:Name="renameInPlaceCheckBox" Content="Rename in place" IsChecked="False" Click="renameInPlaceCheckBox_Click" Margin="0 10"></CheckBox>
+                    <CheckBox Grid.Row="3" x:Name="restoreOriginalReplayNamesCheckBox" Content="Restore original replay names" IsChecked="False" Click="RestoreOriginalReplayNamesCheckBox_Click" Margin="0 10"></CheckBox>
+                    <StackPanel Grid.Row="4" Grid.ColumnSpan="3" Orientation="Horizontal">
+                        <StackPanel.Resources>
+                            <Path x:Key="long-path" Stroke="Black" Data="M 0,0 h5 v5 h-5 v-5 m2.5,5 v2.5 h5 m0,0 v-2.5 h5 v5 h-5 v-5 m2.5,5 v2.5 h5 m0,0 v-2.5 h5 v5 h-5 v-5" Height="16" Width="20"/>
+                            <Path x:Key="short-path" Stroke="Black" Data="M 0,0 H10 M 0,5 H10 M 0,10 H10"/>
+                        </StackPanel.Resources>
+                        <Button Tag="long-path" x:Name="changeRenameTransformationListBoxRendering" MinWidth="30" Content="{StaticResource long-path}" Click="ChangeRenameTransformationListBoxRendering_Click">
+                        </Button>
+                        <Button x:Name="undoRenamingButton" Click="undoRenamingButton_Click" MinWidth="30">
+                            <Path Stroke="Black" Data="m 10 20 a 10,10 0 1 0 -10,-10 m 0 0 l -5 0 l 5 5 l 5 -5 Z" RenderTransformOrigin="0.5 0.5" >
+                                <Path.RenderTransform>
+                                    <ScaleTransform ScaleX="0.75" ScaleY="0.75"/>
+                                </Path.RenderTransform>
+                            </Path>
+                        </Button>
+                        <Button x:Name="redoRenamingButton" Click="redoRenamingButton_Click" MinWidth="30">
+                            <Path Stroke="Black" Data="m 10 20 a 10,10 0 1 1 10,-10 m 0 0 l -5 0 l 5 5 l 5 -5 Z" RenderTransformOrigin="0.5 0.5" >
+                                <Path.RenderTransform>
+                                    <ScaleTransform ScaleX="0.75" ScaleY="0.75"/>
+                                </Path.RenderTransform>
+                            </Path>
+                        </Button>
                     </StackPanel>
-                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Bottom" HorizontalAlignment="Center">
-                        <Button x:Name="previewSortButton" Content="Preview sort" Margin="10" HorizontalAlignment="Center" Padding="10 0 10 0"></Button>
-                        <Button x:Name="cancelPreviewSortButton" Content="cancel" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="10 0 10 0"></Button>
-                    </StackPanel>
-                    <Grid DockPanel.Dock="Bottom">
-                        <ProgressBar x:Name="progressBarSortingReplays" Minimum="0" Maximum="100"></ProgressBar>
-                        <Label x:Name="progressBarSortingReplaysLabel" Content="{Binding ElementName=progressBarSortingReplays, Path=Value, StringFormat={}{0:0}%}" HorizontalAlignment="Center"></Label>
-                    </Grid>
-                    <Canvas></Canvas>
-                </DockPanel>
+                    <ListView Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="3" x:Name="renameTransformationResultListView">
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn Header="Old" Width="{Binding RelativeSource={RelativeSource AncestorType=ListView}, Path=ActualWidth, Converter={StaticResource DBPConverter}, ConverterParameter=2}">
+                                    <GridViewColumn.DisplayMemberBinding>
+                                        <MultiBinding Converter="{StaticResource ROConverter}">
+                                            <Binding ElementName="changeRenameTransformationListBoxRendering" Path="Tag"/>
+                                            <Binding Path="OldName"/>
+                                        </MultiBinding>
+                                    </GridViewColumn.DisplayMemberBinding>
+                                </GridViewColumn>
+                                <GridViewColumn Header="New" Width="{Binding RelativeSource={RelativeSource AncestorType=ListView}, Path=ActualWidth, Converter={StaticResource DBPConverter}, ConverterParameter=2}">
+                                    <GridViewColumn.DisplayMemberBinding>
+                                        <MultiBinding Converter="{StaticResource ROConverter}">
+                                            <Binding ElementName="changeRenameTransformationListBoxRendering" Path="Tag"/>
+                                            <Binding Path="NewName"/>
+                                        </MultiBinding>
+                                    </GridViewColumn.DisplayMemberBinding>
+                                </GridViewColumn>
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+                    <DockPanel Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="3">
+                        <Button DockPanel.Dock="Right" x:Name="cancelRenamingButton" Content="Cancel" Click="cancelRenamingButton_Click" Margin="10 10 0 10" MinWidth="70"></Button>
+                        <Button DockPanel.Dock="Right" x:Name="executeRenamingButton" Content="Rename" Click="executeRenamingButton_Click" Margin="10" MinWidth="70"></Button>
+                        <Grid DockPanel.Dock="Left" Margin="0 10 10 10">
+                            <ProgressBar x:Name="progressBarRenamingOrRestoringReplays" Minimum="0" Maximum="100"></ProgressBar>
+                            <Label x:Name="progressBarRenamingReplaysLabel" Content="{Binding ElementName=progressBarRenamingOrRestoringReplays, Path=Value, StringFormat={}{0:0}%}" HorizontalAlignment="Center" VerticalAlignment="Center"></Label>
+                        </Grid>
+                    </DockPanel>
+                </Grid>
             </TabItem>
             <TabItem Header="Search">
-                <StackPanel>
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="Type search criteria here..."></TextBlock>
-                        <CheckBox Content="Select All"></CheckBox>
-                    </StackPanel>
-                    <ListBox></ListBox>
-                </StackPanel>
+                <DockPanel>
+                    <DockPanel DockPanel.Dock="Top">
+                        <Grid DockPanel.Dock="Right">
+                            <ProgressBar x:Name="filterReplaysProgressBar" Minimum="0" Maximum="100" Margin="10" MinWidth="100"></ProgressBar>
+                            <Label x:Name="filterReplaysProgressBarLabel" Content="{Binding ElementName=filterReplaysProgressBar, Path=Value, StringFormat={}{0:0}%}" HorizontalAlignment="Center" VerticalAlignment="Center"></Label>
+                        </Grid>
+                        <CheckBox Name="filterReplaysCheckBox" Content="Select as input" DockPanel.Dock="Right" Margin="10" VerticalAlignment="Center"></CheckBox>
+                        <TextBox Name="filterReplaysTextBox" Text="Type search criteria here..." Margin="10" KeyUp="FilterReplaysTextBox_KeyUp"></TextBox>
+                    </DockPanel>
+                    <ListView Name="listViewReplays">
+                        <ListView.Resources>
+                            <ContextMenu x:Key="lvCm">
+                                <MenuItem Header="Copy filepath" Name="copyFilePathMenuItem" Click="CopyFilePathMenuItem_Click"/>
+                                <MenuItem Header="Rename replay" Name="renameReplayMenuItem" Click="RenameReplayMenuItem_Click"/>
+                                <MenuItem IsEnabled="False" Header="Details" Name="detailsReplayMenuItem" Click="DetailsReplayMenuItem_Click"/>
+                                <MenuItem Header="Open in file explorer" Name="openInFileExplorerMenuItem" Click="OpenInFileExplorerMenuItem_Click"/>
+                                <MenuItem IsEnabled="False" Header="Launch in starcraft" Name="launchReplayInStarcraftMenuItem" Click="LaunchReplayInStarcraftMenuItem_Click"/>
+                            </ContextMenu>
+                        </ListView.Resources>
+                        <ListView.ItemContainerStyle>
+                            <Style TargetType="{x:Type ListViewItem}">
+                                <Setter Property="BorderBrush" Value="LightGray" />
+                                <Setter Property="BorderThickness" Value="0,0,0,1" />
+                                <Setter Property="ContextMenu" Value="{StaticResource lvCm}"/>
+                            </Style>
+                        </ListView.ItemContainerStyle>
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn>
+                                    <GridViewColumn.Header>
+                                        <GridViewColumnHeader Tag="Players" Click="listViewReplaysColumnHeader_Click">Players</GridViewColumnHeader>
+                                    </GridViewColumn.Header>
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <ItemsControl>
+                                                <ItemsControl.Resources>
+                                                    <CollectionViewSource x:Key="cvs" Source="{Binding Content.Players}">
+                                                        <CollectionViewSource.GroupDescriptions>
+                                                            <PropertyGroupDescription PropertyName="ForceIdentifier" />
+                                                        </CollectionViewSource.GroupDescriptions>
+                                                        <CollectionViewSource.SortDescriptions>
+                                                            <scm:SortDescription PropertyName="ForceIdentifier" />
+                                                        </CollectionViewSource.SortDescriptions>
+                                                    </CollectionViewSource>
+                                                </ItemsControl.Resources>
+                                                <ItemsControl ItemsSource="{Binding Source={StaticResource cvs}}">
+                                                    <ItemsControl.ItemsPanel>
+                                                        <ItemsPanelTemplate>
+                                                            <StackPanel Orientation="Horizontal"/>
+                                                        </ItemsPanelTemplate>
+                                                    </ItemsControl.ItemsPanel>
+                                                    <ItemsControl.GroupStyle>
+                                                        <GroupStyle>
+                                                            <GroupStyle.HeaderTemplate>
+                                                                <DataTemplate>
+                                                                    <TextBlock FontWeight="Bold" Text="{Binding Name, StringFormat={}Team {0}}"></TextBlock>
+                                                                </DataTemplate>
+                                                            </GroupStyle.HeaderTemplate>
+                                                        </GroupStyle>
+                                                    </ItemsControl.GroupStyle>
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <StackPanel Orientation="Horizontal">
+                                                                <Image Source="/images/crown.png" Height="16px" Width="16px">
+                                                                    <Image.Visibility>
+                                                                        <MultiBinding Converter="{StaticResource PTWBConverter}">
+                                                                            <Binding BindsDirectlyToSource="True"/>
+                                                                            <Binding Path="DataContext" RelativeSource="{RelativeSource AncestorType={x:Type ItemsControl}, AncestorLevel=2}"/>
+                                                                        </MultiBinding>
+                                                                    </Image.Visibility>
+                                                                </Image>
+                                                                <Image Source="/images/eye.png" Height="16px" Width="16px">
+                                                                    <Image.Visibility>
+                                                                        <MultiBinding Converter="{StaticResource PTOBConverter}">
+                                                                            <Binding BindsDirectlyToSource="True"/>
+                                                                            <Binding Path="DataContext" RelativeSource="{RelativeSource AncestorType={x:Type ItemsControl}, AncestorLevel=2}"/>
+                                                                        </MultiBinding>
+                                                                    </Image.Visibility>
+                                                                </Image>
+                                                                <Label Content="{Binding Name, Mode=OneWay}" />
+                                                                <Image Source="{Binding Path=RaceType, Converter={StaticResource RTIConverter}}" />
+                                                            </StackPanel>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </ItemsControl>
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
+                                <!--<GridViewColumn Header="Map" DisplayMemberBinding="{Binding Content.ReplayMap.MapName}">-->
+                                <GridViewColumn>
+                                    <GridViewColumn.Header>
+                                        <GridViewColumnHeader Tag="Content.ReplayMap.MapName" Click="listViewReplaysColumnHeader_Click">Map</GridViewColumnHeader>
+                                    </GridViewColumn.Header>
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel>
+                                                <Image 
+                                                    Source="{Binding Path=Content.ReplayMap.MapName, Converter={StaticResource MTFConverter}}"
+                                                    Height="50px"
+                                                    Width="50px"
+                                                 />
+                                                <Label Content="{Binding Path=Content.ReplayMap.MapName}"></Label>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
+                                <GridViewColumn DisplayMemberBinding="{Binding Content.FrameCount, Converter={StaticResource FTSConverter}, StringFormat={}{0:hh\\:mm\\:ss}}">
+                                    <GridViewColumn.Header>
+                                        <GridViewColumnHeader Tag="Content.FrameCount" Click="listViewReplaysColumnHeader_Click">Duration</GridViewColumnHeader>
+                                    </GridViewColumn.Header>
+                                </GridViewColumn>
+                                <GridViewColumn  DisplayMemberBinding="{Binding Content.Timestamp, StringFormat={}{0:yyyy-MM-dd}}">
+                                    <GridViewColumn.Header>
+                                        <GridViewColumnHeader Tag="Content.Timestamp" Click="listViewReplaysColumnHeader_Click">Date</GridViewColumnHeader>
+                                    </GridViewColumn.Header>
+                                </GridViewColumn>
+                                <GridViewColumn  DisplayMemberBinding="{Binding FilePath}">
+                                    <GridViewColumn.Header>
+                                        <GridViewColumnHeader Tag="FilePath" Click="listViewReplaysColumnHeader_Click">Filepath</GridViewColumnHeader>
+                                    </GridViewColumn.Header>
+                                </GridViewColumn>
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+                </DockPanel>
             </TabItem>
-            <TabItem Header="Pool">
+            <TabItem Header="Backups">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition></RowDefinition>
+                        <RowDefinition Height="Auto"></RowDefinition>
+                        <RowDefinition Height="Auto"></RowDefinition>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="2*" MinWidth="450"></ColumnDefinition>
+                        <ColumnDefinition Width="5"></ColumnDefinition>
+                        <ColumnDefinition Width="*" MinWidth="190"></ColumnDefinition>
+                    </Grid.ColumnDefinitions>
+                    <ListView Name="backupListView" Grid.Row="0" Grid.Column="0">
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn Header="Name" DisplayMemberBinding="{Binding Path=Name}"></GridViewColumn>
+                                <GridViewColumn Header="Comment" DisplayMemberBinding="{Binding Comment}"></GridViewColumn>
+                                <GridViewColumn Header="RootDirectory" DisplayMemberBinding="{Binding RootDirectory}"></GridViewColumn>
+                                <GridViewColumn Header="Date" DisplayMemberBinding="{Binding Date}"></GridViewColumn>
+                                <GridViewColumn Header="Number of replays" DisplayMemberBinding="{Binding Count}"></GridViewColumn>
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+                    <StackPanel Grid.Row="1" Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Button Name="createBackupButton" Content="Create" MinWidth="90" MinHeight="70" Margin="10" Click="CreateBackupButton_Click"></Button>
+                        <Button Name="inspectBackupButton" Content="Inspect" MinWidth="90" MinHeight="70" Margin="10" Click="InspectBackupButton_Click"></Button>
+                        <Button Name="restoreFromBackupButton" Content="Restore" MinWidth="90" MinHeight="70" Margin="10" Click="RestoreFromBackupButton_Click"></Button>
+                        <Button Name="deleteBackupButton" Content="Delete" MinWidth="90" MinHeight="70" Margin="10" Click="DeleteBackupButton_Click"></Button>
+                    </StackPanel>
+                    <GridSplitter Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" HorizontalAlignment="Stretch"></GridSplitter>
+                    <Border BorderThickness="1" BorderBrush="Black" Grid.Row="0" Grid.Column="2" Grid.RowSpan="2">
+                    <!-- TODO use grid instead for cleaner lay out?? -->
+                        <StackPanel Orientation="Vertical">
+                            <DockPanel Margin="10">
+                                <Label>Active database:</Label>
+                                <ComboBox Name="databaseComboBox" MinWidth="70" SelectionChanged="DatabaseComboBox_SelectionChanged"></ComboBox>
+                            </DockPanel>
+                            <Button Name="emptyDatabaseButton" Content="Empty database" MaxWidth="140" Margin="10 0 10 10" Click="EmptyDatabaseButton_Click"></Button>
+                            <Button Name="deleteDatabaseButton" Content="Delete database" MaxWidth="140" Margin="10 0 10 10" Click="DeleteDatabaseButton_Click"></Button>
+                            <Button Name="cleanDatabaseListButton" Content="Clean database list" MaxWidth="140" Margin="10 0 10 10" Click="CleanDatabaseListButton_Click"></Button>
+                            <Button Name="addExistingDatabaseButton" Content="Add existing database" MaxWidth="140" Margin="10 0 10 10" Click="AddExistingDatabaseButton_Click"></Button>
+                            <Label HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Margin="10 0 10 10">
+                                <TextBlock Text="Create new database" TextDecorations="Underline" FontSize="16"></TextBlock>
+                            </Label>
+                            <Grid Margin="10 0 10 0">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition></RowDefinition>
+                                    <RowDefinition></RowDefinition>
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"></ColumnDefinition>
+                                    <ColumnDefinition></ColumnDefinition>
+                                </Grid.ColumnDefinitions>
+                                <Label Grid.Row="0" Grid.Column="0" Content="Name:" Margin="0 0 0 10"></Label>
+                                <TextBox Grid.Row="0" Grid.Column="1" Name="databaseNameTextBox" Margin="0 0 10 10"></TextBox>
+                                <Label Grid.Row="1" Grid.Column="0" Content="Directory:" Margin="0 0 0 10"></Label>
+                                <TextBox Grid.Row="1" Grid.Column="1" Name="databaseDirectoryTextBox" Margin="0 0 10 10"/>
+                            </Grid>
+                            <Button Name="selectDatabaseDirectoryButton" Content="Select directory" MaxWidth="140" Margin="10" Click="SelectDatabaseDirectoryButton_Click"></Button>
+                            <Button Name="createNewDatabaseButton" Content="Create" Margin="10" MaxWidth="140" Click="CreateNewDatabaseButton_Click"></Button>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </TabItem>
+            <TabItem IsEnabled="false" Header="Pool">
                 <DockPanel>
                     <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
                         <Button Content="Rename"></Button>

@@ -1,0 +1,34 @@
+﻿<Grid Grid.Row="1" Grid.Column="0" 
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+    <Grid.RowDefinitions>
+        <RowDefinition Height="Auto"></RowDefinition>
+        <RowDefinition Height="Auto"></RowDefinition>
+        <RowDefinition Height="Auto"></RowDefinition>
+        <RowDefinition Height="Auto"></RowDefinition>
+        <RowDefinition Height="Auto"></RowDefinition>
+        <RowDefinition Height="Auto"></RowDefinition>
+        <RowDefinition Height="Auto"></RowDefinition>
+        <RowDefinition Height="Auto"></RowDefinition>
+    </Grid.RowDefinitions>
+    <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="Auto"></ColumnDefinition>
+        <ColumnDefinition Width="*"></ColumnDefinition>
+        <ColumnDefinition Width="Auto"></ColumnDefinition>
+    </Grid.ColumnDefinitions>
+    <Label Grid.Row="0" Grid.Column="0" Content="Backup Id:" Margin="10 0 10 10"></Label>
+    <Label Grid.Row="0" Grid.Column="1" Name="backupIdLabel" Margin="10 0 10 10"></Label>
+    <Label Grid.Row="1" Grid.Column="0" Content="Name:" Margin="10 0 10 10"></Label>
+    <Label Grid.Row="1" Grid.Column="1" Name="backupNameLabel" Margin="10 0 10 10"></Label>
+    <Label Grid.Row="2" Grid.Column="0" Content="Comment:" Margin="10 0 10 10"></Label>
+    <Label Grid.Row="2" Grid.Column="1" Name="backupCommentLabel" Margin="10 0 10 10"></Label>
+    <Label Grid.Row="3" Grid.Column="0" Content="Root directory:" Margin="10 0 10 10"></Label>
+    <Label Grid.Row="3" Grid.Column="1" Name="backupRootDirectoryLabel" Margin="10 0 10 10"></Label>
+    <Label Grid.Row="4" Grid.Column="0" Content="Date:" Margin="10 0 10 10"></Label>
+    <Label Grid.Row="4" Grid.Column="1" Name="backupDateLabel" Margin="10 0 10 10"></Label>
+    <Label Grid.Row="5" Grid.Column="0" Content="Number of replays:" Margin="10 0 10 10"></Label>
+    <Label Grid.Row="5" Grid.Column="1" Name="backupCountLabel" Margin="10 0 10 10"></Label>
+    <Label Grid.Row="6" Grid.Column="0" Name="outputDirectoryLabel" Content="Output directory:" Margin="10 0 10 10"/>
+    <TextBlock Grid.Row="6" Grid.Column="1" Name="outputDirectoryTextBlock" Margin="10 0 10 10"/>
+    <Button Grid.Row="6" Grid.Column="2" Name="selectOutputDirectoryButton" Content="Select directory" Margin="10 0 10 10"/>
+    <Button Grid.Row="7" Grid.Column="2" Name="restoreBackupButton" Content="Restore" Margin="10 0 10 10"/>
+</Grid>

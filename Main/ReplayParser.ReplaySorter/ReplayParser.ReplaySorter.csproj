@@ -5,7 +5,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{833D41A5-2BE7-431D-97A8-6AF51DC9C35C}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>ReplayParser.ReplaySorter</RootNamespace>
     <AssemblyName>ReplayParser.ReplaySorter</AssemblyName>
@@ -33,6 +33,8 @@
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -55,10 +57,24 @@
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
+  <PropertyGroup>
+    <TargetZone>LocalIntranet</TargetZone>
+  </PropertyGroup>
+  <PropertyGroup>
+    <GenerateManifests>true</GenerateManifests>
+  </PropertyGroup>
+  <PropertyGroup />
+  <PropertyGroup>
+    <StartupObject />
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="PresentationFramework" />
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Data.SQLite, Version=1.0.110.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Data.SQLite.Core.1.0.110.0\lib\net46\System.Data.SQLite.dll</HintPath>
+    </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -67,29 +83,61 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Backup\BackupService.cs" />
+    <Compile Include="Backup\BWContext.cs" />
+    <Compile Include="Backup\IRepository.cs" />
+    <Compile Include="Backup\Models\Backup.cs" />
+    <Compile Include="Backup\Models\Replay.cs" />
+    <Compile Include="Backup\Models\ReplayBackup.cs" />
+    <Compile Include="Backup\BackupRepository.cs" />
+    <Compile Include="Backup\SQL\Queries.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Queries.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Configuration\IReplaySorterConfiguration.cs" />
+    <Compile Include="Configuration\ReplaySorterAppConfiguration.cs" />
+    <Compile Include="Constants.cs" />
     <Compile Include="Diagnostics\ErrorLogger.cs" />
     <Compile Include="Diagnostics\ProgressBar.cs" />
+    <Compile Include="Extensions\IEnumerableExtensions.cs" />
+    <Compile Include="Extensions\ListExtensions.cs" />
+    <Compile Include="Extensions\StringBuilderExtensions.cs" />
+    <Compile Include="Filtering\AddAdditionalAndAlsoToMethodCallModifier.cs" />
+    <Compile Include="Ignoring\IgnoreFile.cs" />
+    <Compile Include="Filtering\ReplayFilterer.cs" />
+    <Compile Include="Ignoring\IgnoreFileManager.cs" />
+    <Compile Include="IO\File.cs" />
+    <Compile Include="IO\FileHandler.cs" />
+    <Compile Include="IO\FileHasher.cs" />
+    <Compile Include="IO\FileHistory.cs" />
+    <Compile Include="IO\SimpleFile.cs" />
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>Settings.settings</DependentUpon>
+    </Compile>
+    <Compile Include="Renaming\Enums\ReplayNameSectionType.cs" />
+    <Compile Include="Renaming\Renamer\Renaming.cs" />
+    <Compile Include="Renaming\Renamer\RenamingParameters.cs" />
+    <Compile Include="Renaming\Renamer\Renamer.cs" />
+    <Compile Include="Renaming\ReplayDecorator.cs" />
+    <Compile Include="Renaming\ReplayNameSections\IReplayNameSection.cs" />
+    <Compile Include="Renaming\ReplayNameSections\MatchUp.cs" />
+    <Compile Include="Renaming\ReplayNameSections\Team.cs" />
     <Compile Include="Replays.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Replays.resx</DependentUpon>
     </Compile>
+    <Compile Include="ServiceResult.cs" />
+    <Compile Include="ServiceResultSummary.cs" />
     <Compile Include="Sorting\Enums\Criteria.cs" />
-    <Compile Include="ReplayRenamer\Custom Format\CustomReplayFormat.cs" />
-    <Compile Include="ReplayRenamer\Enums\CustomReplayNameSyntax.cs" />
+    <Compile Include="Renaming\CustomFormat\CustomReplayFormat.cs" />
+    <Compile Include="Renaming\Enums\CustomReplayNameSyntax.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ReplayHandler\ReplayHandler.cs" />
-    <Compile Include="ReplayRenamer\ReplayNameSections\Date.cs" />
-    <Compile Include="ReplayRenamer\ReplayNameSections\Duration.cs" />
-    <Compile Include="ReplayRenamer\ReplayNameSections\IReplayNameSection.cs" />
-    <Compile Include="ReplayRenamer\ReplayNameSections\LosingRace.cs" />
-    <Compile Include="ReplayRenamer\ReplayNameSections\LosingTeam.cs" />
-    <Compile Include="ReplayRenamer\ReplayNameSections\Map.cs" />
-    <Compile Include="ReplayRenamer\ReplayNameSections\MatchUp.cs" />
-    <Compile Include="ReplayRenamer\ReplayNameSections\Team.cs" />
-    <Compile Include="ReplayRenamer\ReplayNameSections\WinningRace.cs" />
-    <Compile Include="ReplayRenamer\ReplayNameSections\WinningTeam.cs" />
     <Compile Include="Sorting\Enums\PlayerType.cs" />
     <Compile Include="Sorting\SortCommands\ISortCommand.cs" />
     <Compile Include="Sorting\SortCommands\SortCommandFactory.cs" />
@@ -105,6 +153,8 @@
     <Compile Include="Sorting\EqualityComparers\ReplayMapEqualityComparer.cs" />
     <Compile Include="Sorting\Sorter\Sorter.cs" />
     <Compile Include="Sorting\SortResult\DirectoryFileTree.cs" />
+    <Compile Include="Sorting\SortResult\DirectoryFileTreeNode.cs" />
+    <Compile Include="IO\IFile.cs" />
     <Compile Include="UserInput\Answer.cs" />
     <Compile Include="UserInput\BaseDirectory.cs" />
     <Compile Include="UserInput\OutputDirectory.cs" />
@@ -113,6 +163,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <EmbeddedResource Include="Backup\SQL\Queries.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Queries.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
     <EmbeddedResource Include="Resources\000204-Fighting Spirit 1.3_.rep">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
@@ -140,7 +194,15 @@
     <EmbeddedResource Include="Resources\235958-Fighting Spirit 1.3_.rep">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
-    <None Include="Resources\192042-%284%29투혼1.3.rep" />
+    <EmbeddedResource Include="Resources\192042-%284%29투혼1.3.rep">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <None Include="packages.config" />
+    <None Include="Properties\app.manifest" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ReplayParser\ReplayParser.csproj">
@@ -172,7 +234,39 @@
       <Install>true</Install>
     </BootstrapperPackage>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Backup\SQL\AddReplayToBackup.sql" />
+    <None Include="Backup\SQL\CreateDatabase.sql" />
+    <None Include="Backup\SQL\GetBackupById.sql" />
+    <None Include="Backup\SQL\GetReplayCountOfBackup.sql" />
+    <None Include="Backup\SQL\GetReplayIdByHash.sql" />
+    <None Include="Backup\SQL\InsertReplay.sql" />
+    <None Include="Backup\SQL\RemoveBackupByIdWithReplays.sql" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Backup\SQL\GetBackupByIdWithReplays.sql" />
+    <None Include="Backup\SQL\InsertBackup.sql" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Backup\SQL\RemoveAllBackupsAndReplays.sql" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Backup\SQL\VerifyDatabaseSchema.sql" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Backup\SQL\GetAllBackups.sql" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Backup\SQL\RemoveBackupById.sql" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="..\packages\System.Data.SQLite.Core.1.0.110.0\build\net46\System.Data.SQLite.Core.targets" Condition="Exists('..\packages\System.Data.SQLite.Core.1.0.110.0\build\net46\System.Data.SQLite.Core.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\System.Data.SQLite.Core.1.0.110.0\build\net46\System.Data.SQLite.Core.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\System.Data.SQLite.Core.1.0.110.0\build\net46\System.Data.SQLite.Core.targets'))" />
+  </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
