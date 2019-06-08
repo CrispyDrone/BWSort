@@ -1246,6 +1246,7 @@ namespace ReplayParser.ReplaySorter.UI
             progressBarSortingReplays.Value = 0;
 
             renameTransformationResultListView.ItemsSource = RenderRenaming(response.Result.Result);
+
             if (_renamingToOutputDirectory)
             {
                 // remove history

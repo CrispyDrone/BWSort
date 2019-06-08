@@ -594,7 +594,7 @@ namespace ReplayParser.ReplaySorter.Filtering
             }
             else 
             {
-                dateParts[2] = Math.Max(dateParts[2], DateTime.DaysInMonth(dateParts[0], dateParts[1]));
+                dateParts[2] = Math.Min(dateParts[2], DateTime.DaysInMonth(dateParts[0], dateParts[1]));
             }
 
             return true;

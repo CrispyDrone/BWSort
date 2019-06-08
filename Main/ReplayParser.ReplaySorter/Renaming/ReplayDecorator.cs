@@ -7,6 +7,7 @@ using System;
 using ReplayParser.ReplaySorter.IO;
 using System.Text.RegularExpressions;
 using System.IO;
+using ReplayParser.ReplaySorter.Extensions;
 
 namespace ReplayParser.ReplaySorter.Renaming
 {
@@ -72,15 +73,6 @@ namespace ReplayParser.ReplaySorter.Renaming
                 default:
                     throw new InvalidOperationException();
             }
-        }
-
-        private char GetLastCharacterStringBuilder(StringBuilder outputSb)
-        {
-            var length = outputSb.Length;
-            if (length == 0)
-                return char.MinValue;
-
-            return outputSb[length - 1];
         }
 
         private IPlayer GetPlayerX(string formatItem)
@@ -192,7 +184,9 @@ namespace ReplayParser.ReplaySorter.Renaming
             else
             {
                 durationSb.Append(gameLength.Hours == 0 ? string.Empty : $"{gameLength.Hours.ToString()} hours");
+                durationSb.TryAddSingleSpace();
                 durationSb.Append(gameLength.Minutes == 0 ? string.Empty : $"{gameLength.Minutes.ToString()} minutes");
+                durationSb.TryAddSingleSpace();
                 durationSb.Append(gameLength.Seconds == 0 ? string.Empty : $"{gameLength.Seconds.ToString()} seconds");
             }
             return durationSb.ToString();
@@ -275,9 +269,7 @@ namespace ReplayParser.ReplaySorter.Renaming
                         if (nextCharIndex < charCount)
                         {
                             toSkip += 1 + TakeWhileWhiteSpaceCount(formatItemChars, i + 2);
-                            char lastChar = GetLastCharacterStringBuilder(outputSb);
-                            if (!char.IsWhiteSpace(lastChar))
-                                outputSb.Append(' ');
+                            outputSb.TryAddSingleSpace();
 
                             switch (formatItemChars[nextCharIndex])
                             {

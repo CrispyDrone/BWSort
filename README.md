@@ -42,7 +42,7 @@ After you've parsed replays, you can see your results in the Search tab:
 
 ![Search for specific replays and see their stats in the search tab](./imgs/search-tab-after-parsing.png)
 
-A crown indicates the winning players. You can see the different teams that were part of the game. [Team extraction is currently buggy due to known issues with the replay parsing.](#known-issues). Each player's race is visible and there are some additional columns showing the map, duration, the date the game was played and the path of the replay file.
+A crown indicates the winning players. An eye indicates observers. You can see the different teams that were part of the game. [Team extraction is currently buggy due to known issues with the replay parsing.](#known-issues). Each player's race is visible and there are some additional columns showing the map, duration, the date the game was played and the path of the replay file.
 
 You can filter this list of replays by typing filter expression in the search bar. Aside from using this search function to find a specific replay, you can also use it as input for the sorting and renaming actions but more on that later.
 
@@ -93,7 +93,7 @@ For each of the following filters you can combine different conditions by using 
 
   ![Specify a date in a relative or absolute format to filter on it.](./imgs/search-tab-filter-date.png)
 
-  You can specify relative or absolute dates to filter replays. Same as for durations the operators `<`, `<=`, `>`, `>=`, `=` are available. Note the dates represent a specific point in time. This means that when you say `<4 months and 3 weeks ago` it does not mean "less than 4 months and 3 weeks ago" but instead it means __before__ 4 months and 3 weeks ago! The digital pattern is as follows `<year><sep><month><sep><day>`:
+  You can specify relative or absolute dates to filter replays. Same as for durations the operators `<`, `<=`, `>`, `>=`, `=` are available. By default the `=` is applied. Note the dates represent a specific point in time. This means that when you say `<4 months and 3 weeks ago` it does not mean "less than 4 months and 3 weeks ago" but instead it means __before__ 4 months and 3 weeks ago! The digital pattern is as follows `<year><sep><month><sep><day>`:
   + `<year>`: Mandatory, can be 2 or 4 digits. 
   + `<month>`: Optional, can be 1 or 2 digits. 
   + `<day>`: Optional, can be 1 or 2 digits.
@@ -112,10 +112,21 @@ For each of the following filters you can combine different conditions by using 
   Finally, same as for the duration filter, you can use the `between x and y` construct to filter replays between 2 dates. `x` and `y` can be any format previously described. Note that `between` works __inclusively__ which means that it acts as if you stated `>= date1 and <= date2`.
 
 #### Some additional examples
-![](./imgs/search-tab-filter-date-between-inclusively.png)
-![](./imgs/search-tab-filter-date-greater-than-or-equal-ago.png)
-![](./imgs/search-tab-filter-date-less-than-ago.png)
-![](./imgs/search-tab-filter-date-previous.png)
++ ![The between construct filters between 2 dates, inclusively.](./imgs/search-tab-filter-date-between-inclusively.png)
+
+  The between construct filters between 2 dates, inclusively.
+
++ ![Use the greater than or equal operator to specify that you want all replays later than the point in time that follows it.](./imgs/search-tab-filter-date-greater-than-or-equal-ago.png)
+
+  Use the greater than or equal operator to specify that you want all replays later than the point in time that follows it. **Note** As mentioned before, this might be confusing at first, so it's best to think of `>` as "later than" and `<` as earlier than.
+
++ ![Use the less than operator to specify that you want all replays earlier than the point in time that follows it.](./imgs/search-tab-filter-date-less-than-ago.png)
+
+  Use the less than operator to specify that you want all replays earlier than the point in time that follows it. **Note** As mentioned before, this might be confusing at first, so it's best to think of `>` as "later than" and `<` as earlier than.
+
++ ![Use previous if you want to find all replays of the previous X days, weeks, months or years excluding the current day, week, month, or year.](./imgs/search-tab-filter-date-previous.png)
+
+  Use previous if you want to find all replays of the previous X days, weeks, months or years excluding the current day, week, month, or year. So for example, the previous 2 weeks would find all replays between Monday of 2 weeks ago and Sunday of last week.
 
 ### Sorting replays
 After parsing, you have the option to sort or categorize your replays to an output directory of your choice. You can either decide to sort the entire set of replays you've parsed, or to first filter them appropriately and then selecting the `Select as input` checkbox.
@@ -135,7 +146,7 @@ Finally it is possible to combine multiple sort criteria. For example `map playe
 ![Preview of sort on map and duration without applying a renaming.](./imgs/sort-tab-preview.png)
 
 ### Renaming replays
-You can now rename replays after parsing, either into an output directory or in place. After renaming, the transformation from the old to new filename will be shown in the output view. There are 2 arrows visible on top of this part of the window. You can use these to undo or redo renames. The number of actions you can undo or redo can be configured in the advanced settings but by default is 5. If you are executing renames on many replays, be aware that this has the potential to quickly increase memory usage. 
+You can now rename replays after parsing, either into an output directory or in place. After renaming, the transformation from the old to new filename will be shown in the output view. You can toggle between filenames only (hamburger icon) and the entire filepath (directory tree icon) by clicking on the button next to the 2 arrows. As you might have guessed, these 2 arrows are buttons for undoing and redoing a rename. The number of actions you can undo or redo can be configured in the advanced settings but by default is 5. If you are executing renames on many replays, be aware that this has the potential to quickly increase memory usage. 
 
 It is also possible at any point to always return to how the replays were named originally. Just tick off the checkbox `Restore original replay names` and execute the rename.
 
@@ -180,7 +191,13 @@ You can use these placeholders in an otherwise literally interpreted sentence: `
 + `Defiler tournament - 2019-05-03 - PZvPZ - Bisu P W, Jaedong Z W, CrispyDrone Z L, AbstractDaddy P L`
 
 #### Examples
-TODO
++ ![Example using the `/C` construct that allows numbering of replays.](./imgs/rename-tab-example-01.png)
+
+  Example using the `/C` construct that allows numbering of replays.
+
++ ![Example using the `/p` construct which extracts all players excluding observers.](./imgs/rename-tab-example-02.png)
+
+  Example using the `/p` construct which extracts all players excluding observers.
 
 ### Backup replays
 You can backup directories containing replays. First you will have to create a new database file; you can give it a name and create it in a specific directory, it will be automatically selected as the active database.
@@ -236,24 +253,29 @@ Finally, there are some extra buttons in the panel on the side:
 Due to the possible presence of some bugs and it being hard to verify edge case behavior, I suggest either __not__ working on your original replay folder but instead on a copy *or* using the built-in [backup functionality](#backup-replays)!
 
 ## Known issues
-1. When using multiple sort criteria (nested sort), the sort folder's name will not be in the correct order.
-2. The order of the match-up from a replay, and using the T[] argument, will not necessarily be the same (so it could say ZvP, while the first player is the Protoss, and the second one the Zerg)
-3. Teams aren't extracted properly because for most game types the team number is the same for opposing teams...
+1. The parser has many issues which affect:
+   + team identification
+   + matchup identification
+   + observer identification
+   + build order identification
+   + the action list. [See the towards the future section.](#towards-the-future)
+2. Using the `Use as input` functionality will result in a wrong reporting of the number of replays sorted or renamed.
 
 ## Towards the future
 1. Add additional filters based on units, and user defined build orders.
 2. Allow sorting in place and add possibility to undo/redo.
-3. Add replay detail view with action history (i.e. build order) and some basic stats and graphs 
-4. Add map rendering in the replay list view based on map data inside the replay instead of needing to use image files
-5. Try to improve the parsing algorithm which will mean more reliable sorting, renaming, filtering,...:
+3. Add additional sort criteria such as `date`, `build order`, `game format`,...
+4. Add replay detail view with action history (i.e. build order) and some basic stats and graphs 
+5. Add map rendering in the replay list view based on map data inside the replay instead of needing to use image files
+6. Try to improve the parsing algorithm which will mean more reliable sorting, renaming, filtering,...:
    + This will fix team identification which is currently very buggy. Players are often reported to be on the same team even though they are opponents.
    + Match-up identification as a result is also buggy since players are not separated into the correct teams.
    + It will fix observer identification since actions in many instances aren't parsed correctly
    + It will fix the action list allowing much better insight into the build order of a replay
    + ...
-6. Support for 1.16 replays
-7. Allow backups of multiple directories at the same time
-8. General bug fixing
+7. Support for 1.16 replays
+8. Allow backups of multiple directories at the same time
+9. General bug fixing
 
 In the very far future, there might be a complete rewrite from scratch with a much better designed codebase. To understand why this is necessary look at the [project history section](#project-history). 
 

@@ -118,6 +118,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Converters\DivideByParamConverter.cs" />
     <Compile Include="Converters\ObserverToVisibilityConverter.cs" />
     <Compile Include="Converters\RenamingOutputConverter.cs" />
     <Compile Include="Models\BackupAction.cs" />

@@ -102,6 +102,7 @@
     <Compile Include="Diagnostics\ProgressBar.cs" />
     <Compile Include="Extensions\IEnumerableExtensions.cs" />
     <Compile Include="Extensions\ListExtensions.cs" />
+    <Compile Include="Extensions\StringBuilderExtensions.cs" />
     <Compile Include="Filtering\AddAdditionalAndAlsoToMethodCallModifier.cs" />
     <Compile Include="Ignoring\IgnoreFile.cs" />
     <Compile Include="Filtering\ReplayFilterer.cs" />
