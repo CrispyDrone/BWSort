@@ -122,9 +122,6 @@
     <Compile Include="Renaming\Renamer\RenamingParameters.cs" />
     <Compile Include="Renaming\Renamer\Renamer.cs" />
     <Compile Include="Renaming\ReplayDecorator.cs" />
-    <Compile Include="Renaming\ReplayNameSections\IReplayNameSection.cs" />
-    <Compile Include="Renaming\ReplayNameSections\MatchUp.cs" />
-    <Compile Include="Renaming\ReplayNameSections\Team.cs" />
     <Compile Include="Replays.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
