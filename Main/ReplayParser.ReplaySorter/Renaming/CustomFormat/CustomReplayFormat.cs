@@ -181,7 +181,8 @@ namespace ReplayParser.ReplaySorter.Renaming
                     match = match.NextMatch();
                 }
             }
-            customFormatStringBuilder.Append(toCheck.Substring(previousMatchIndexEnd));
+            customFormatStringBuilder.Append($"{{{matchCounter++}}}");
+            customReplayFormatSections.Add(Tuple.Create(CustomReplayNameSyntax.None, toCheck.Substring(previousMatchIndexEnd)));
             customReplayFormat = new CustomReplayFormat(customFormatStringBuilder.ToString(), customReplayFormatSections);
             return true;
         }
@@ -195,15 +196,15 @@ namespace ReplayParser.ReplaySorter.Renaming
             // use replaywrapper object that has methods for each replay formatting item
             // replaywrapper needs to know the replay, the customreplaynamesyntax and in a few cases the actual regex itself for more information
             // use string.Format with the formatting string and pass all the formatting items to it
+            ++_counter;
             var replayWrapper = ReplayDecorator.Create(replay);
             var customReplayNameSectionsReplacements = new string[_customFormatSections.Count];
             for (int i = 0; i < _customFormatSections.Count; i++)
             {
-                customReplayNameSectionsReplacements[i] = replayWrapper.GetReplayItem(_customFormatSections[i]);
+                customReplayNameSectionsReplacements[i] = replayWrapper.GetReplayItem(_customFormatSections[i], _counter);
             }
 
-            _counter++;
-            return string.Format(_customFormat, customReplayNameSectionsReplacements).Replace($"{{{CustomReplayNameSyntax.Counter.ToString()}}}", _counter.ToString());
+            return string.Format(_customFormat, customReplayNameSectionsReplacements);
         }
 
         public override string ToString()

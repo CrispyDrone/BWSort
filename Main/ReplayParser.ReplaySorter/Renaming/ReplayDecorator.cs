@@ -391,7 +391,7 @@ namespace ReplayParser.ReplaySorter.Renaming
 
         #region methods
 
-        public string GetReplayItem(Tuple<CustomReplayNameSyntax, string> customReplayNameSyntaxItem)
+        public string GetReplayItem(Tuple<CustomReplayNameSyntax, string> customReplayNameSyntaxItem, int counter)
         {
             var customReplayNameSyntax = customReplayNameSyntaxItem.Item1;
             switch (customReplayNameSyntax)
@@ -475,7 +475,7 @@ namespace ReplayParser.ReplaySorter.Renaming
                     return GetOriginalName();
 
                 case CustomReplayNameSyntax.Counter:
-                    return $"{{{CustomReplayNameSyntax.Counter}}}";
+                    return counter.ToString();
 
                 default:
                     throw new InvalidOperationException();
