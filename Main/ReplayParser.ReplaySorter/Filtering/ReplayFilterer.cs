@@ -844,6 +844,7 @@ namespace ReplayParser.ReplaySorter.Filtering
                         Expression.Constant(CustomReplayNameSyntax.Matchup), 
                         Expression.Constant(string.Empty)
                     ),
+                    Expression.Constant(0),
                     Expression.Constant(0)
                 );
 

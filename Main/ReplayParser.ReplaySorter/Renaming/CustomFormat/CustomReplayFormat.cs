@@ -26,21 +26,21 @@ namespace ReplayParser.ReplaySorter.Renaming
         //TODO validate regexes
         private static readonly Regex _escapeCharacter = new Regex(@"/");
         private static readonly Regex _playerInfoBlockEnd = new Regex(@">"); // .*? lazy instead of greedy
-        private static readonly string _playerInfoOption1 =  @"/p\s*(?=>)";
-        private static readonly string _playerInfoOption2 =  @"/[Ww](?=>)";
-        private static readonly string _playerInfoOption3 =  @"/[Rr](?=>)";
-        private static readonly string _playerInfoOption4 =  @"/p\s*/[Ww](?=>)";
-        private static readonly string _playerInfoOption5 =  @"/p\s*/[Rr](?=>)";
-        private static readonly string _playerInfoOption6 =  @"/[Ww]\s*/p(?=>)";
-        private static readonly string _playerInfoOption7 =  @"/[Ww]\s*/[Rr](?=>)";
-        private static readonly string _playerInfoOption8 =  @"/[Rr]\s*/p(?=>)";
-        private static readonly string _playerInfoOption9 =  @"/[Rr]\s*/[Ww](?=>)";
-        private static readonly string _playerInfoOption10 = @"/p\s*/[Ww]\s*/[Rr]\s*";
-        private static readonly string _playerInfoOption11 = @"/p\s*/[Rr]\s*/[Ww]\s*";
-        private static readonly string _playerInfoOption12 = @"/[Ww]\s*/p\s*/[Rr]\s*";
-        private static readonly string _playerInfoOption13 = @"/[Ww]\s*/[Rr]\s*/p\s*";
-        private static readonly string _playerInfoOption14 = @"/[Rr]\s*/p\s*/[Ww]\s*";
-        private static readonly string _playerInfoOption15 = @"/[Rr]\s*/[Ww]\s*/p\s*";
+        private static readonly string _playerInfoOption1 =  @"[^/]*/p[^/]*(?=/>)";
+        private static readonly string _playerInfoOption2 =  @"[^/]*/[Ww][^/]*(?=/>)";
+        private static readonly string _playerInfoOption3 =  @"[^/]*/[Rr][^/]*(?=/>)";
+        private static readonly string _playerInfoOption4 =  @"[^/]*/p[^/]*/[Ww][^/]*(?=/>)";
+        private static readonly string _playerInfoOption5 =  @"[^/]*/p[^/]*/[Rr][^/]*(?=/>)";
+        private static readonly string _playerInfoOption6 =  @"[^/]*/[Ww][^/]*/p[^/]*(?=/>)";
+        private static readonly string _playerInfoOption7 =  @"[^/]*/[Ww][^/]*/[Rr][^/]*(?=/>)";
+        private static readonly string _playerInfoOption8 =  @"[^/]*/[Rr][^/]*/p[^/]*(?=>)";
+        private static readonly string _playerInfoOption9 =  @"[^/]*/[Rr][^/]*/[Ww][^/]*(?=/>)";
+        private static readonly string _playerInfoOption10 = @"[^/]*/p[^/]*/[Ww][^/]*/[Rr][^/]*(?=/>)";
+        private static readonly string _playerInfoOption11 = @"[^/]*/p[^/]*/[Rr][^/]*/[Ww][^/]*(?=/>)";
+        private static readonly string _playerInfoOption12 = @"[^/]*/[Ww][^/]*/p[^/]*/[Rr][^/]*(?=/>)";
+        private static readonly string _playerInfoOption13 = @"[^/]*/[Ww][^/]*/[Rr][^/]*/p[^/]*(?=/>)";
+        private static readonly string _playerInfoOption14 = @"[^/]*/[Rr][^/]*/p[^/]*/[Ww][^/]*(?=/>)";
+        private static readonly string _playerInfoOption15 = @"[^/]*/[Rr][^/]*/[Ww][^/]*/p[^/]*(?=/>)";
 
         private static readonly Dictionary<Regex, CustomReplayNameSyntax> _formatRegexes = new Dictionary<Regex, CustomReplayNameSyntax>
         {
@@ -63,7 +63,7 @@ namespace ReplayParser.ReplaySorter.Renaming
             { new Regex(@"^(F)"), CustomReplayNameSyntax.GameFormat }, // game format i.e. 1v1, 2v2, ... 
             { new Regex(@"^(gt)"), CustomReplayNameSyntax.GameTypeShort }, // game type i.e. melee, free for all, short form
             { new Regex(@"^(G[Tt])"), CustomReplayNameSyntax.GameTypeLong }, // game type i.e. melee, free for all, long form
-            { new Regex($@"^(<({_playerInfoOption1}|{_playerInfoOption2}|{_playerInfoOption3}|{_playerInfoOption4}|{_playerInfoOption5}|{_playerInfoOption6}|{_playerInfoOption7}|{_playerInfoOption8}|{_playerInfoOption9}|{_playerInfoOption10}|{_playerInfoOption11}|{_playerInfoOption12}|{_playerInfoOption13}|{_playerInfoOption14}|{_playerInfoOption15})>)"), CustomReplayNameSyntax.PlayerInfo }, // player specific instructions
+            { new Regex($@"^(<({_playerInfoOption1}|{_playerInfoOption2}|{_playerInfoOption3}|{_playerInfoOption4}|{_playerInfoOption5}|{_playerInfoOption6}|{_playerInfoOption7}|{_playerInfoOption8}|{_playerInfoOption9}|{_playerInfoOption10}|{_playerInfoOption11}|{_playerInfoOption12}|{_playerInfoOption13}|{_playerInfoOption14}|{_playerInfoOption15})/>)"), CustomReplayNameSyntax.PlayerInfo }, // player specific instructions
             // { new Regex(@"^(?:<(((/p|/[Rr]|/[Ww])(?:\s+)?)+)>)"), CustomReplayNameSyntax.PlayerInfo }, // player specific instructions
             { new Regex(@"^(P)"), CustomReplayNameSyntax.PlayersWithObservers }, // comma separated list of all players, including observers
             { new Regex(@"^(p)"), CustomReplayNameSyntax.Players }, // comma separated list of all players, excluding observers
@@ -73,7 +73,8 @@ namespace ReplayParser.ReplaySorter.Renaming
             { new Regex(@"^(w\d+)"), CustomReplayNameSyntax.PlayerXVictoryStatusShort }, // extract the the victory status of the x'th player, short form
             { new Regex(@"^(W\d+)"), CustomReplayNameSyntax.PlayerXVictoryStatusLong }, // extract the the victory status of the x'th player, long form
             { new Regex(@"^(O)"), CustomReplayNameSyntax.OriginalName }, // extract the original name of the replay
-            { new Regex(@"^(C)"), CustomReplayNameSyntax.Counter } // counter that will increment for each replay being renamed
+            { new Regex(@"^(c)"), CustomReplayNameSyntax.CounterShort }, // counter that will increment for each replay being renamed
+            { new Regex(@"^(C)"), CustomReplayNameSyntax.CounterLong } // fixed counter that will increment for each replay being renamed
             //TODO add players+observers option?
             // { new Regex(@""), CustomReplayNameSyntax. }, // 
         };
@@ -85,7 +86,6 @@ namespace ReplayParser.ReplaySorter.Renaming
 
         #region instance
 
-        private readonly string _customFormat;
         private readonly List<Tuple<CustomReplayNameSyntax, string>> _customFormatSections;
         private int _counter;
 
@@ -95,10 +95,12 @@ namespace ReplayParser.ReplaySorter.Renaming
 
         #region constructors
 
-        private CustomReplayFormat(string format, List<Tuple<CustomReplayNameSyntax, string>> customFormatSections)
+        private CustomReplayFormat(string format, List<Tuple<CustomReplayNameSyntax, string>> customFormatSections, int maxNumberOfReplays, bool throwOnExceedingMax)
         {
-            _customFormat = format;
+            CustomFormat = format;
             _customFormatSections = customFormatSections;
+            MaxNumberOfReplays = maxNumberOfReplays;
+            ThrowOnExceedingMax = throwOnExceedingMax;
         }
 
         #endregion
@@ -109,9 +111,12 @@ namespace ReplayParser.ReplaySorter.Renaming
 
         #region constructors
 
-        public static CustomReplayFormat Create(string format)
+        public static CustomReplayFormat Create(string format, int maxNumberOfReplays, bool throwOnExceedingMax)
         {
-            if (!TryParse(format, out var customReplayFormat))
+            if (maxNumberOfReplays <= 0)
+                throw new ArgumentException(nameof(maxNumberOfReplays), "Max number of replays cannot be less than or equal to zero.");
+
+            if (!TryParse(format, maxNumberOfReplays, throwOnExceedingMax, out var customReplayFormat))
                 throw new ArgumentException(nameof(format), "Invalid custom syntax!");
 
             return customReplayFormat;
@@ -121,8 +126,10 @@ namespace ReplayParser.ReplaySorter.Renaming
 
         #region properties
 
-        public string CustomFormat => _customFormat;
+        public string CustomFormat { get; }
         public int Counter => _counter;
+        public int MaxNumberOfReplays { get; }
+        public bool ThrowOnExceedingMax { get; }
 
         #endregion
 
@@ -130,9 +137,15 @@ namespace ReplayParser.ReplaySorter.Renaming
 
         #region static
 
-        public static bool TryParse(string toCheck, out CustomReplayFormat customReplayFormat)
+        public static bool TryParse(string toCheck, int maxNumberOfReplays, bool throwOnExceedingMax, out CustomReplayFormat customReplayFormat)
         {
             if (string.IsNullOrWhiteSpace(toCheck))
+            {
+                customReplayFormat = null;
+                return false;
+            }
+
+            if (maxNumberOfReplays <= 0)
             {
                 customReplayFormat = null;
                 return false;
@@ -183,7 +196,7 @@ namespace ReplayParser.ReplaySorter.Renaming
             }
             customFormatStringBuilder.Append($"{{{matchCounter++}}}");
             customReplayFormatSections.Add(Tuple.Create(CustomReplayNameSyntax.None, toCheck.Substring(previousMatchIndexEnd)));
-            customReplayFormat = new CustomReplayFormat(customFormatStringBuilder.ToString(), customReplayFormatSections);
+            customReplayFormat = new CustomReplayFormat(customFormatStringBuilder.ToString(), customReplayFormatSections, maxNumberOfReplays, throwOnExceedingMax);
             return true;
         }
 
@@ -197,14 +210,18 @@ namespace ReplayParser.ReplaySorter.Renaming
             // replaywrapper needs to know the replay, the customreplaynamesyntax and in a few cases the actual regex itself for more information
             // use string.Format with the formatting string and pass all the formatting items to it
             ++_counter;
+            if (ThrowOnExceedingMax && Counter > MaxNumberOfReplays)
+                throw new InvalidOperationException("Exceeded max number of replays!");
+
             var replayWrapper = ReplayDecorator.Create(replay);
             var customReplayNameSectionsReplacements = new string[_customFormatSections.Count];
+
             for (int i = 0; i < _customFormatSections.Count; i++)
             {
-                customReplayNameSectionsReplacements[i] = replayWrapper.GetReplayItem(_customFormatSections[i], _counter);
+                customReplayNameSectionsReplacements[i] = replayWrapper.GetReplayItem(_customFormatSections[i], _counter, MaxNumberOfReplays);
             }
 
-            return string.Format(_customFormat, customReplayNameSectionsReplacements);
+            return string.Format(CustomFormat, customReplayNameSectionsReplacements);
         }
 
         public override string ToString()

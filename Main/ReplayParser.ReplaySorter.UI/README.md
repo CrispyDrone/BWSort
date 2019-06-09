@@ -25,22 +25,22 @@ After an optional installation, run the .exe file.
 ### Parse replays
 First things first, you will have to parse replays. Choose a directory by clicking the set directory button, and next click on the Add button:
 
-![Choose a directory, and discover replays.](./imgs/parse-tab-step01.png)
+![Choose a directory, and discover replays.](./images/help/parse-tab-step01.png)
 
 You can repeatedly import replays from directories and they will show up in the listbox at the bottom of the screen with a yellow box in front of them. This means these replays are waiting to be parsed. Next, click on parse and wait til all replays have been parsed.  Once it's finished, if the replay has been parsed successfully it will show a green box in front of it, otherwise a red box. 
 
-![Parse replays, and receive feedback in the form of a green or red box.](./imgs/parse-tab-step02.png)
+![Parse replays, and receive feedback in the form of a green or red box.](./images/help/parse-tab-step02.png)
 
 If there are certain replays that you never want to parse, you can make use of an ignore file. Click on the `Create - Edit` button at the right side of the window. This will open a new buffer for you to create an ignore file in, or it will edit the ignore file that's configured in the [advanced settings](#advanced-settings). 
 
-![Create an ignore file to have the possibility to ignore specific files and directories during parsing.](./imgs/ignore-file.png)
+![Create an ignore file to have the possibility to ignore specific files and directories during parsing.](./images/help/ignore-file.png)
 
 You can click on the `Import directory` to import all the filenames (recursively) in that directory. You can click on the `Select filenames` to select multiple replays you would like to ignore. __Note__ that you specify filenames, however the ignore functionality works based on file hashes. This means that it will ignore these replays you've specified, regardless of what the actual file name is!
 
 ### View and filter replays
 After you've parsed replays, you can see your results in the Search tab:
 
-![Search for specific replays and see their stats in the search tab](./imgs/search-tab-after-parsing.png)
+![Search for specific replays and see their stats in the search tab](./images/help/search-tab-after-parsing.png)
 
 A crown indicates the winning players. An eye indicates observers. You can see the different teams that were part of the game. [Team extraction is currently buggy due to known issues with the replay parsing.](#known-issues). Each player's race is visible and there are some additional columns showing the map, duration, the date the game was played and the path of the replay file.
 
@@ -60,19 +60,19 @@ Date		| d
 For each of the following filters you can combine different conditions by using the vertical bar `|`:
 + Filter on map by using the `m:<mapname>` filter.
 
-  ![Filter the replays by specifying partial or full map names. You can search for multiple map names at the same time by separating them with the vertical bar '|'.](./imgs/search-tab-filter-map.png)
+  ![Filter the replays by specifying partial or full map names. You can search for multiple map names at the same time by separating them with the vertical bar '|'.](./images/help/search-tab-filter-map.png)
 
   You can specify any part of the map name and it will find it. The `<mapname>` can also be a regular expression allowing for more advanced usage.
 
 + Filter on player by using the `p:<playername>` filter. This filter allows you to optionally specify whether this player needs to be a winner `& isWinner`, and which race they need to be `& race=<race>`.
 
-  ![Specify a player name to filter on it. Add 'isWinner' and 'race=t' to further refine the search.](./imgs/search-tab-filter-player.png)
+  ![Specify a player name to filter on it. Add 'isWinner' and 'race=t' to further refine the search.](./images/help/search-tab-filter-player.png)
 
   You can search for any part of a player name. You can also add the `& isWinner` construct to filter out replays where this player lost, [unfortunately as mentioned before due to strange results for teams when parsing the replays this doesn't work as well as I would hope.](#known-issues). You can also further restrict the set of replays to only show those where this player is of a specific race by using the `& race=<race>` construct. You can specify `z`, `t`, or `p`.
 
 + Filter on duration by using the `du:<duration>` filter. This filter allows you to search for replays lesser than, greater than or equal a specific duration. You can also search for replays between 2 durations.
 
-  ![Specify a duration to filter on it.](./imgs/search-tab-filter-duration.png)
+  ![Specify a duration to filter on it.](./images/help/search-tab-filter-duration.png)
 
   You can use specify digital or written durations and use the following operators `<`, `<=`, `>`, `>=`, `=` to specify ranges or an exact match. For the digital pattern you can specify minutes and seconds, so for example: `5:00` would mean 5 minutes. You can also specify hours like so `01:03:15` which would mean 1 hour, 3 minutes and 15 seconds. The written durations are of the following format `x<hours>y<minutes>z<seconds>` where any element can be optional: 
   + `<hours>`: can be either `h`, `hrs`, or `hours`
@@ -81,17 +81,17 @@ For each of the following filters you can combine different conditions by using 
 
   It is also possible to search for replays between 2 durations, use the `between x-y` construct for this. `x` and `y` can be any format previously discussed.
 
-  ![Use between to search for replays between 2 durations.](./imgs/search-tab-filter-duration-between.png)
+  ![Use between to search for replays between 2 durations.](./images/help/search-tab-filter-duration-between.png)
 
 + Filter on match-up by using the `mu:<matchup>` filter. This filter allows you to search for replays matching the desired match-up.
 
-  ![Specify a match-up to filter on it.](./imgs/search-tab-filter-matchup.png)
+  ![Specify a match-up to filter on it.](./images/help/search-tab-filter-matchup.png)
 
   You can specify a match-up of the format `xvx` where x can be either `z`, `t`, `p`, or `.`. The latter is a wildcard meaning it can be any race. Currently it's not possible to search for "broken" match-ups where there's only a single team.
 
 + Filter on date by using the `d:<date>` filter. You can use absolute and relative dates.
 
-  ![Specify a date in a relative or absolute format to filter on it.](./imgs/search-tab-filter-date.png)
+  ![Specify a date in a relative or absolute format to filter on it.](./images/help/search-tab-filter-date.png)
 
   You can specify relative or absolute dates to filter replays. Same as for durations the operators `<`, `<=`, `>`, `>=`, `=` are available. By default the `=` is applied. Note the dates represent a specific point in time. This means that when you say `<4 months and 3 weeks ago` it does not mean "less than 4 months and 3 weeks ago" but instead it means __before__ 4 months and 3 weeks ago! The digital pattern is as follows `<year><sep><month><sep><day>`:
   + `<year>`: Mandatory, can be 2 or 4 digits. 
@@ -114,19 +114,19 @@ For each of the following filters you can combine different conditions by using 
 #### Some additional examples
 + The between construct filters between 2 dates, inclusively.
 
-  ![The between construct filters between 2 dates, inclusively.](./imgs/search-tab-filter-date-between-inclusively.png)
+  ![The between construct filters between 2 dates, inclusively.](./images/help/search-tab-filter-date-between-inclusively.png)
 
 + Use the greater than or equal operator to specify that you want all replays later than the point in time that follows it. **Note** As mentioned before, this might be confusing at first, so it's best to think of `>` as "later than" and `<` as earlier than.
 
-  ![Use the greater than or equal operator to specify that you want all replays later than the point in time that follows it.](./imgs/search-tab-filter-date-greater-than-or-equal-ago.png)
+  ![Use the greater than or equal operator to specify that you want all replays later than the point in time that follows it.](./images/help/search-tab-filter-date-greater-than-or-equal-ago.png)
 
 + Use the less than operator to specify that you want all replays earlier than the point in time that follows it. **Note** As mentioned before, this might be confusing at first, so it's best to think of `>` as "later than" and `<` as earlier than.
 
-  ![Use the less than operator to specify that you want all replays earlier than the point in time that follows it.](./imgs/search-tab-filter-date-less-than-ago.png)
+  ![Use the less than operator to specify that you want all replays earlier than the point in time that follows it.](./images/help/search-tab-filter-date-less-than-ago.png)
 
 + Use previous if you want to find all replays of the previous X days, weeks, months or years excluding the current day, week, month, or year. So for example, the previous 2 weeks would find all replays between Monday of 2 weeks ago and Sunday of last week.
 
-  ![Use previous if you want to find all replays of the previous X days, weeks, months or years excluding the current day, week, month, or year.](./imgs/search-tab-filter-date-previous.png)
+  ![Use previous if you want to find all replays of the previous X days, weeks, months or years excluding the current day, week, month, or year.](./images/help/search-tab-filter-date-previous.png)
 
 ### Sorting replays
 After parsing, you have the option to sort or categorize your replays to an output directory of your choice. You can either decide to sort the entire set of replays you've parsed, or to first filter them appropriately and then selecting the `Select as input` checkbox.
@@ -143,14 +143,14 @@ The following criteria are currently supported:
 
 Finally it is possible to combine multiple sort criteria. For example `map playername` will sort your replays first on the map the game was played on, and then create additional folders per player name within the map folder.
 
-![Preview of sort on map and duration without applying a renaming.](./imgs/sort-tab-preview.png)
+![Preview of sort on map and duration without applying a renaming.](./images/help/sort-tab-preview.png)
 
 ### Renaming replays
 You can now rename replays after parsing, either into an output directory or in place. After renaming, the transformation from the old to new filename will be shown in the output view. You can toggle between filenames only (hamburger icon) and the entire filepath (directory tree icon) by clicking on the button next to the 2 arrows. As you might have guessed, these 2 arrows are buttons for undoing and redoing a rename. The number of actions you can undo or redo can be configured in the advanced settings but by default is 5. If you are executing renames on many replays, be aware that this has the potential to quickly increase memory usage. 
 
 It is also possible at any point to always return to how the replays were named originally. Just tick off the checkbox `Restore original replay names` and execute the rename.
 
-![Rename replays according to a custom format. You can rename in place or into an output directory. The output area shows how each filename has changed.](./imgs/rename-tab-in-place.png)
+![Rename replays according to a custom format. You can rename in place or into an output directory. The output area shows how each filename has changed.](./images/help/rename-tab-in-place.png)
 
 #### Renaming syntax
 You can rename your replays by using special placeholders that start with the `/` character, currently BWSort supports the following placeholders:
@@ -193,36 +193,36 @@ You can use these placeholders in an otherwise literally interpreted sentence: `
 #### Examples
 + Example using the `/C` construct that allows numbering of replays.
 
-  ![Example using the `/C` construct that allows numbering of replays.](./imgs/rename-tab-example-01.png)
+  ![Example using the `/C` construct that allows numbering of replays.](./images/help/rename-tab-example-01.png)
 
 + Example using the `/p` construct which extracts all players excluding observers.
 
-  ![Example using the `/p` construct which extracts all players excluding observers.](./imgs/rename-tab-example-02.png)
+  ![Example using the `/p` construct which extracts all players excluding observers.](./images/help/rename-tab-example-02.png)
 
 ### Backup replays
 You can backup directories containing replays. First you will have to create a new database file; you can give it a name and create it in a specific directory, it will be automatically selected as the active database.
 
-![Create a new database and select it as the active one.](./imgs/backup-tab-create-database.png)
+![Create a new database and select it as the active one.](./images/help/backup-tab-create-database.png)
 
 To create a backup, press the create button at the bottom of the screen. A new window will pop up:
 
-![Create a new backup by importing replays and specifying a name and optional comment.](./imgs/backup-tab-create-backup.png)
+![Create a new backup by importing replays and specifying a name and optional comment.](./images/help/backup-tab-create-backup.png)
 
 You can specify a name and an optional comment. To add replays to this backup click on the import button. At the moment, you can only import replays from one directory! This is because when restoring from a backup, it needs to be able to write to a single directory. [Maybe in the future, there will be support to make it so you can import replays from multiple directories, and it will congregate the multiple directories under one parent directory when executing the restore.](#towards-the-future) To now create a backup, click on the `Create backup` button.
 
-![After the backup is successfully created, you can see it in the list of backup.](./imgs/backup-list.png)
+![After the backup is successfully created, you can see it in the list of backup.](./images/help/backup-list.png)
 
 After you've created a backup, you can inspect it. You'll be able to see its name, the comment, how many replays, which directory you backed up, on which date, and finally the directory and file hierarchy of the folder you backed up.
 
-![You can inspect a backup, and see the structure of the folder and file hierarchy.](./imgs/backup-tab-inspect-backup.png)
+![You can inspect a backup, and see the structure of the folder and file hierarchy.](./images/help/backup-tab-inspect-backup.png)
 
 Once you remember what this backup was all about, and you need to restore replays from it, you can press the restore button. Just select a directory and click on the restore button!
 
-![You can restore from a backup to restore all replays exactly as they were at the time of backing up.](./imgs/backup-tab-restore-backup.png)
+![You can restore from a backup to restore all replays exactly as they were at the time of backing up.](./images/help/backup-tab-restore-backup.png)
 
 You can delete a backup in case you don't need it any more. Select the `Delete orphan replays` in case you want to also delete all replays that are not part of any backup.
 
-![You can delete a backup, and specify whether to also delete all replays that are not part of any backup any more by ticking off the `Delete orphan replays` checkbox.](./imgs/backup-tab-delete-backup.png)
+![You can delete a backup, and specify whether to also delete all replays that are not part of any backup any more by ticking off the `Delete orphan replays` checkbox.](./images/help/backup-tab-delete-backup.png)
 
 Finally, there are some extra buttons in the panel on the side:
 + Empty database: If for some reason you want to delete all the data in the database, you can click on this button.
@@ -232,7 +232,7 @@ Finally, there are some extra buttons in the panel on the side:
 
 ### Advanced settings
 
-![There are many advanced settings you can fine tune to your liking.](./imgs/advanced-settings.png)
+![There are many advanced settings you can fine tune to your liking.](./images/help/advanced-settings.png)
 
 + Max undo level: This setting controls the maximum number of undos or redos you can do.
 + Check for updates on startup: Check to check at startup whether a newer version is available.

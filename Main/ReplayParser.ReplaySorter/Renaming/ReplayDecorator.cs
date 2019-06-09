@@ -238,21 +238,31 @@ namespace ReplayParser.ReplaySorter.Renaming
 
         private string GetPlayerInfo(string formatItem)
         {
-            var players = _replay.Players.Except(_replay.Observers);
-            if (players == null)
+            var players = _replay.Players.Except(_replay.Observers).OrderBy(p => p.ForceIdentifier);
+            if (players == null || players.Count() == 0)
                 return "NoPlayers";
 
             var playerRace = new Func<IPlayer, string>(p => p.RaceType.ToString());
             var playerVictoryStatus = new Func<IReplay, IPlayer, bool>((r, p) => r.Winners.Contains(p));
 
             var outputSb = new StringBuilder();
-            var formatItemChars = formatItem.ToCharArray();
+            var formatItemChars = formatItem.Trim('>', '<').TrimEnd('/').ToCharArray();
             var charCount = formatItemChars.Count();
             int toSkip = 0;
             var playerCount = players.Count();
+            var currentTeam = players.First().ForceIdentifier;
             for (int playerIndex = 0; playerIndex < playerCount; playerIndex++)
             {
                 var player = players.ElementAt(playerIndex);
+                if (currentTeam != player.ForceIdentifier)
+                {
+                    currentTeam = player.ForceIdentifier;
+                    if (outputSb.Length >= 2)
+                    {
+                        outputSb.Replace(", ", string.Empty, outputSb.Length - 2, 2);
+                    }
+                    outputSb.Append(" vs ");
+                }
                 for (int i = 0; i < charCount; i++)
                 {
                     if (toSkip > 0)
@@ -268,8 +278,9 @@ namespace ReplayParser.ReplaySorter.Renaming
                         var nextCharIndex = i + 1;
                         if (nextCharIndex < charCount)
                         {
-                            toSkip += 1 + TakeWhileWhiteSpaceCount(formatItemChars, i + 2);
-                            outputSb.TryAddSingleSpace();
+                            // toSkip += 1 + TakeWhileWhiteSpaceCount(formatItemChars, i + 2);
+                            toSkip += 1;
+                            // outputSb.TryAddSingleSpace();
 
                             switch (formatItemChars[nextCharIndex])
                             {
@@ -353,6 +364,14 @@ namespace ReplayParser.ReplaySorter.Renaming
             return Path.GetFileNameWithoutExtension(_replayFile.FilePath);
         }
 
+        private string GetCounter(int counter, int maxCounter, OutputFormat outputFormat)
+        {
+            if (outputFormat == OutputFormat.Short)
+                return counter.ToString();
+
+            return counter.ToString().PadLeft(maxCounter.ToString().Length, '0');
+        }
+
         #endregion
 
         #region constructor
@@ -383,7 +402,7 @@ namespace ReplayParser.ReplaySorter.Renaming
 
         #region methods
 
-        public string GetReplayItem(Tuple<CustomReplayNameSyntax, string> customReplayNameSyntaxItem, int counter)
+        public string GetReplayItem(Tuple<CustomReplayNameSyntax, string> customReplayNameSyntaxItem, int counter, int maxCounter)
         {
             var customReplayNameSyntax = customReplayNameSyntaxItem.Item1;
             switch (customReplayNameSyntax)
@@ -466,8 +485,11 @@ namespace ReplayParser.ReplaySorter.Renaming
                 case CustomReplayNameSyntax.OriginalName:
                     return GetOriginalName();
 
-                case CustomReplayNameSyntax.Counter:
-                    return counter.ToString();
+                case CustomReplayNameSyntax.CounterShort:
+                    return GetCounter(counter, maxCounter, OutputFormat.Short);
+
+                case CustomReplayNameSyntax.CounterLong:
+                    return GetCounter(counter, maxCounter, OutputFormat.Long);
 
                 default:
                     throw new InvalidOperationException();

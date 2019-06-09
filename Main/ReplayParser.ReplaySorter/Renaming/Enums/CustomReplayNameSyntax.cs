@@ -28,6 +28,7 @@
         PlayerXVictoryStatusShort = 4194304,
         PlayerXVictoryStatusLong = 8388608,
         OriginalName = 16777216,
-        Counter = 33554432
+        CounterShort = 33554432,
+        CounterLong = 67108864
     }
 }

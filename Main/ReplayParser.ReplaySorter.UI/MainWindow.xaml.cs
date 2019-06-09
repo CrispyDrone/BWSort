@@ -726,6 +726,9 @@ namespace ReplayParser.ReplaySorter.UI
             return null;
         }
 
+        //TODO Rewrite this trash:
+        // Validation doesn't need to stop immediately, validate all parameters etc and show error message with all invalid parameters if there are any
+        // instantiate sorter at the end with all parameters
         private void executeSortButton_Click(object sender, RoutedEventArgs e)
         {
             if (_worker_ReplaySorter != null && _worker_ReplaySorter.IsBusy)
@@ -737,6 +740,16 @@ namespace ReplayParser.ReplaySorter.UI
             {
                 MessageBox.Show("Please make a selection of sort criteria. Not all of them can be none!", "No sort criteria selected!", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
                 return;
+            }
+
+            var filterReplays = filterReplaysCheckBox.IsChecked.HasValue && filterReplaysCheckBox.IsChecked.Value;
+            if (filterReplays)
+            {
+                if (_filteredListReplays == null || _filteredListReplays.Count == 0)
+                {
+                    MessageBox.Show("Can not execute sort since filter did not return any replays!", "Failed to start sort: invalid filter", MessageBoxButton.OK, MessageBoxImage.Warning, MessageBoxResult.OK);
+                    return;
+                }
             }
 
             // get additional parameters
@@ -753,7 +766,7 @@ namespace ReplayParser.ReplaySorter.UI
                 {
                     if (customFormatTextBox != null)
                     {
-                        customReplayFormat = CustomReplayFormat.Create(customFormatTextBox.Text);
+                        customReplayFormat = CustomReplayFormat.Create(customFormatTextBox.Text, filterReplays ? _filteredListReplays.Count : _listReplays.Count, true);
                     }
                     else
                     {
@@ -855,16 +868,8 @@ namespace ReplayParser.ReplaySorter.UI
             // only if directory exists
             if (Directory.Exists(sortOutputDirectoryTextBox.Text))
             {
-                var filterReplays = filterReplaysCheckBox.IsChecked.HasValue && filterReplaysCheckBox.IsChecked.Value;
-
                 if (filterReplays)
                 {
-                    if (_filteredListReplays == null)
-                    {
-                        MessageBox.Show("Can not execute sort since filter did not return any replays!", "Failed to start sort: invalid filter", MessageBoxButton.OK, MessageBoxImage.Warning, MessageBoxResult.OK);
-                        return;
-                    }
-
                     _sorter = new Sorter(sortOutputDirectoryTextBox.Text, _filteredListReplays);
                 }
                 else
@@ -1107,6 +1112,8 @@ namespace ReplayParser.ReplaySorter.UI
             SelectMapFolder(replayRenamingOutputDirectoryTextBox);
         }
 
+        //TODO rewrite this trash...
+        // Validate everything, return error message with all validation if necessary
         private void executeRenamingButton_Click(object sender, RoutedEventArgs e)
         {
             if (_worker_ReplayRenamer != null && _worker_ReplayRenamer.IsBusy)
@@ -1119,6 +1126,16 @@ namespace ReplayParser.ReplaySorter.UI
 
             var renameInPlaceValue = renameInPlace.HasValue && renameInPlace.Value;
             var restoreOriginalReplayNamesValue = restoreOriginalReplayNames.HasValue && restoreOriginalReplayNames.Value;
+            var filterReplays = filterReplaysCheckBox.IsChecked.HasValue && filterReplaysCheckBox.IsChecked.Value;
+            if (filterReplays)
+            {
+                if (_filteredListReplays == null)
+                {
+                    MessageBox.Show("Can not execute rename since filter did not return any replays!", "Failed to start rename: invalid filter", MessageBoxButton.OK, MessageBoxImage.Warning, MessageBoxResult.OK);
+                    return;
+                }
+            }
+
             CustomReplayFormat customReplayFormat = null;
 
             if (!restoreOriginalReplayNamesValue)
@@ -1131,7 +1148,7 @@ namespace ReplayParser.ReplaySorter.UI
 
                 try
                 {
-                    customReplayFormat = CustomReplayFormat.Create(replayRenamingSyntax);
+                    customReplayFormat = CustomReplayFormat.Create(replayRenamingSyntax, filterReplays ? _filteredListReplays.Count : _listReplays.Count, true);
                 }
                 catch (ArgumentException)
                 {
@@ -1161,14 +1178,10 @@ namespace ReplayParser.ReplaySorter.UI
                 return;
             }
 
-            var filterReplays = filterReplaysCheckBox.IsChecked.HasValue && filterReplaysCheckBox.IsChecked.Value;
             Renamer replayRenamer = null;
 
             if (filterReplays)
             {
-                if (_filteredListReplays == null)
-                    MessageBox.Show("Can not execute rename since filter did not return any replays!", "Failed to start rename: invalid filter", MessageBoxButton.OK, MessageBoxImage.Warning, MessageBoxResult.OK);
-
                 replayRenamer = new Renamer(renamingParameters, _filteredListReplays);
             }
             else
@@ -2121,7 +2134,7 @@ namespace ReplayParser.ReplaySorter.UI
                     if (string.IsNullOrWhiteSpace(replayDialog.Answer))
                         throw new ArgumentException();
 
-                    customReplayFormat = CustomReplayFormat.Create(replayDialog.Answer);
+                    customReplayFormat = CustomReplayFormat.Create(replayDialog.Answer, listViewItemReplays.Count, true);
                 }
                 catch(ArgumentException)
                 {
@@ -2168,6 +2181,15 @@ namespace ReplayParser.ReplaySorter.UI
 
         #endregion
 
+        #region help 
+
+        private void HelpGuideMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            var helpGuideWindow = new HelpWindow();
+            helpGuideWindow.Show();
+        }
+
+        #endregion
     }
 }
 

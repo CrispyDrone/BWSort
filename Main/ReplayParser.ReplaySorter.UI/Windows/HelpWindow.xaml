@@ -1,0 +1,14 @@
+﻿<Window x:Class="ReplayParser.ReplaySorter.UI.Windows.HelpWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ReplayParser.ReplaySorter.UI.Windows"
+        xmlns:md="clr-namespace:Markdig.Wpf;assembly=Markdig.Wpf"
+        mc:Ignorable="d"
+        Title="BWSort user guide" Height="450" Width="800"
+        Loaded="Window_Loaded">
+    <Grid>
+        <md:MarkdownViewer Name="userGuideMarkdownViewer"></md:MarkdownViewer>
+    </Grid>
+</Window>

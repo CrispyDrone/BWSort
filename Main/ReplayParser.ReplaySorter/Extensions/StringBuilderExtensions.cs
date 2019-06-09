@@ -10,7 +10,8 @@ namespace ReplayParser.ReplaySorter.Extensions
     {
         public static StringBuilder TryAddSingleSpace(this StringBuilder stringBuilder)
         {
-            if (!char.IsWhiteSpace(GetLastCharacter(stringBuilder)))
+            var lastChar = GetLastCharacter(stringBuilder);
+            if (!char.IsWhiteSpace(lastChar) && lastChar != '\0')
                 stringBuilder.Append(' ');
 
             return stringBuilder;

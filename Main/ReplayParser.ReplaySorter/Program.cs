@@ -238,7 +238,7 @@ namespace ReplayParser.ReplaySorter
                                 string customformat = Console.ReadLine();
                                 try
                                 {
-                                    aCustomReplayFormat = CustomReplayFormat.Create(customformat);
+                                    aCustomReplayFormat = CustomReplayFormat.Create(customformat, ListReplays.Count, true);
                                     sorter.CustomReplayFormat = aCustomReplayFormat;
                                 }
                                 catch (Exception)
