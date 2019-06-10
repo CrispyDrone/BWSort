@@ -257,7 +257,6 @@
                         <RowDefinition Height="Auto"></RowDefinition>
                         <RowDefinition Height="Auto"></RowDefinition>
                         <RowDefinition Height="Auto"></RowDefinition>
-                        <RowDefinition Height="Auto"></RowDefinition>
                         <RowDefinition Height="*"></RowDefinition>
                         <RowDefinition Height="Auto"></RowDefinition>
                     </Grid.RowDefinitions>
@@ -266,9 +265,12 @@
                     <Button Grid.Row="0" Grid.Column="2" x:Name="replayRenamingOutputDirectoryButton" Content="Set directory" Click="replayRenamingOutputDirectoryButton_Click" Margin="10 10 0 10"></Button>
                     <Label Grid.Row="1" Grid.Column="0" x:Name="replayRenamingSyntaxLabel" Content="Renaming expression" VerticalAlignment="Center"></Label>
                     <TextBox Grid.Row="1" Grid.Column="1" x:Name="replayRenamingSyntaxTextBox" Margin="10"></TextBox>
-                    <CheckBox Grid.Row="2" x:Name="renameInPlaceCheckBox" Content="Rename in place" IsChecked="False" Click="renameInPlaceCheckBox_Click" Margin="0 10"></CheckBox>
-                    <CheckBox Grid.Row="3" x:Name="restoreOriginalReplayNamesCheckBox" Content="Restore original replay names" IsChecked="False" Click="RestoreOriginalReplayNamesCheckBox_Click" Margin="0 10"></CheckBox>
-                    <StackPanel Grid.Row="4" Grid.ColumnSpan="3" Orientation="Horizontal">
+                    <StackPanel Grid.Row="2" Margin="0 10">
+                        <CheckBox x:Name="renameInPlaceCheckBox" Content="Rename in place" IsChecked="False" Click="renameInPlaceCheckBox_Click"></CheckBox>
+                        <CheckBox x:Name="restoreOriginalReplayNamesCheckBox" Content="Restore original replay names" IsChecked="False" Click="RestoreOriginalReplayNamesCheckBox_Click"></CheckBox>
+                        <CheckBox x:Name="renameIsPreviewCheckBox" Content="Preview" IsChecked="False"></CheckBox>
+                    </StackPanel>
+                    <StackPanel Grid.Row="3" Grid.ColumnSpan="3" Orientation="Horizontal">
                         <StackPanel.Resources>
                             <Path x:Key="long-path" Stroke="Black" Data="M 0,0 h5 v5 h-5 v-5 m2.5,5 v2.5 h5 m0,0 v-2.5 h5 v5 h-5 v-5 m2.5,5 v2.5 h5 m0,0 v-2.5 h5 v5 h-5 v-5" Height="16" Width="20"/>
                             <Path x:Key="short-path" Stroke="Black" Data="M 0,0 H10 M 0,5 H10 M 0,10 H10"/>
@@ -290,7 +292,7 @@
                             </Path>
                         </Button>
                     </StackPanel>
-                    <ListView Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="3" x:Name="renameTransformationResultListView">
+                    <ListView Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" x:Name="renameTransformationResultListView">
                         <ListView.View>
                             <GridView>
                                 <GridViewColumn Header="Old" Width="{Binding RelativeSource={RelativeSource AncestorType=ListView}, Path=ActualWidth, Converter={StaticResource DBPConverter}, ConverterParameter=2}">
@@ -312,7 +314,7 @@
                             </GridView>
                         </ListView.View>
                     </ListView>
-                    <DockPanel Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="3">
+                    <DockPanel Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="3">
                         <Button DockPanel.Dock="Right" x:Name="cancelRenamingButton" Content="Cancel" Click="cancelRenamingButton_Click" Margin="10 10 0 10" MinWidth="70"></Button>
                         <Button DockPanel.Dock="Right" x:Name="executeRenamingButton" Content="Rename" Click="executeRenamingButton_Click" Margin="10" MinWidth="70"></Button>
                         <Grid DockPanel.Dock="Left" Margin="0 10 10 10">

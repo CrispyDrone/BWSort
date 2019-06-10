@@ -8,6 +8,9 @@
         mc:Ignorable="d"
         Title="BWSort user guide" Height="450" Width="800"
         Loaded="Window_Loaded">
+    <FrameworkElement.CommandBindings>
+        <CommandBinding Command="{x:Static md:Commands.Hyperlink}" Executed="OpenHyperlink" />
+    </FrameworkElement.CommandBindings>
     <Grid>
         <md:MarkdownViewer Name="userGuideMarkdownViewer"></md:MarkdownViewer>
     </Grid>

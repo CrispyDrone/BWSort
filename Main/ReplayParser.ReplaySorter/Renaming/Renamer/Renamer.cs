@@ -26,7 +26,7 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
 
         #region methods
 
-        private ServiceResult<ServiceResultSummary<IEnumerable<File<IReplay>>>> ComputeNames(BackgroundWorker worker_ReplayRenamer, string outputDirectory, bool restore = false)
+        private ServiceResult<ServiceResultSummary<IEnumerable<File<IReplay>>>> ComputeNames(BackgroundWorker worker_ReplayRenamer, string outputDirectory, bool restore = false, int steps = 2)
         {
             worker_ReplayRenamer.ReportProgress(0, "Computing names...");
 
@@ -55,26 +55,26 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
                     sw.Stop();
                     return new ServiceResult<ServiceResultSummary<IEnumerable<File<IReplay>>>>(
                         new ServiceResultSummary<IEnumerable<File<IReplay>>>(
-                            renamedReplays, 
-                            $"Renaming cancelled by user... It took {sw.Elapsed} to rename {renamedReplays.Count()} of {_listReplays.Count()} replays. {replaysThrowingExceptions} replays encountered exceptions.", 
-                            sw.Elapsed, 
-                            currentPosition, 
+                            renamedReplays,
+                            $"Renaming cancelled by user... It took {sw.Elapsed} to rename {renamedReplays.Count()} of {_listReplays.Count()} replays. {replaysThrowingExceptions} replays encountered exceptions.",
+                            sw.Elapsed,
+                            currentPosition,
                             replaysThrowingExceptions
-                            ), 
-                        true, 
+                            ),
+                        true,
                         null
                     );
                 }
 
                 currentPosition++;
-                progressPercentage = Convert.ToInt32(((double)currentPosition / (_listReplays.Count() * 2)) * 100);
+                progressPercentage = Convert.ToInt32(((double)currentPosition / (_listReplays.Count() * steps)) * 100);
                 worker_ReplayRenamer.ReportProgress(progressPercentage);
                 try
                 {
                     replay.AddAfterCurrent(
-                        (string.IsNullOrWhiteSpace(outputDirectory) ? Directory.GetParent(replay.FilePath).ToString() : outputDirectory ) + @"\" 
-                        + 
-                        (restore ?  FileHandler.GetFileName(replay.OriginalFilePath) : ReplayHandler.GenerateReplayName(replay, CustomReplayFormat) + ".rep")
+                        (string.IsNullOrWhiteSpace(outputDirectory) ? Directory.GetParent(replay.FilePath).ToString() : outputDirectory) + @"\"
+                        +
+                        (restore ? FileHandler.GetFileName(replay.OriginalFilePath) : ReplayHandler.GenerateReplayName(replay, CustomReplayFormat) + ".rep")
                     );
                     renamedReplays.Add(replay);
                 }
@@ -89,13 +89,13 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
             sw.Stop();
             return new ServiceResult<ServiceResultSummary<IEnumerable<File<IReplay>>>>(
                     new ServiceResultSummary<IEnumerable<File<IReplay>>>(
-                        renamedReplays, 
+                        renamedReplays,
                         $"Finished renaming replays! It took {sw.Elapsed} to rename {_listReplays.Count()} replays. {replaysThrowingExceptions} replays encountered exceptions.",
                         sw.Elapsed,
                         currentPosition,
                         replaysThrowingExceptions
                     ),
-                    true, 
+                    true,
                     null
                 );
         }
@@ -185,14 +185,17 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
 
         }
 
-        private ServiceResult<ServiceResultSummary<IEnumerable<File<IReplay>>>> ComputeAndExecuteRenaming(BackgroundWorker worker_ReplayRenamer, string outputDirectory, bool restore = false)
+        private ServiceResult<ServiceResultSummary<IEnumerable<File<IReplay>>>> ComputeAndExecuteRenaming(BackgroundWorker worker_ReplayRenamer, string outputDirectory, bool restore = false, bool isPreview = false)
         {
-            var computationResponse = ComputeNames(worker_ReplayRenamer, OutputDirectory, restore);
+            var computationResponse = ComputeNames(worker_ReplayRenamer, OutputDirectory, restore, IsPreview ? 1 : 2);
 
             if (!computationResponse.Success)
             {
                 return new ServiceResult<ServiceResultSummary<IEnumerable<File<IReplay>>>>(ServiceResultSummary<IEnumerable<File<IReplay>>>.Default, false, new List<string>(computationResponse.Errors));
             }
+
+            if (isPreview)
+                return computationResponse;
 
             var executionResponse = ExecuteRenaming(worker_ReplayRenamer, computationResponse.Result.Result, !string.IsNullOrWhiteSpace(outputDirectory));
 
@@ -200,7 +203,6 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
             {
                 return new ServiceResult<ServiceResultSummary<IEnumerable<File<IReplay>>>>(ServiceResultSummary<IEnumerable<File<IReplay>>>.Default, false, new List<string>(executionResponse.Errors));
             }
-
 
             // combine both responses...
             //TODO extract to method
@@ -215,7 +217,6 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
                 );
             // union of both replay sets => wrong you only need those replays that have successfully passed both steps
             // IEnumerable<File<IReplay>> combinedReplays = computationResponse.Result.Result.Union(executionResponse.Result.Result);
-
 
             return new ServiceResult<ServiceResultSummary<IEnumerable<File<IReplay>>>>
                 (
@@ -252,6 +253,7 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
 
         public bool RenameInPlace => _renamingParameters.RenameInPlace;
         public bool RestoreOriginalReplayNames => _renamingParameters.RestoreOriginalReplayNames;
+        public bool IsPreview => _renamingParameters.IsPreview;
         public string OutputDirectory => _renamingParameters.OutputDirectory;
         public CustomReplayFormat CustomReplayFormat => _renamingParameters.CustomReplayFormat;
         public IEnumerable<File<IReplay>> Replays => _listReplays;
@@ -262,24 +264,29 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
 
         // how to avoid coupling yourself to backgroundworker...
         // rethink design of not passing parameters, but having them be properties of this renamer class...
-        public ServiceResult<ServiceResultSummary<IEnumerable<File<IReplay>>>> RenameInPlaceAsync(BackgroundWorker worker_ReplayRenamer)
-        {
-            return ComputeAndExecuteRenaming(worker_ReplayRenamer, string.Empty);
-        }
+        // public ServiceResult<ServiceResultSummary<IEnumerable<File<IReplay>>>> RenameInPlaceAsync(BackgroundWorker worker_ReplayRenamer)
+        // {
+        //     return ComputeAndExecuteRenaming(worker_ReplayRenamer, string.Empty);
+        // }
 
         // how to avoid coupling yourself to backgroundworker...
         // rethink design of not passing parameters, but having them be properties of this renamer class...
-        public ServiceResult<ServiceResultSummary<IEnumerable<File<IReplay>>>> RenameToDirectoryAsync(BackgroundWorker worker_ReplayRenamer)
-        {
-            return ComputeAndExecuteRenaming(worker_ReplayRenamer, OutputDirectory);
-        }
+        // public ServiceResult<ServiceResultSummary<IEnumerable<File<IReplay>>>> RenameToDirectoryAsync(BackgroundWorker worker_ReplayRenamer)
+        // {
+        //     return ComputeAndExecuteRenaming(worker_ReplayRenamer, OutputDirectory);
+        // }
 
-        public ServiceResult<ServiceResultSummary<IEnumerable<File<IReplay>>>> RestoreOriginalNames(BackgroundWorker worker_RenameUndoer)
+        // public ServiceResult<ServiceResultSummary<IEnumerable<File<IReplay>>>> RestoreOriginalNames(BackgroundWorker worker_RenameUndoer)
+        // {
+        //     // rename in place => names changed => restore => names restored back to originals
+        //     // sort with name change => names changed => restore => keep sorted, but revert names to originals
+        //     // rename last sort => names changed => restore => restore names to originals
+        //     return ComputeAndExecuteRenaming(worker_RenameUndoer, string.Empty, true);
+        // }
+
+        public ServiceResult<ServiceResultSummary<IEnumerable<File<IReplay>>>> RenameAsync(BackgroundWorker worker_RenameRenamer)
         {
-            // rename in place => names changed => restore => names restored back to originals
-            // sort with name change => names changed => restore => keep sorted, but revert names to originals
-            // rename last sort => names changed => restore => restore names to originals
-            return ComputeAndExecuteRenaming(worker_RenameUndoer, string.Empty, true);
+            return ComputeAndExecuteRenaming(worker_RenameRenamer, OutputDirectory, RestoreOriginalReplayNames, IsPreview);
         }
 
         public ServiceResult<ServiceResultSummary<IEnumerable<File<IReplay>>>> UndoRename(BackgroundWorker worker_RenameUndoer)
@@ -296,6 +303,7 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
         {
             return _renamingParameters.ToString();
         }
+
         #endregion
 
         #endregion

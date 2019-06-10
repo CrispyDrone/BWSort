@@ -71,6 +71,7 @@ namespace ReplayParser.ReplaySorter.UI
         private BackgroundWorker _worker_ReplayRenamer = null;
         private bool _renamingReplays = false;
         private bool _renamingToOutputDirectory = false;
+        private bool _renamingIsPreview;
 
         // undoing
         private BackgroundWorker _worker_Undoer = null;
@@ -1121,11 +1122,13 @@ namespace ReplayParser.ReplaySorter.UI
 
             bool? renameInPlace = renameInPlaceCheckBox.IsChecked;
             bool? restoreOriginalReplayNames = restoreOriginalReplayNamesCheckBox.IsChecked;
+            bool? isPreview = renameIsPreviewCheckBox.IsChecked;
             string replayRenamingSyntax = replayRenamingSyntaxTextBox.Text;
             string replayRenamingOutputDirectory = replayRenamingOutputDirectoryTextBox.Text;
 
             var renameInPlaceValue = renameInPlace.HasValue && renameInPlace.Value;
             var restoreOriginalReplayNamesValue = restoreOriginalReplayNames.HasValue && restoreOriginalReplayNames.Value;
+            var isPreviewValue = isPreview.HasValue && isPreview.Value;
             var filterReplays = filterReplaysCheckBox.IsChecked.HasValue && filterReplaysCheckBox.IsChecked.Value;
             if (filterReplays)
             {
@@ -1170,7 +1173,7 @@ namespace ReplayParser.ReplaySorter.UI
                 replayRenamingOutputDirectory = string.Empty;
             }
 
-            var renamingParameters = RenamingParameters.Create(customReplayFormat, replayRenamingOutputDirectory, renameInPlaceValue, restoreOriginalReplayNamesValue);
+            var renamingParameters = RenamingParameters.Create(customReplayFormat, replayRenamingOutputDirectory, renameInPlaceValue, restoreOriginalReplayNamesValue, isPreviewValue);
 
             if (renamingParameters == null)
             {
@@ -1207,25 +1210,30 @@ namespace ReplayParser.ReplaySorter.UI
         private void worker_RenameReplays(object sender, DoWorkEventArgs e)
         {
             var replayRenamer = e.Argument as Renamer;
-            var renameInPlace = replayRenamer.RenameInPlace;
-            var restoreOriginalReplayNames = replayRenamer.RestoreOriginalReplayNames;
-            ServiceResult<ServiceResultSummary<IEnumerable<File<IReplay>>>> response = null;
+            // var renameInPlace = replayRenamer.RenameInPlace;
+            // var restoreOriginalReplayNames = replayRenamer.RestoreOriginalReplayNames;
+            // var isPreview = replayRenamer.IsPreview;
+            // ServiceResult<ServiceResultSummary<IEnumerable<File<IReplay>>>> response = null;
             _renamingReplays = true;
 
-            if (renameInPlace)
-            {
-                response = replayRenamer.RenameInPlaceAsync(sender as BackgroundWorker);
-            }
-            else if (restoreOriginalReplayNames)
-            {
-                response = replayRenamer.RestoreOriginalNames(sender as BackgroundWorker);
-            }
-            else
-            {
-                // renaming into another directory
-                _renamingToOutputDirectory = true;
-                response = replayRenamer.RenameToDirectoryAsync(sender as BackgroundWorker);
-            }
+            //TODO wtf... why do you have these different methods RenameInPlace and RestoreOriginalNames when the RenamingParameters used to create the Renamer already give you the necessaryinformation ???
+            // if (renameInPlace)
+            // {
+            //     response = replayRenamer.RenameInPlaceAsync(sender as BackgroundWorker);
+            // }
+            // else if (restoreOriginalReplayNames)
+            // {
+            //     response = replayRenamer.RestoreOriginalNames(sender as BackgroundWorker);
+            // }
+            // else
+            // {
+            //     // renaming into another directory
+            //     _renamingToOutputDirectory = true;
+            //     response = replayRenamer.RenameToDirectoryAsync(sender as BackgroundWorker);
+            // }
+            _renamingToOutputDirectory = !string.IsNullOrEmpty(replayRenamer.OutputDirectory);
+            _renamingIsPreview = replayRenamer.IsPreview;
+            var response = replayRenamer.RenameAsync(sender as BackgroundWorker);
 
             ReplayHandler.LogBadReplays(_replaysThrowingExceptions, _replaySorterConfiguration.LogDirectory, $"{DateTime.Now} - Error while renaming replay: {{0}} using arguments: {replayRenamer.ToString()}");
             e.Result = response;
@@ -1260,7 +1268,7 @@ namespace ReplayParser.ReplaySorter.UI
 
             renameTransformationResultListView.ItemsSource = RenderRenaming(response.Result.Result);
 
-            if (_renamingToOutputDirectory)
+            if (_renamingToOutputDirectory || _renamingIsPreview)
             {
                 // remove history
                 foreach (var replay in response.Result.Result)
@@ -1294,6 +1302,7 @@ namespace ReplayParser.ReplaySorter.UI
             }
             _renamingToOutputDirectory = false;
             _renamingReplays = false;
+            _renamingIsPreview = false;
             listViewReplays.Items.Refresh();
         }
 
