@@ -967,12 +967,12 @@ namespace ReplayParser.ReplaySorter.UI
                     {
                         e.Result = _sorter.ExecuteSortAsync(_previewTree, _worker_ReplaySorter, _replaysThrowingExceptions);
                         _previewTree = null;
+                        _previewSortArguments = null;
                     }
                     else
                     {
                         e.Result = _sorter.ExecuteSortAsync(_keepOriginalReplayNames, _worker_ReplaySorter, _replaysThrowingExceptions);
                     }
-                    _previewSortArguments = null;
                 }
                 ReplayHandler.LogBadReplays(_replaysThrowingExceptions, _replaySorterConfiguration.LogDirectory, $"{DateTime.Now} - Error while {(isPreview ? "previewing " : string.Empty)}sorting replay: {{0}} with arguments {_sorter.ToString()}");
 

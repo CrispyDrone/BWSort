@@ -127,6 +127,7 @@ namespace ReplayParser.ReplaySorter.Renaming
         #region properties
 
         public string CustomFormat { get; }
+        public IEnumerable<Tuple<CustomReplayNameSyntax, string>> CustomFormatSections => _customFormatSections.AsEnumerable();
         public int Counter => _counter;
         public int MaxNumberOfReplays { get; }
         public bool ThrowOnExceedingMax { get; }

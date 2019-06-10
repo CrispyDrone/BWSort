@@ -163,7 +163,7 @@ namespace ReplayParser.ReplaySorter
             {
                 if (replay != null)
                 {
-                    tree.AddToNode(directories[directoryPath], FileReplay.Create(replay.Content, replay.OriginalFilePath, replay.Hash));
+                    tree.AddToNode(directories[directoryPath], FileReplay.Create(replay.Content, /*replay.OriginalFilePath*/ replay.FilePath, replay.Hash));
                 }
             }
             else
@@ -175,7 +175,7 @@ namespace ReplayParser.ReplaySorter
                         tree.AddToNode(
                             directories[previousDirectoryPath],
                             directory,
-                            new List<FileReplay>() { FileReplay.Create(replay.Content, replay.OriginalFilePath, replay.Hash) }.AsEnumerable()
+                            new List<FileReplay>() { FileReplay.Create(replay.Content, /*replay.OriginalFilePath*/ replay.FilePath, replay.Hash) }.AsEnumerable()
                         )
                     );
                 }
