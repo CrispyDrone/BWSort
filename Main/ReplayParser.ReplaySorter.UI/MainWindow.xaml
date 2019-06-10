@@ -293,6 +293,19 @@
                         </Button>
                     </StackPanel>
                     <ListView Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" x:Name="renameTransformationResultListView">
+                        <ListView.Resources>
+                            <ContextMenu x:Key="renameOutputLvCm">
+                                <MenuItem Header="Open in file explorer" Name="renameOutputOpenInFileExplorerMenuItem" Click="RenameOutputOpenInFileExplorerMenuItem_Click"/>
+                                <MenuItem Header="Select in search view" Name="renameOutputSelectInSearchView" Click="RenameOutputSelectInSearchView_Click"/>
+                            </ContextMenu>
+                        </ListView.Resources>
+                        <ListView.ItemContainerStyle>
+                            <Style TargetType="{x:Type ListViewItem}">
+                                <!--<Setter Property="BorderBrush" Value="LightGray" />
+                                <Setter Property="BorderThickness" Value="0,0,0,1" />-->
+                                <Setter Property="ContextMenu" Value="{StaticResource renameOutputLvCm}"/>
+                            </Style>
+                        </ListView.ItemContainerStyle>
                         <ListView.View>
                             <GridView>
                                 <GridViewColumn Header="Old" Width="{Binding RelativeSource={RelativeSource AncestorType=ListView}, Path=ActualWidth, Converter={StaticResource DBPConverter}, ConverterParameter=2}">
@@ -324,7 +337,7 @@
                     </DockPanel>
                 </Grid>
             </TabItem>
-            <TabItem Header="Search">
+            <TabItem Name="searchTabItem" Header="Search">
                 <DockPanel>
                     <DockPanel DockPanel.Dock="Top">
                         <Grid DockPanel.Dock="Right">

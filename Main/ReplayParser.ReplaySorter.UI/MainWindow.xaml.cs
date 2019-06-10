@@ -542,6 +542,24 @@ namespace ReplayParser.ReplaySorter.UI
             }
         }
 
+        private void OpenInFileExplorer(string filePath)
+        {
+            if (!File.Exists(filePath))
+            {
+                return;
+            }
+
+            string argument = "/select, \"" + filePath + "\"";
+            try
+            {
+                Process.Start("explorer.exe", argument);
+            }
+            catch (Exception)
+            {
+                MessageBox.Show("An error occurred while trying to open the file.", "Failed to open file.", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
         #endregion
 
         #region sorting
@@ -2064,6 +2082,8 @@ namespace ReplayParser.ReplaySorter.UI
 
         #region context menus
 
+        #region parse tab
+
         private void RemoveFoundReplay_Click(object sender, RoutedEventArgs e)
         {
             MenuItem removeFoundReplay = sender as MenuItem;
@@ -2076,26 +2096,16 @@ namespace ReplayParser.ReplaySorter.UI
             replayFilesFoundListBox.Items.Refresh();
         }
 
+        #endregion
+
+        #region search tab
+
         private void OpenInFileExplorerMenuItem_Click(object sender, RoutedEventArgs e)
         {
             MenuItem openFileInExplorer = sender as MenuItem;
             ListViewItem listViewItemReplay = listViewReplays.ItemContainerGenerator.ContainerFromItem(openFileInExplorer.DataContext) as ListViewItem;
             var replay = listViewItemReplay.Content as File<IReplay>;
-            var folderPath = Path.GetDirectoryName(replay.FilePath);
-            if (!File.Exists(replay.FilePath))
-            {
-                return;
-            }
-
-            string argument = "/select, \"" + replay.FilePath + "\"";
-            try
-            {
-                Process.Start("explorer.exe", argument);
-            }
-            catch (Exception)
-            {
-                MessageBox.Show("An error occurred while trying to open the file.", "Failed to open file.", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            OpenInFileExplorer(replay.FilePath);
         }
 
         //TODO shouldn't make a difference whether 1 or multiple are selected, rewrite...
@@ -2190,6 +2200,34 @@ namespace ReplayParser.ReplaySorter.UI
 
         #endregion
 
+        #region rename tab
+
+        private void RenameOutputOpenInFileExplorerMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            MenuItem openFileInExplorer = sender as MenuItem;
+            ListViewItem listViewItemReplay = renameTransformationResultListView.ItemContainerGenerator.ContainerFromItem(openFileInExplorer.DataContext) as ListViewItem;
+            var replay = listViewItemReplay.Content as ReplayRenamer.Renaming;
+            OpenInFileExplorer(replay.Replay.FilePath);
+        }
+
+        //TODO how to make it scroll until item is the first in view?
+        // I scroll to the last item and then back again lol...
+        private void RenameOutputSelectInSearchView_Click(object sender, RoutedEventArgs e)
+        {
+            MenuItem openFileInExplorer = sender as MenuItem;
+            ListViewItem listViewItemReplay = renameTransformationResultListView.ItemContainerGenerator.ContainerFromItem(openFileInExplorer.DataContext) as ListViewItem;
+            var replay = listViewItemReplay.Content as ReplayRenamer.Renaming;
+            searchTabItem.Focus();
+            var lastItem = listViewReplays.Items.GetItemAt(listViewReplays.Items.Count - 1);
+            listViewReplays.ScrollIntoView(lastItem);
+            listViewReplays.SelectedItem = replay.Replay;
+            listViewReplays.ScrollIntoView(replay.Replay);
+        }
+
+        #endregion
+
+        #endregion
+
         #region help 
 
         private void HelpGuideMenuItem_Click(object sender, RoutedEventArgs e)
@@ -2199,6 +2237,7 @@ namespace ReplayParser.ReplaySorter.UI
         }
 
         #endregion
+
     }
 }
 

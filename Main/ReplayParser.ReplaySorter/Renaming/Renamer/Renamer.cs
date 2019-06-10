@@ -26,7 +26,7 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
 
         #region methods
 
-        private ServiceResult<ServiceResultSummary<IEnumerable<File<IReplay>>>> ComputeNames(BackgroundWorker worker_ReplayRenamer, string outputDirectory, bool restore = false, int steps = 2)
+        private ServiceResult<ServiceResultSummary<IEnumerable<File<IReplay>>>> ComputeNames(BackgroundWorker worker_ReplayRenamer, string outputDirectory, bool restore = false)
         {
             worker_ReplayRenamer.ReportProgress(0, "Computing names...");
 
@@ -67,7 +67,7 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
                 }
 
                 currentPosition++;
-                progressPercentage = Convert.ToInt32(((double)currentPosition / (_listReplays.Count() * steps)) * 100);
+                progressPercentage = Convert.ToInt32(((double)currentPosition / (_listReplays.Count() * 2)) * 100);
                 worker_ReplayRenamer.ReportProgress(progressPercentage);
                 try
                 {
@@ -100,7 +100,7 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
                 );
         }
 
-        private ServiceResult<ServiceResultSummary<IEnumerable<File<IReplay>>>> ExecuteRenaming(BackgroundWorker worker_ReplayRenamer, IEnumerable<File<IReplay>> replays, bool shouldCopy, bool forward = true, int steps = 2)
+        private ServiceResult<ServiceResultSummary<IEnumerable<File<IReplay>>>> ExecuteRenaming(BackgroundWorker worker_ReplayRenamer, IEnumerable<File<IReplay>> replays, bool shouldCopy, bool forward = true, int steps = 2, bool isPreview = false)
         {
             worker_ReplayRenamer.ReportProgress(50, "Writing replays...");
             // report progress... with "Copying replays with newly generated names..."
@@ -122,12 +122,12 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
                             new ServiceResultSummary<IEnumerable<File<IReplay>>>
                             (
                                 renamedReplays, 
-                                $"Renaming cancelled by user... It took {sw.Elapsed} to write {renamedReplays.Count()} of {replays.Count()} replays. {replaysThrowingExceptions} replays encountered exceptions.", 
-                                sw.Elapsed, 
-                                currentPosition, 
+                                $"Renaming cancelled by user... It took {sw.Elapsed} to write {renamedReplays.Count()} of {replays.Count()} replays. {replaysThrowingExceptions} replays encountered exceptions.",
+                                sw.Elapsed,
+                                currentPosition,
                                 replaysThrowingExceptions
-                            ), 
-                            true, 
+                            ),
+                            true,
                             null
                         );
                 }
@@ -137,24 +137,30 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
                 worker_ReplayRenamer.ReportProgress(progressPercentage);
                 try
                 {
-                    //TODO identical names => failed to create file (add incrementor)
                     replay.SaveState();
-                    if (shouldCopy)
+
+                    if (isPreview)
                     {
-                        ReplayHandler.CopyReplay(replay, forward);
-                        // don't want this to show up in history
-                        //TODO eh this doesn't take into account forward, but i guess copying only occurs when renaming to an output directory which is always forward??
-
-                        // support for listview renaming action result requires history to be recorded...
-                        // replay.Rewind();
-                        // replay.RemoveAfterCurrent();
-
-                        // File.Copy(replay.OriginalFilePath, replay.FilePath);
+                        replay.Forward();
                     }
                     else
                     {
-                        ReplayHandler.MoveReplay(replay, forward);
-                        // File.Move(replay.OriginalFilePath, replay.FilePath);
+                        if (shouldCopy)
+                        {
+                            ReplayHandler.CopyReplay(replay, forward);
+                            // don't want this to show up in history
+                            //TODO eh this doesn't take into account forward, but i guess copying only occurs when renaming to an output directory which is always forward??
+
+                            // support for listview renaming action result requires history to be recorded...
+                            // replay.Rewind();
+                            // replay.RemoveAfterCurrent();
+
+                            // File.Copy(replay.OriginalFilePath, replay.FilePath);
+                        }
+                        else
+                        {
+                            ReplayHandler.MoveReplay(replay, forward);
+                        }
                     }
                     renamedReplays.Add(replay);
                     replay.DiscardSavedState();
@@ -187,17 +193,14 @@ namespace ReplayParser.ReplaySorter.ReplayRenamer
 
         private ServiceResult<ServiceResultSummary<IEnumerable<File<IReplay>>>> ComputeAndExecuteRenaming(BackgroundWorker worker_ReplayRenamer, string outputDirectory, bool restore = false, bool isPreview = false)
         {
-            var computationResponse = ComputeNames(worker_ReplayRenamer, OutputDirectory, restore, IsPreview ? 1 : 2);
+            var computationResponse = ComputeNames(worker_ReplayRenamer, OutputDirectory, restore);
 
             if (!computationResponse.Success)
             {
                 return new ServiceResult<ServiceResultSummary<IEnumerable<File<IReplay>>>>(ServiceResultSummary<IEnumerable<File<IReplay>>>.Default, false, new List<string>(computationResponse.Errors));
             }
 
-            if (isPreview)
-                return computationResponse;
-
-            var executionResponse = ExecuteRenaming(worker_ReplayRenamer, computationResponse.Result.Result, !string.IsNullOrWhiteSpace(outputDirectory));
+            var executionResponse = ExecuteRenaming(worker_ReplayRenamer, computationResponse.Result.Result, !string.IsNullOrWhiteSpace(outputDirectory), true, 2, isPreview);
 
             if (!executionResponse.Success)
             {
