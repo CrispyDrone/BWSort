@@ -27,7 +27,7 @@ First things first, you will have to parse replays. Choose a directory by clicki
 
 ![Choose a directory, and discover replays.](./images/help/parse-tab-step01.png)
 
-You can repeatedly import replays from directories and they will show up in the listbox at the bottom of the screen with a yellow box in front of them. This means these replays are waiting to be parsed. Next, click on parse and wait til all replays have been parsed.  Once it's finished, if the replay has been parsed successfully it will show a green box in front of it, otherwise a red box. 
+You can repeatedly import replays from directories and they will show up in the listbox at the bottom of the screen. You can remove replays you don't want to parse by right clicking on them and choosing "Remove file". You can see that all the replays have a yellow box in front of them. This means these replays are waiting to be parsed. Next, click on parse and wait until all replays have been parsed. Once this finishes, a green box will indicate success, whereas a red box will indicate a failure to parse the replays.
 
 ![Parse replays, and receive feedback in the form of a green or red box.](./images/help/parse-tab-step02.png)
 
@@ -42,12 +42,14 @@ After you've parsed replays, you can see your results in the Search tab:
 
 ![Search for specific replays and see their stats in the search tab](./images/help/search-tab-after-parsing.png)
 
-A crown indicates the winning players. An eye indicates observers. You can see the different teams that were part of the game. [Team extraction is currently buggy due to known issues with the replay parsing.](#known-issues). Each player's race is visible and there are some additional columns showing the map, duration, the date the game was played and the path of the replay file.
+A crown icon indicates the winning players. An eye icon indicates observers. You can see the different teams that were part of the game. [Unfortunately, team identification is currently buggy due to known issues with the replay parser.](#known-issues). Each player's race is visible and there are some additional columns showing the map, duration, the date the game was played on, and the path of the replay file.
 
-You can filter this list of replays by typing filter expression in the search bar. Aside from using this search function to find a specific replay, you can also use it as input for the sorting and renaming actions but more on that later.
+You can filter this list of replays by typing filter expressions in the search bar. Aside from using this search function to find a specific replay, you can also use the filtered output as input for the sorting and renaming actions, but more on that later.
+
+As you can see, many maps don't have an actual image yet but instead a placeholder. If you want to, you can download images and add them to the `images/maps` folder. [In the future, this won't be necessary any more since I will use the data present inside the replay files and Brood War's MPQ file.](#towards-the-future) Name the file exactly like the map but use `_` instead of spaces and remove any special characters such as `'`. Check the [map section](#map-file-names) for a list of the expected file names of all maps.
 
 #### Filter syntax
-To use a filter you specify its code followed by a colon. You combine individual filters by separating them with a comma.
+To use a filter you specify its code followed by a colon. You combine individual filters by separating them with a comma. To reset all filters and get back the original full list of replays, just use an empty filter and press enter.
 
 Filter 		| code
 ---------------	| ----
@@ -68,7 +70,7 @@ For each of the following filters you can combine different conditions by using 
 
   ![Specify a player name to filter on it. Add 'isWinner' and 'race=t' to further refine the search.](./images/help/search-tab-filter-player.png)
 
-  You can search for any part of a player name. You can also add the `& isWinner` construct to filter out replays where this player lost, [unfortunately as mentioned before due to strange results for teams when parsing the replays this doesn't work as well as I would hope.](#known-issues). You can also further restrict the set of replays to only show those where this player is of a specific race by using the `& race=<race>` construct. You can specify `z`, `t`, or `p`.
+  You can search for any part of a player name. You can also add the `& isWinner` construct to filter out replays where this player lost, [unfortunately as mentioned before due to the buggy behavior of the parser this doesn't work that well yet.](#known-issues). You can also further restrict the set of replays to only show those where this player is of a specific race by using the `& race=<race>` construct, where race can be either the full name or the first letter (`z`, `t`, or `p`). You can search for multiple players at the same time by separating them with a comma. So for example: `p:MJ & race=z, Sadeas & race=p` would only give back replays that contain both a player whose name contains `MJ` and played as zerg, and a player with a name that contains `Sadeas` and who played as protoss.
 
 + Filter on duration by using the `du:<duration>` filter. This filter allows you to search for replays lesser than, greater than or equal a specific duration. You can also search for replays between 2 durations.
 
@@ -146,45 +148,49 @@ Finally it is possible to combine multiple sort criteria. For example `map playe
 ![Preview of sort on map and duration without applying a renaming.](./images/help/sort-tab-preview.png)
 
 ### Renaming replays
-You can now rename replays after parsing, either into an output directory or in place. After renaming, the transformation from the old to new filename will be shown in the output view. You can toggle between filenames only (hamburger icon) and the entire filepath (directory tree icon) by clicking on the button next to the 2 arrows. As you might have guessed, these 2 arrows are buttons for undoing and redoing a rename. The number of actions you can undo or redo can be configured in the advanced settings but by default is 5. If you are executing renames on many replays, be aware that this has the potential to quickly increase memory usage. 
+You can now rename replays after parsing, either into an output directory or in place. You can either rename all replays, or only those that matched the latest used filter by ticking the `Select as input` checkbox on the search tab. If you want to experiment with the syntax without actually renaming your replays, make sure to tick off the `Preview` checkbox. After renaming, the transformation from the old to new filename will be shown in the output view. You can toggle between filenames only (hamburger icon) and the entire filepath (directory tree icon) by clicking on the button next to the 2 arrows. As you might have guessed, these 2 arrows are buttons for undoing and redoing a rename. The number of actions you can undo or redo can be configured in the advanced settings but by default is 10. If you are executing renames on many replays, be aware that this has the potential to quickly increase memory usage of BWSort. 
 
-It is also possible at any point to always return to how the replays were named originally. Just tick off the checkbox `Restore original replay names` and execute the rename.
+It is always possible to return to how the replays were named originally. Just tick off the checkbox `Restore original replay names` and execute!.
 
 ![Rename replays according to a custom format. You can rename in place or into an output directory. The output area shows how each filename has changed.](./images/help/rename-tab-in-place.png)
 
+You can right click on a replay to open it in explorer or to select it in the search tab.
+
 #### Renaming syntax
 You can rename your replays by using special placeholders that start with the `/` character, currently BWSort supports the following placeholders:
-+ `WR` or `Wr`: Stands for WinningRaces, which will be replaced by a comma separated list of the races of the winning players.
-+ `LR` or `Lr`: Stands for LosingRaces, which will be replaced by a comma separated list of the races of the losing players.
-+ `R` or `r`: Stands for Races, which will be replaced by a comma separated list of the races of all players (excluding observers).
-+ `WT` or `Wt`: Stands for WinningTeam, which will be replaced by a comma separated list of all the names of the winning players.
-+ `LT` or `Lt`: Stands for LosingTeams, which will be replaced by a comma separated list of all the names of the losing players. Each team will be surrounded by parentheses.
-+ `T`: Stands for Teams, which will be replaced by a comma separated list of all the names of all players, excluding observers. Each team will be surrounded by parentheses.
-+ `m`: Stands for map. This will print a short form i.e. the first letter of each word. This is sufficiently recognizable for most maps however some maps will have strange abbreviations.
-+ `M`: Stands for map. This will print the long form i.e. the full map name.
-+ `MU or Mu`: Stands for Match-up. This will be replaced by the match-up.
-+ `d`: Stands for date. This will be replaced by the date in the year-month-day format.
-+ `D`: Stands for datetime. This will be replaced by the datetime in a format that resembles ISO-8601, without the timezone information, an example would be `2019-05-25T160510` which means 5 minutes and 10 seconds past 4 in the afternoon on 25th of May, 2019.
-+ `du`: Stands for duration. This will be replaced by the duration of the replay in a short format, an example would be `01_05_15` which means 1 hour, 5 minutes and 15 seconds.
-+ `DU or Du`: Stands for duration. This will be replaced by the duration of the replay in a longer format by writing out the time units (hours, minutes, seconds). An example would be `1 hour 5 minutes 15 seconds`.
-+ `F`: Stands for game format. This will be replaced by the team grouping to give an indication of what kind of game it was i.e. 1v1, 2v2, 3v3...
-+ `gt`: Stands for game type. This will be replaced by the actual game type as known by Starcraft such as TopVsBottom (TvB), Melee (M), OneOnOne (OvO),... in an abbreviated form.
-+ `GT or Gt`: Stands for game type. This will be replaced by the full name of the game type.
-+ `P`: Stands for players. This will be replaced by a comma separated list of all players including observers.
-+ `p`: Stands for players. This will be replaced by a comma separated list of all players excluding observers.
-+ `<>`: Stands for player info block. In this block you can specify arguments that will be applied to all players of the replay.
-  + `p`: Stands for player. This will be replaced by the name of the player.
-  + `R:` Stands for race. This will be replaced by the full name of the race of the player.
-  + `r`: Stands for race. This will be replaced by the first letter of the race of the player.
-  + `W`: Stands for winstatus. This will be replaced by `Winner` or `Loser` depending on whether the player is a winner or loser.
-  + `w`: Stands for winstatus. This will be replaced by `W` or `L` depending on whether the player is a winner or loser.
-+ `O`: Stands for original. This will be replaced by the original name of the replay.
++ `/WR` or `/Wr`: Stands for WinningRaces, which will be replaced by a comma separated list of the races of the winning players.
++ `/LR` or `/Lr`: Stands for LosingRaces, which will be replaced by a comma separated list of the races of the losing players.
++ `/R` or `/r`: Stands for Races, which will be replaced by a comma separated list of the races of all players (excluding observers).
++ `/WT` or `/Wt`: Stands for WinningTeam, which will be replaced by a comma separated list of all the names of the winning players.
++ `/LT` or `/Lt`: Stands for LosingTeams, which will be replaced by a comma separated list of all the names of the losing players. Each team will be surrounded by parentheses.
++ `/T`: Stands for Teams, which will be replaced by a comma separated list of all the names of all players, excluding observers. Each team will be surrounded by parentheses.
++ `/m`: Stands for map. This will print a short form i.e. the first letter of each word. This is sufficiently recognizable for most maps however some maps will have strange abbreviations.
++ `/M`: Stands for map. This will print the long form i.e. the full map name.
++ `/MU` or `/Mu`: Stands for Match-up. This will be replaced by the match-up.
++ `/d`: Stands for date. This will be replaced by the date in the year-month-day format.
++ `/D`: Stands for datetime. This will be replaced by the datetime in a format that resembles ISO-8601, without the timezone information, an example would be `2019-05-25T160510` which means 5 minutes and 10 seconds past 4 in the afternoon on 25th of May, 2019.
++ `/du`: Stands for duration. This will be replaced by the duration of the replay in a short format, an example would be `01_05_15` which means 1 hour, 5 minutes and 15 seconds.
++ `/DU` or `/Du`: Stands for duration. This will be replaced by the duration of the replay in a longer format by writing out the time units (hours, minutes, seconds). An example would be `1 hour 5 minutes 15 seconds`.
++ `/F`: Stands for game format. This will be replaced by the team grouping to give an indication of what kind of game it was i.e. 1v1, 2v2, 3v3...
++ `/gt`: Stands for game type. This will be replaced by the actual game type as known by Starcraft such as TopVsBottom (TvB), Melee (M), OneOnOne (OvO),... in an abbreviated form.
++ `/GT` or `/Gt`: Stands for game type. This will be replaced by the full name of the game type.
++ `/P`: Stands for players. This will be replaced by a comma separated list of all players including observers.
++ `/p`: Stands for players. This will be replaced by a comma separated list of all players excluding observers.
++ `/</>`: Stands for player info block. In this block you can specify arguments that will be applied to all players of the replay. This will return a list of the requested properties for each player, grouped by teams. You can add literal characters inside the block for example to surround the race with parentheses.
+  + `/p`: Stands for player. This will be replaced by the name of the player.
+  + `/R:` Stands for race. This will be replaced by the full name of the race of the player.
+  + `/r`: Stands for race. This will be replaced by the first letter of the race of the player.
+  + `/W`: Stands for winstatus. This will be replaced by `Winner` or `Loser` depending on whether the player is a winner or loser.
+  + `/w`: Stands for winstatus. This will be replaced by `W` or `L` depending on whether the player is a winner or loser.
 + The following placeholders allow you to specify a non-negative (natural) integer. This corresponds to the identifier a player has in the game, unfortunately these are unpredictable.
-  + `Px`: Stands for player x. This will be replaced by the name of the x'th player.
-  + `Rx`: Stands for race x. This will be replaced by the full name of the race of the x'th player.
-  + `rx`: Stands for race x. This will be replaced by the first letter of the race of the x'th player.
-  + `Wx`: Stands for winstatus x. This will be replaced by `Winner` or `Loser` depending on whether the x'th player is a winner or loser.
-  + `wx`: Stands for winstatus x. This will be replaced by `W` or `L` depending on whether the x'th player is a winner or loser.
+  + `/Px`: Stands for player x. This will be replaced by the name of the x'th player.
+  + `/Rx`: Stands for race x. This will be replaced by the full name of the race of the x'th player.
+  + `/rx`: Stands for race x. This will be replaced by the first letter of the race of the x'th player.
+  + `/Wx`: Stands for winstatus x. This will be replaced by `Winner` or `Loser` depending on whether the x'th player is a winner or loser.
+  + `/wx`: Stands for winstatus x. This will be replaced by `W` or `L` depending on whether the x'th player is a winner or loser.
++ `/O`: Stands for original. This will be replaced by the original name of the replay.
++ `/c`: Stands for counter. This will increment on each replay that is being renamed.
++ `/C`: Stands for counter. This is exactly the same as `c` aside from padding 0's to the left to give a consistent width to the counter.
 
 You can use these placeholders in an otherwise literally interpreted sentence: `Defiler tournament - /d - /Mu - /</p /r /w>` which would produce replays with names such as:
 + `Defiler tournament - 2019-05-03 - ZvZ - Jaedong Z W, CrispyDrone Z L`
@@ -245,9 +251,9 @@ Finally, there are some extra buttons in the panel on the side:
 + Generate intermediate folders during sorting: When using multiple sort criteria, by default it will generate intermediary folders named after the criteria, if you don't like these folders, uncheck this option.
 
 ## Remarks
-1. For now only replays of version 1.18 or later are supported. I was looking into a way to decompress the PKWARE compressed replay files, but the algorithm used in other parsers didn't make much sense to me. If anyone wants to help me implement this, feel free to contact me.
-2. There will be errors for certain criteria like player name. If you specify to make a folder for the winner or for both, but the replay doesn't have a winner, it'll show an error.
-3. Another common error is the "unable to distinguish player from observer", which means that not a single player did a build, unit training, or unit morph action. In most cases, this is a replay of a few seconds long where no player did anything, so you can safely ignore these too.
+1. For now only replays of version 1.18 or later are supported. I haven't had the time yet to improve the parser. If anyone wants to help me implement this, feel free to contact me or make a pull request.
+2. There will be errors for certain criteria like player name. If you specify to make a folder for the winner or for both, but the replay doesn't have a winner, it will fail to sort this replay.
+3. Another common error is the "unable to distinguish player from observer", which means that not a single player did a build, unit training, or unit morph action. In most cases, this is a replay of a few seconds long where none of the players did a single action, so you can safely ignore these too.
 4. If a replay shows up in a non-terminal folder (in case of multiple sort criteria), this means one of the errors as mentioned above occurred, meaning it was impossible to determine the winner, the match-up,...
 
 Due to the possible presence of some bugs and it being hard to verify edge case behavior, I suggest either __not__ working on your original replay folder but instead on a copy *or* using the built-in [backup functionality](#backup-replays)!
@@ -262,11 +268,11 @@ Due to the possible presence of some bugs and it being hard to verify edge case 
 2. Using the `Use as input` functionality will result in a wrong reporting of the number of replays sorted or renamed.
 
 ## Towards the future
-1. Add additional filters based on units, and user defined build orders.
+1. Add additional filters for the search tab based on units, and user defined build orders.
 2. Allow sorting in place and add possibility to undo/redo.
 3. Add additional sort criteria such as `date`, `build order`, `game format`,...
-4. Add replay detail view with action history (i.e. build order) and some basic stats and graphs 
-5. Add map rendering in the replay list view based on map data inside the replay instead of needing to use image files
+4. Add replay detail view with action history (i.e. build order) and some basic stats and graphs.
+5. Add map rendering in the replay list view based on map data inside the replay instead of needing to use image files. This requires sprites that are present inside a BW installation's MPQ file.
 6. Try to improve the parsing algorithm which will mean more reliable sorting, renaming, filtering,...:
    + This will fix team identification which is currently very buggy. Players are often reported to be on the same team even though they are opponents.
    + Match-up identification as a result is also buggy since players are not separated into the correct teams.
@@ -274,8 +280,8 @@ Due to the possible presence of some bugs and it being hard to verify edge case 
    + It will fix the action list allowing much better insight into the build order of a replay
    + ...
 7. Support for 1.16 replays
-8. Allow backups of multiple directories at the same time
-9. General bug fixing
+8. Allow backups of multiple directories at the same time.
+9. General bug fixing.
 
 In the very far future, there might be a complete rewrite from scratch with a much better designed codebase. To understand why this is necessary look at the [project history section](#project-history). 
 
@@ -286,19 +292,21 @@ At the end of 2017 I had just started to learn how to program and was still play
 ### Change history
 #### v1.0
 + Rewrote the renaming feature. It is now much more flexible and supports many more options.
-+ Removed support to rename the last sort since it was too complex and made some aspects of the UI confusing
-+ Updated graphical user interface to be more intuitive
-  + Added a view to discover replay files before parsing allowing you to craft the set of replays you want to parse i.e. you can import from multiple directories and remove individual replays
-  + Updated the layout of the sorting and renaming tabs
-  + Added a window that will render the output of the sort or rename action
-+ Added support for previewing replay sorts
++ Removed support to rename the last sort since it was too complex and made some aspects of the UI confusing.
++ Updated graphical user interface to be more intuitive.
+  + Added a view to discover replay files before parsing allowing you to craft the set of replays you want to parse i.e. you can import from multiple directories and remove individual replays.
+  + Updated the layout of the sorting and renaming tabs.
+  + Added a window that will render the output of the sort or rename action.
++ Added support for previewing replay sorts.
++ Added support for previesing replay renamings.
 + Added advanced settings window that allows you to set options such as remember last parsing directory, parse on startup,...
-+ Added "ignore" file functionality, which allows you to prevent parsing of specific replays based on file hashes
++ Added "ignore" file functionality, which allows you to prevent parsing of specific replays based on file hashes.
 + Added a parsed replay list that shows information such as players, winners, races, map, filepath,...
 + Added filter functionality to search the parsed replay list. Currently supported filters are player name, race, winner, map, duration, match-up, date. You can then use this filtered set of replays for sorting or renaming purposes.
-+ Added undo/redo functionality when renaming replays
++ Added undo/redo functionality when renaming replays.
 + Added backup functionality that allows you to backup replay folders. This will make sure you can always restore your replay folders just the way they were at time of backup.
-+ Added automatic checking for newer versions
++ Added automatic checking for newer versions.
++ Added a help section that renders this README file inside BWSort.
 
 #### v0.9
 + Added support for renaming replays without sorting.
@@ -329,3 +337,223 @@ Many thanks to SimplySerenity for porting the replay parser to C#. You can find 
 
 ## Attributions
 + <div>Crown icon made by <a href="https://www.flaticon.com/authors/pixel-perfect" title="Pixel perfect">Pixel perfect</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a> is licensed by <a href="http://creativecommons.org/licenses/by/3.0/" title="Creative Commons BY 3.0" target="_blank">CC 3.0 BY</a>.</div>
+
+## Map File Names
++ `815.jpg`
++ `acheron.jpg`
++ `alchemist.jpg`
++ `alternative.jpg`
++ `andromeda.jpg`
++ `another_day.jpg`
++ `arcadia.jpg`
++ `arizona.jpg`
++ `arkanoid.jpg`
++ `ashrigo.jpg`
++ `athena.jpg`
++ `autobahn.jpg`
++ `avalon.jpg`
++ `avant_garde.jpg`
++ `azalea.jpg`
++ `aztec.jpg`
++ `baekmagoji.jpg`
++ `beltway.jpg`
++ `benzene.jpg`
++ `bifrost.jpg`
++ `blade_storm.jpg`
++ `blaze.jpg`
++ `blitz.jpg`
++ `block_chain.jpg`
++ `bloody_ridge.jpg`
++ `blue_storm.jpg`
++ `byzantium.jpg`
++ `camelot.jpg`
++ `carthage.jpg`
++ `central_plains.jpg`
++ `chain_reaction.jpg`
++ `chariots_of_fire.jpg`
++ `charity.jpg`
++ `chupung-ryeong.jpg`
++ `circuit_breaker.jpg`
++ `colosseum.jpg`
++ `crimson_isles.jpg`
++ `cross_game.jpg`
++ `crossing_field.jpg`
++ `dmz.jpg`
++ `dahlia_of_jungle.jpg`
++ `dantes_peak.jpg`
++ `dantes_peak_se.jpg`
++ `dark_sauron.jpg`
++ `dark_stone.jpg`
++ `deep_purple.jpg`
++ `demian.jpg`
++ `demons_forest.jpg`
++ `desert_fox.jpg`
++ `desperado.jpg`
++ `destination.jpg`
++ `detonation.jpg`
++ `dream_of_balhae.jpg`
++ `eddy.jpg`
++ `el_niño.jpg`
++ `electric_circuit.jpg`
++ `elysion.jpg`
++ `empire_of_the_sun.jpg`
++ `enter_the_dragon.jpg`
++ `estrella.jpg`
++ `eye_in_the_sky.jpg`
++ `eye_of_the_storm.jpg`
++ `face_off.jpg`
++ `fantasy.jpg`
++ `fighting_spirit.jpg`
++ `flight-dreamliner.jpg`
++ `forbidden_zone.jpg`
++ `forte.jpg`
++ `fortress.jpg`
++ `fortress_se.jpg`
++ `full_moon.jpg`
++ `gaema_gowon.jpg`
++ `gaia.jpg`
++ `gauntlet_2003.jpg`
++ `geometry.jpg`
++ `glacial_epoch.jpg`
++ `gladiator.jpg`
++ `gold_rush.jpg`
++ `gorky_island.jpg`
++ `grand_line.jpg`
++ `grand_line_se.jpg`
++ `great_barrier_reef.jpg`
++ `ground_zero.jpg`
++ `guillotine.jpg`
++ `hall_of_valhalla.jpg`
++ `hannibal.jpg`
++ `harmony.jpg`
++ `heartbreak_ridge.jpg`
++ `hitchhiker.jpg`
++ `holy_world.jpg`
++ `holy_world_se.jpg`
++ `hunters.jpg`
++ `hwangsanbul.jpg`
++ `hwarangdo.jpg`
++ `icarus.jpg`
++ `incubus.jpg`
++ `indian_lament.jpg`
++ `into_the_darkness.jpg`
++ `iron_curtain.jpg`
++ `jade.jpg`
++ `jim_raynors_memory.jpg`
++ `judgment_day.jpg`
++ `jungle_story.jpg`
++ `katrina.jpg`
++ `korhal_of_ceres.jpg`
++ `la_mancha.jpg`
++ `legacy_of_char.jpg`
++ `loki.jpg`
++ `longinus.jpg`
++ `lost_temple.jpg`
++ `luna.jpg`
++ `martian_cross.jpg`
++ `match_point.jpg`
++ `medusa.jpg`
++ `mercury.jpg`
++ `mercury_zero.jpg`
++ `monte_cristo.jpg`
++ `monty_hall.jpg`
++ `monty_hall_se.jpg`
++ `moon_glaive.jpg`
++ `multiverse.jpg`
++ `namja_iyagi.jpg`
++ `nemesis.jpg`
++ `neo_arkanoid.jpg`
++ `neo_aztec.jpg`
++ `neo_bifrost.jpg`
++ `neo_blaze.jpg`
++ `neo_electric_circuit.jpg`
++ `neo_forbidden_zone.jpg`
++ `neo_forte.jpg`
++ `neo_ground_zero.jpg`
++ `neo_guillotine.jpg`
++ `neo_hall_of_valhalla.jpg`
++ `neo_harmony.jpg`
++ `neo_jungle_story.jpg`
++ `neo_legacy_of_char.jpg`
++ `neo_requiem.jpg`
++ `neo_silent_vortex.jpg`
++ `neo_sylphid.jpg`
++ `neo_transistor.jpg`
++ `neo_vertigo.jpg`
++ `new_bloody_ridge.jpg`
++ `new_heartbreak_ridge.jpg`
++ `new_sniper_ridge.jpg`
++ `nostalgia.jpg`
++ `odd-eye.jpg`
++ `odin.jpg`
++ `old_plains_to_hill.jpg`
++ `othello.jpg`
++ `outlier.jpg`
++ `outsider.jpg`
++ `outsider_se.jpg`
++ `overwatch.jpg`
++ `paradoxxx.jpg`
++ `parallel_lines.jpg`
++ `paranoid_android.jpg`
++ `pathfinder.jpg`
++ `peaks_of_baekdu.jpg`
++ `pelennor.jpg`
++ `persona.jpg`
++ `pioneer_period.jpg`
++ `plains_to_hill.jpg`
++ `plasma.jpg`
++ `polaris_rhapsody.jpg`
++ `python.jpg`
++ `r-point.jpg`
++ `ragnarok.jpg`
++ `raid_assault.jpg`
++ `requiem.jpg`
++ `return_of_the_king.jpg`
++ `reverse_temple.jpg`
++ `ride_of_valkyries.jpg`
++ `rivalry.jpg`
++ `river_of_flames.jpg`
++ `roadkill.jpg`
++ `roadrunner.jpg`
++ `rush_hour.jpg`
++ `seongangil.jpg`
++ `shin_peaks_of_baekdu.jpg`
++ `showdown.jpg`
++ `silent_vortex.jpg`
++ `sin_815.jpg`
++ `sin_chupung-ryeong.jpg`
++ `sin_gaema_gowon.jpg`
++ `sin_peaks_of_baekdu.jpg`
++ `sin_pioneer_period.jpg`
++ `sniper_ridge.jpg`
++ `snowbound.jpg`
++ `space_odyssey.jpg`
++ `sparkle.jpg`
++ `sylphid.jpg`
++ `symmetry_of_psy.jpg`
++ `taebaek_mountains.jpg`
++ `tau_cross.jpg`
++ `tears_of_the_moon.jpg`
++ `the_eye.jpg`
++ `the_hunters.jpg`
++ `the_huntress.jpg`
++ `third_world.jpg`
++ `tiamat.jpg`
++ `tornado.jpg`
++ `transistor.jpg`
++ `triathlon.jpg`
++ `tripod.jpg`
++ `troy.jpg`
++ `tucson.jpg`
++ `u-boat.jpg`
++ `ultimatum.jpg`
++ `un_goro_crater.jpg`
++ `usan_nation.jpg`
++ `valley_of_wind.jpg`
++ `vampire.jpg`
++ `vertigo_plus.jpg`
++ `whiteout.jpg`
++ `wishbone.jpg`
++ `wuthering_heights.jpg`
++ `xeno_sky.jpg`
++ `zodiac.jpg`
