@@ -151,7 +151,6 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                     DirectoryFileReplay.Add(new KeyValuePair<string, List<File<IReplay>>>(sortDirectory + @"\" + DurationName, FileReplays));
                     foreach (var replay in DurationReplays)
                     {
-                        bool threwException = false;
                         try
                         {
                             if (IsNested == false)
@@ -165,41 +164,18 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                             
                             FileReplays.Add(replay);
                         }
-                        catch (IOException IOex)
-                        {
-                            threwException = true;
-                            ErrorLogger.GetInstance()?.LogError("SortOnDuration IOException.", ex: IOex);
-                        }
-                        catch (NotSupportedException NSE)
-                        {
-                            threwException = true;
-                            ErrorLogger.GetInstance()?.LogError("SortOnDuration NotSupportedException.", ex: NSE);
-                        }
-                        catch (NullReferenceException nullex)
-                        {
-                            threwException = true;
-                            ErrorLogger.GetInstance()?.LogError("SortOnDuration NullReferenceException.", ex: nullex);
-                        }
-                        catch (ArgumentException AEX)
-                        {
-                            threwException = true;
-                            ErrorLogger.GetInstance()?.LogError("SortOnDuration ArgumentException.", ex: AEX);
-                        }
                         catch (Exception ex)
                         {
-                            threwException = true;
-                            ErrorLogger.GetInstance()?.LogError("SortOnDuration Exception.", ex: ex);
-                        }
-                        if (threwException)
                             replaysThrowingExceptions.Add(replay.OriginalFilePath);
+                            ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - SortOnDuration Exception.", ex: ex);
+                        }
                     }
                 }
                 catch (Exception ex)
                 {
-                    ErrorLogger.GetInstance()?.LogError("SortOnDuration Exception Outer.", ex: ex);
+                    ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - SortOnDuration Exception Outer.", ex: ex);
                 }
             }
-            // not implemented yet
             return DirectoryFileReplay;
         }
 
@@ -319,33 +295,14 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
 
                             FileReplays.Add(replay);
                         }
-                        catch (IOException IOex)
-                        {
-                            threwError = true;
-                            ErrorLogger.GetInstance()?.LogError("SortOnDuration IOException.", ex: IOex);
-                        }
-                        catch (NotSupportedException NSE)
-                        {
-                            threwError = true;
-                            ErrorLogger.GetInstance()?.LogError("SortOnDuration NotSupportedException.", ex: NSE);
-                        }
-                        catch (NullReferenceException nullex)
-                        {
-                            threwError = true;
-                            ErrorLogger.GetInstance()?.LogError("SortOnDuration NullReferenceException.", ex: nullex);
-                        }
-                        catch (ArgumentException AEX)
-                        {
-                            threwError = true;
-                            ErrorLogger.GetInstance()?.LogError("SortOnDuration ArgumentException.", ex: AEX);
-                        }
                         catch (Exception ex)
                         {
-                            threwError = true;
-                            ErrorLogger.GetInstance()?.LogError("SortOnDuration Exception.", ex: ex);
+                            replaysThrowingExceptions.Add(replay.OriginalFilePath);
+                            ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - SortOnDuration Exception.", ex: ex);
                         }
+
                         currentPosition++;
-                        if (this.IsNested == false)
+                        if (IsNested == false)
                         {
                             progressPercentage = Convert.ToInt32(((double)currentPosition / Sorter.ListReplays.Count) * 1 / numberOfCriteria * 100);
                         }
@@ -354,17 +311,14 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                             progressPercentage = Convert.ToInt32((((double)currentPosition / Sorter.ListReplays.Count) * 1 / numberOfPositions * 100 + ((currentPositionNested - 1) * 100 / numberOfPositions)) * ((double)1 / numberOfCriteria));
                             progressPercentage += (currentCriteria - 1) * 100 / numberOfCriteria;
                         }
-                        if (threwError)
-                            replaysThrowingExceptions.Add(replay.OriginalFilePath);
                         worker_ReplaySorter.ReportProgress(progressPercentage, "Sorting on duration...");
                     }
                 }
                 catch (Exception ex)
                 {
-                    ErrorLogger.GetInstance()?.LogError("SortOnDuration Exception Outer.", ex: ex);
+                    ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - SortOnDuration Exception Outer.", ex: ex);
                 }
             }
-            // not implemented yet
             return DirectoryFileReplay;
         }
 
@@ -465,7 +419,6 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                     DirectoryFileReplay.Add(new KeyValuePair<string, List<File<IReplay>>>(sortDirectory + @"\" + DurationName, FileReplays));
                     foreach (var replay in DurationReplays)
                     {
-                        bool threwError = false;
                         if (worker_ReplaySorter.CancellationPending == true)
                         {
                             // ??? how am i supposed to do this!! This doesn't feel right at all!! No way i'm supposed to also pass the DoWorkEventArgs!!
@@ -484,33 +437,13 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
 
                             FileReplays.Add(replay);
                         }
-                        catch (IOException IOex)
-                        {
-                            threwError = true;
-                            ErrorLogger.GetInstance()?.LogError("SortOnDuration IOException.", ex: IOex);
-                        }
-                        catch (NotSupportedException NSE)
-                        {
-                            threwError = true;
-                            ErrorLogger.GetInstance()?.LogError("SortOnDuration NotSupportedException.", ex: NSE);
-                        }
-                        catch (NullReferenceException nullex)
-                        {
-                            threwError = true;
-                            ErrorLogger.GetInstance()?.LogError("SortOnDuration NullReferenceException.", ex: nullex);
-                        }
-                        catch (ArgumentException AEX)
-                        {
-                            threwError = true;
-                            ErrorLogger.GetInstance()?.LogError("SortOnDuration ArgumentException.", ex: AEX);
-                        }
                         catch (Exception ex)
                         {
-                            threwError = true;
-                            ErrorLogger.GetInstance()?.LogError("SortOnDuration Exception.", ex: ex);
+                            replaysThrowingExceptions.Add(replay.OriginalFilePath);
+                            ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - SortOnDuration Exception.", ex: ex);
                         }
                         currentPosition++;
-                        if (this.IsNested == false)
+                        if (IsNested == false)
                         {
                             progressPercentage = Convert.ToInt32(((double)currentPosition / Sorter.ListReplays.Count) * 1 / numberOfCriteria * 100);
                         }
@@ -519,17 +452,14 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                             progressPercentage = Convert.ToInt32((((double)currentPosition / Sorter.ListReplays.Count) * 1 / numberOfPositions * 100 + ((currentPositionNested - 1) * 100 / numberOfPositions)) * ((double)1 / numberOfCriteria));
                             progressPercentage += (currentCriteria - 1) * 100 / numberOfCriteria;
                         }
-                        if (threwError)
-                            replaysThrowingExceptions.Add(replay.OriginalFilePath);
                         worker_ReplaySorter.ReportProgress(progressPercentage, "Sorting on duration...");
                     }
                 }
                 catch (Exception ex)
                 {
-                    ErrorLogger.GetInstance()?.LogError("SortOnDuration Exception Outer.", ex: ex);
+                    ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - SortOnDuration Exception Outer.", ex: ex);
                 }
             }
-            // not implemented yet
             return DirectoryFileReplay;
         }
 

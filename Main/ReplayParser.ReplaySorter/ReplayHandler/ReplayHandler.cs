@@ -7,38 +7,77 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
 using System;
+using ReplayParser.ReplaySorter.Exceptions;
 
 namespace ReplayParser.ReplaySorter
 {
     public static class ReplayHandler
     {
-        public static void MoveReplay(File<IReplay> replay, string sortDirectory, string FolderName, bool KeepOriginalReplayNames, CustomReplayFormat CustomReplayFormat, bool isPreview = false)
-        {
-            var sourceFilePath = replay.FilePath;
-            var FileName = FileHandler.GetFileName(replay.FilePath);
-            var DestinationFilePath = sortDirectory + @"\" + FolderName + @"\" + FileName;
+        // public static void MoveReplay(File<IReplay> replay, string sortDirectory, string FolderName, bool KeepOriginalReplayNames, CustomReplayFormat CustomReplayFormat, bool isPreview = false)
+        // {
+        //     var sourceFilePath = replay.FilePath;
+        //     var FileName = FileHandler.GetFileName(replay.FilePath);
+        //     var DestinationFilePath = sortDirectory + @"\" + FolderName + @"\" + FileName;
 
-            if (!KeepOriginalReplayNames)
+        //     if (!KeepOriginalReplayNames)
+        //     {
+        //         try
+        //         {
+        //             DestinationFilePath = sortDirectory + @"\" + FolderName + @"\" + GenerateReplayName(replay, CustomReplayFormat) + ".rep";
+        //         }
+        //         catch(Exception ex)
+        //         {
+        //             ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - Error while renaming replay: {replay.OriginalFilePath}", ex : ex);
+        //         }
+        //     }
+
+        //     DestinationFilePath = FileHandler.AdjustName(DestinationFilePath, false);
+
+        //     if (!isPreview)
+        //     {
+        //         File.Move(sourceFilePath, DestinationFilePath);
+        //     }
+
+        //     replay.AddAfterCurrent(DestinationFilePath);
+        //     replay.Forward();
+        // }
+
+        public static void MoveReplay(File<IReplay> replay, string sortDirectory, string folderName, bool keepOriginalReplayNames, CustomReplayFormat customReplayFormat, bool isPreview = false)
+        {
+            if (replay == null) throw new ArgumentNullException(nameof(replay));
+            if (string.IsNullOrWhiteSpace(sortDirectory)) throw new ArgumentException(nameof(sortDirectory));
+            if (!keepOriginalReplayNames && customReplayFormat == null) throw new InvalidOperationException($"{nameof(customReplayFormat)} cannot be null if {nameof(keepOriginalReplayNames)} is false!");
+
+            var sourceFilePath = replay.FilePath;
+            var fileName = FileHandler.GetFileName(replay.FilePath);
+            var destinationFilePath = Path.Combine(sortDirectory, folderName, fileName);
+            var renamedSuccessfully = true;
+            Exception renameException = null;
+
+            if (!keepOriginalReplayNames)
             {
                 try
                 {
-                    DestinationFilePath = sortDirectory + @"\" + FolderName + @"\" + GenerateReplayName(replay, CustomReplayFormat) + ".rep";
+                    destinationFilePath = sortDirectory + @"\" + folderName + @"\" + GenerateReplayName(replay, customReplayFormat) + ".rep";
                 }
                 catch(Exception ex)
                 {
+                    renamedSuccessfully = false;
+                    renameException = ex;
                     ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - Error while renaming replay: {replay.OriginalFilePath}", ex : ex);
                 }
             }
 
-            DestinationFilePath = FileHandler.AdjustName(DestinationFilePath, false);
+            destinationFilePath = FileHandler.AdjustName(destinationFilePath, false);
 
             if (!isPreview)
-            {
-                File.Move(sourceFilePath, DestinationFilePath);
-            }
+                File.Move(sourceFilePath, destinationFilePath);
 
-            replay.AddAfterCurrent(DestinationFilePath);
+            replay.AddAfterCurrent(destinationFilePath);
             replay.Forward();
+
+            if (!renamedSuccessfully)
+                throw new RenameException(sourceFilePath, customReplayFormat, $"Something went wrong while renaming.", renameException);
         }
 
         //TODO accept 2 filepaths
@@ -73,32 +112,42 @@ namespace ReplayParser.ReplaySorter
             //}
         }
 
-        public static void CopyReplay(File<IReplay> replay, string sortDirectory, string FolderName, bool KeepOriginalReplayNames, CustomReplayFormat CustomReplayFormat, bool isPreview = false)
+        public static void CopyReplay(File<IReplay> replay, string sortDirectory, string folderName, bool keepOriginalReplayNames, CustomReplayFormat customReplayFormat, bool isPreview = false)
         {
-            var sourceFilePath = replay.FilePath;
-            var FileName = FileHandler.GetFileName(replay.FilePath);
-            var DestinationFilePath = sortDirectory + @"\" + FolderName + @"\" + FileName;
+            if (replay == null) throw new ArgumentNullException(nameof(replay));
+            if (string.IsNullOrWhiteSpace(sortDirectory)) throw new ArgumentException(nameof(sortDirectory));
+            if (!keepOriginalReplayNames && customReplayFormat == null) throw new InvalidOperationException($"{nameof(customReplayFormat)} cannot be null if {nameof(keepOriginalReplayNames)} is false!");
 
-            if (!KeepOriginalReplayNames)
+            var sourceFilePath = replay.FilePath;
+            var fileName = FileHandler.GetFileName(replay.FilePath);
+            var destionationFilePath = Path.Combine(sortDirectory, folderName, fileName);
+            var renamedSuccessfully = true;
+            Exception renameException = null;
+
+            if (!keepOriginalReplayNames)
             {
                 try
                 {
-                    DestinationFilePath = sortDirectory + @"\" + FolderName + @"\" + GenerateReplayName(replay, CustomReplayFormat) + ".rep";
+                    destionationFilePath = sortDirectory + @"\" + folderName + @"\" + GenerateReplayName(replay, customReplayFormat) + ".rep";
                 }
                 catch (Exception ex)
                 {
+                    renamedSuccessfully = false;
+                    renameException = ex;
                     ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - Error while renaming replay: {replay.OriginalFilePath}", ex : ex);
                 }
             }
 
-            DestinationFilePath = FileHandler.AdjustName(DestinationFilePath, false);
+            destionationFilePath = FileHandler.AdjustName(destionationFilePath, false);
 
             if (!isPreview)
-            {
-                File.Copy(sourceFilePath, DestinationFilePath);
-            }
-            replay.AddAfterCurrent(DestinationFilePath);
+                File.Copy(sourceFilePath, destionationFilePath);
+
+            replay.AddAfterCurrent(destionationFilePath);
             replay.Forward();
+            
+            if (!renamedSuccessfully)
+                throw new RenameException(sourceFilePath, customReplayFormat, $"Something went wrong while renaming.", renameException);
         }
 
         //TODO accept 2 filepaths
@@ -197,31 +246,12 @@ namespace ReplayParser.ReplaySorter
 
         }
 
-        // Enumerate subdirectories, find replay files, copy to 1 big folder??
-
-        // OLD - REWRITE
-        // public static string GenerateReplayName(IReplay replay, CustomReplayFormat format)
-        // {
-        //     // generate mapping structure
-        //     // make interface that has method "GenerateReplayNameSection"
-        //     // make base class that implements interface
-        //     // derive a class per CustomReplayNameSyntax from this base class, fill in the code in the method
-
-        //     Dictionary<CustomReplayNameSyntax, string> CustomReplayNameSections = format.GenerateReplayNameSections(replay);
-
-        //     StringBuilder CustomReplayName = new StringBuilder();
-
-        //     string[] arguments = format.CustomFormat.Split(new char[] { '|' });
-
-        //     for (int i = 0; i < arguments.Length; i++)
-        //     {
-        //         CustomReplayName.Append(CustomReplayNameSections[(CustomReplayNameSyntax)Enum.Parse(typeof(CustomReplayNameSyntax), arguments[i])]);
-        //     }
-
-        //     string CustomReplayNameString = FileHandler.RemoveInvalidChars(CustomReplayName.ToString());
-        //     return CustomReplayNameString;
-        // }
-
+        /// <summary>
+        /// Generates a new replay name based on a replay and a custom replay format.
+        /// </summary>
+        /// <param name="replay">The replay to generate a new name for.</param>
+        /// <param name="format">The custom replay format to use to generate a new replay name.</param>
+        /// <returns></returns>
         public static string GenerateReplayName(File<IReplay> replay, CustomReplayFormat format)
         {
             if (replay == null) throw new ArgumentNullException(nameof(replay));
@@ -231,6 +261,27 @@ namespace ReplayParser.ReplaySorter
             return FileHandler.RemoveInvalidChars(customReplayName);
         }
 
+        /// <summary>
+        /// Renames a replay according to a custom replay format.
+        /// </summary>
+        /// <param name="replay">The replay to rename.</param>
+        /// <param name="format">The custom replay format to use to rename the replay.</param>
+        /// <param name="forward">Whether to move the file history pointer forward or not.</param>
+        /// <exception cref="ArgumentNullException">Throws an ArgumentNullException in case replay or format is null.</exception>
+        public static void RenameReplay(File<IReplay> replay, CustomReplayFormat format, bool forward = true)
+        {
+            var newName = GenerateReplayName(replay, format);
+            replay.AddAfterCurrent(newName);
+            if (forward)
+            {
+                replay.Forward();
+            }
+        }
+
+        /// <summary>
+        /// Saves the current head pointer for all the provided replays.
+        /// </summary>
+        /// <param name="listReplays">The set of replays to operate on.</param>
         public static void SaveReplayFilePaths(List<File<IReplay>> listReplays)
         {
             if (listReplays == null)
@@ -242,15 +293,30 @@ namespace ReplayParser.ReplaySorter
             }
         }
 
-        public static void ResetReplayFilePathsToBeforeSort(List<File<IReplay>> listReplays)
+        /// <summary>
+        /// Restores the provided replays to a saved state. And removes the file history after the new head pointer.
+        /// </summary>
+        /// <param name="listReplays">The set of replays to operate on.</param>
+        /// <param name="throwOnFailure">If true, will throw if a single replay fails to be restored.</param>
+        /// <exception cref="InvalidOperationException">Throws invalid operation exception in case a replay does not contain a saved state.</exception>
+        public static void RestoreToSavedStateAndClearFuture(List<File<IReplay>> listReplays, bool throwOnFailure = false)
         {
             if (listReplays == null)
                 return;
 
             foreach (var replay in listReplays)
             {
-                replay.RestoreToSavedState();
-                replay.RemoveAfterCurrent();
+                try
+                {
+                    replay.RestoreToSavedState();
+                    replay.RemoveAfterCurrent();
+                }
+                catch (InvalidOperationException ex)
+                {
+                    ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - Something went wrong while restoring to a saved state.", ex: ex);
+                    if (throwOnFailure)
+                        throw;
+                }
             }
         }
     }

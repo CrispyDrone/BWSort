@@ -113,7 +113,6 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                     var MapReplays = Maps[map.Key];
                     foreach (var replay in MapReplays)
                     {
-                        bool threwException = false;
                         try
                         {
                             if (IsNested == false)
@@ -127,33 +126,11 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
 
                             FileReplays.Add(replay);
                         }
-                        catch (IOException IOex)
-                        {
-                            threwException = true;
-                            ErrorLogger.GetInstance()?.LogError("SortOnGameType IOException.", ex: IOex);
-                        }
-                        catch (NotSupportedException NSE)
-                        {
-                            threwException = true;
-                            ErrorLogger.GetInstance()?.LogError("SortOnGameType NotSupportedException.", ex: NSE);
-                        }
-                        catch (NullReferenceException nullex)
-                        {
-                            threwException = true;
-                            ErrorLogger.GetInstance()?.LogError("SortOnGameType NullReferenceException.", ex: nullex);
-                        }
-                        catch (ArgumentException AEX)
-                        {
-                            threwException = true;
-                            ErrorLogger.GetInstance()?.LogError("SortOnGameType ArgumentException.", ex: AEX);
-                        }
                         catch (Exception ex)
                         {
-                            threwException = true;
+                            replaysThrowingExceptions.Add(replay.OriginalFilePath);
                             ErrorLogger.GetInstance()?.LogError("SortOnGameType Exception.", ex: ex);
                         }
-                        if (threwException)
-                            replaysThrowingExceptions.Add(replay.OriginalFilePath);
                     }
                 }
                 catch (Exception ex)
@@ -232,7 +209,6 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                     var MapReplays = Maps[map.Key];
                     foreach (var replay in MapReplays)
                     {
-                        bool threwException = false;
                         if (worker_ReplaySorter.CancellationPending == true)
                         {
                             return null;
@@ -262,33 +238,11 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
 
                             FileReplays.Add(replay);
                         }
-                        catch (IOException IOex)
-                        {
-                            threwException = true;
-                            ErrorLogger.GetInstance()?.LogError("SortOnGameType IOException.", ex: IOex);
-                        }
-                        catch (NotSupportedException NSE)
-                        {
-                            threwException = true;
-                            ErrorLogger.GetInstance()?.LogError("SortOnGameType NotSupportedException.", ex: NSE);
-                        }
-                        catch (NullReferenceException nullex)
-                        {
-                            threwException = true;
-                            ErrorLogger.GetInstance()?.LogError("SortOnGameType NullReferenceException.", ex: nullex);
-                        }
-                        catch (ArgumentException AEX)
-                        {
-                            threwException = true;
-                            ErrorLogger.GetInstance()?.LogError("SortOnGameType ArgumentException.", ex: AEX);
-                        }
                         catch (Exception ex)
                         {
-                            threwException = true;
-                            ErrorLogger.GetInstance()?.LogError("SortOnGameType Exception.", ex: ex);
-                        }
-                        if (threwException)
                             replaysThrowingExceptions.Add(replay.OriginalFilePath);
+                            ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - SortOnGameType Exception.", ex: ex);
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -361,7 +315,6 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                     var MapReplays = Maps[map.Key];
                     foreach (var replay in MapReplays)
                     {
-                        bool threwException = false;
                         if (worker_ReplaySorter.CancellationPending == true)
                         {
                             return null;
@@ -391,33 +344,11 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
 
                             FileReplays.Add(replay);
                         }
-                        catch (IOException IOex)
-                        {
-                            threwException = true;
-                            ErrorLogger.GetInstance()?.LogError("SortOnGameType IOException.", ex: IOex);
-                        }
-                        catch (NotSupportedException NSE)
-                        {
-                            threwException = true;
-                            ErrorLogger.GetInstance()?.LogError("SortOnGameType NotSupportedException.", ex: NSE);
-                        }
-                        catch (NullReferenceException nullex)
-                        {
-                            threwException = true;
-                            ErrorLogger.GetInstance()?.LogError("SortOnGameType NullReferenceException.", ex: nullex);
-                        }
-                        catch (ArgumentException AEX)
-                        {
-                            threwException = true;
-                            ErrorLogger.GetInstance()?.LogError("SortOnGameType ArgumentException.", ex: AEX);
-                        }
                         catch (Exception ex)
                         {
-                            threwException = true;
+                            replaysThrowingExceptions.Add(replay.OriginalFilePath);
                             ErrorLogger.GetInstance()?.LogError("SortOnGameType Exception.", ex: ex);
                         }
-                        if (threwException)
-                            replaysThrowingExceptions.Add(replay.OriginalFilePath);
                     }
                 }
                 catch (Exception ex)

@@ -80,7 +80,6 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
 
                 foreach (var replay in gametype)
                 {
-                    bool threwException = false;
                     try
                     {
                         if (IsNested == false)
@@ -94,31 +93,13 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                         
                         FileReplays.Add(replay);
                     }
-                    catch (IOException IOex)
+                    catch (Exception ex)
                     {
-                        threwException = true;
-                        ErrorLogger.GetInstance()?.LogError("SortOnGameType IOException.", ex: IOex);
-                    }
-                    catch (NotSupportedException NSE)
-                    {
-                        threwException = true;
-                        ErrorLogger.GetInstance()?.LogError("SortOnGameType NotSupportedException.", ex: NSE);
-                    }
-                    catch (NullReferenceException nullex)
-                    {
-                        threwException = true;
-                        ErrorLogger.GetInstance()?.LogError("SortOnGameType NullReferenceException.", ex: nullex);
-                    }
-                    catch (ArgumentException AEX)
-                    {
-                        threwException = true;
-                        ErrorLogger.GetInstance()?.LogError("SortOnGameType ArgumentException.", ex: AEX);
-                    }
-                    if (threwException)
                         replaysThrowingExceptions.Add(replay.OriginalFilePath);
+                        ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - SortOnGameType exception.", ex: ex);
+                    }
                 }
             }
-            // not implemented yet
             return DirectoryFileReplay;
         }
 
@@ -163,7 +144,6 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                     {
                         return null;
                     }
-                    bool threwError = false;
                     try
                     {
                         if (IsNested == false)
@@ -177,32 +157,14 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
 
                         FileReplays.Add(replay);
                     }
-                    catch (IOException IOex)
+                    catch (Exception ex)
                     {
-                        threwError = true;
-                        ErrorLogger.GetInstance()?.LogError("SortOnGameType IOException.", ex: IOex);
-                    }
-                    catch (NotSupportedException NSE)
-                    {
-                        threwError = true;
-                        ErrorLogger.GetInstance()?.LogError("SortOnGameType NotSupportedException.", ex: NSE);
-                    }
-                    catch (NullReferenceException nullex)
-                    {
-                        threwError = true;
-                        ErrorLogger.GetInstance()?.LogError("SortOnGameType NullReferenceException.", ex: nullex);
-                    }
-                    catch (ArgumentException AEX)
-                    {
-                        threwError = true;
-                        ErrorLogger.GetInstance()?.LogError("SortOnGameType ArgumentException.", ex: AEX);
-                    }
-
-                    if (threwError)
                         replaysThrowingExceptions.Add(replay.OriginalFilePath);
+                        ErrorLogger.GetInstance()?.LogError("SortOnGameType ArgumentException.", ex: ex);
+                    }
 
                     currentPosition++;
-                    if (this.IsNested == false)
+                    if (IsNested == false)
                     {
                         progressPercentage = Convert.ToInt32(((double)currentPosition / Sorter.ListReplays.Count) * 1 / numberOfCriteria * 100);
                     }
@@ -212,7 +174,6 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                         progressPercentage += (currentCriteria - 1) * 100 / numberOfCriteria;
                     }
                     worker_ReplaySorter.ReportProgress(progressPercentage, "sorting on gametype...");
-
                 }
             }
             return DirectoryFileReplay;
@@ -253,7 +214,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                     {
                         return null;
                     }
-                    bool threwError = false;
+
                     try
                     {
                         if (IsNested == false)
@@ -267,29 +228,11 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
 
                         FileReplays.Add(replay);
                     }
-                    catch (IOException IOex)
+                    catch (Exception ex)
                     {
-                        threwError = true;
-                        ErrorLogger.GetInstance()?.LogError("SortOnGameType IOException.", ex: IOex);
-                    }
-                    catch (NotSupportedException NSE)
-                    {
-                        threwError = true;
-                        ErrorLogger.GetInstance()?.LogError("SortOnGameType NotSupportedException.", ex: NSE);
-                    }
-                    catch (NullReferenceException nullex)
-                    {
-                        threwError = true;
-                        ErrorLogger.GetInstance()?.LogError("SortOnGameType NullReferenceException.", ex: nullex);
-                    }
-                    catch (ArgumentException AEX)
-                    {
-                        threwError = true;
-                        ErrorLogger.GetInstance()?.LogError("SortOnGameType ArgumentException.", ex: AEX);
-                    }
-
-                    if (threwError)
                         replaysThrowingExceptions.Add(replay.OriginalFilePath);
+                        ErrorLogger.GetInstance()?.LogError("SortOnGameType ArgumentException.", ex: ex);
+                    }
 
                     currentPosition++;
                     if (IsNested == false)
@@ -302,7 +245,6 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                         progressPercentage += (currentCriteria - 1) * 100 / numberOfCriteria;
                     }
                     worker_ReplaySorter.ReportProgress(progressPercentage, "sorting on gametype...");
-
                 }
             }
             return DirectoryFileReplay;

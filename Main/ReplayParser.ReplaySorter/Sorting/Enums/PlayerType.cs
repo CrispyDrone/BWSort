@@ -1,11 +1,13 @@
-﻿namespace ReplayParser.ReplaySorter.Sorting
+﻿using System;
+
+namespace ReplayParser.ReplaySorter.Sorting
 {
+    [Flags]
     public enum PlayerType
     {
+        None = 0,
         Winner = 1,
         Loser = 2,
-        Player = 4,
-        All = 8,
-        None = 16,
+        Observer = 4
     }
 }

@@ -163,19 +163,27 @@ namespace ReplayParser.ReplaySorter
             {
                 if (replay != null)
                 {
-                    tree.AddToNode(directories[directoryPath], FileReplay.Create(replay.Content, /*replay.OriginalFilePath*/ replay.FilePath, replay.Hash));
+                    var fileReplay = FileReplay.Create(replay.Content, replay.OriginalFilePath, replay.Hash);
+                    fileReplay.AddAfterCurrent(replay.FilePath);
+                    fileReplay.Forward();
+
+                    tree.AddToNode(directories[directoryPath], fileReplay);
                 }
             }
             else
             {
                 if (replay != null)
                 {
+                    var fileReplay = FileReplay.Create(replay.Content, replay.OriginalFilePath, replay.Hash);
+                    fileReplay.AddAfterCurrent(replay.FilePath);
+                    fileReplay.Forward();
+
                     directories.Add(
                         directoryPath,
                         tree.AddToNode(
                             directories[previousDirectoryPath],
                             directory,
-                            new List<FileReplay>() { FileReplay.Create(replay.Content, /*replay.OriginalFilePath*/ replay.FilePath, replay.Hash) }.AsEnumerable()
+                            new List<FileReplay>() { fileReplay }.AsEnumerable()
                         )
                     );
                 }
@@ -270,7 +278,7 @@ namespace ReplayParser.ReplaySorter
                     SortOnXResult = NestedSort(SortOnX, SortOnXResult, replaysThrowingExceptions);
                 }
             }
-            ReplayHandler.ResetReplayFilePathsToBeforeSort(OriginalListReplays);
+            ReplayHandler.RestoreToSavedStateAndClearFuture(OriginalListReplays);
         }
 
         public DirectoryFileTree ExecuteSortAsync(bool keeporiginalreplaynames, BackgroundWorker worker_ReplaySorter, List<string> replaysThrowingExceptions)
@@ -306,7 +314,7 @@ namespace ReplayParser.ReplaySorter
 
             }
             var tree = BuildTree();
-            ReplayHandler.ResetReplayFilePathsToBeforeSort(OriginalListReplays);
+            ReplayHandler.RestoreToSavedStateAndClearFuture(OriginalListReplays);
             return tree;
         }
 
@@ -338,7 +346,7 @@ namespace ReplayParser.ReplaySorter
 
             }
             var tree = BuildTree();
-            ReplayHandler.ResetReplayFilePathsToBeforeSort(OriginalListReplays);
+            ReplayHandler.RestoreToSavedStateAndClearFuture(OriginalListReplays);
             return tree;
         }
 

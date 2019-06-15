@@ -225,9 +225,51 @@ namespace ReplayParser.ReplaySorter.Renaming
             return string.Format(CustomFormat, customReplayNameSectionsReplacements);
         }
 
+        public void ResetCounter()
+        {
+            _counter = 0;
+        }
+
         public override string ToString()
         {
             return CustomFormat;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj == null)
+                return false;
+
+            if (obj.GetType() != GetType())
+                return false;
+
+            var otherFormat = obj as CustomReplayFormat;
+            return Equals(otherFormat);
+        }
+
+        public bool Equals(CustomReplayFormat other)
+        {
+            if (other == null)
+                return false;
+
+            return
+                CustomFormat == other.CustomFormat &&
+                CustomFormatSections.SequenceEqual(other.CustomFormatSections) &&
+                MaxNumberOfReplays == other.MaxNumberOfReplays &&
+                ThrowOnExceedingMax == other.ThrowOnExceedingMax;
+        }
+
+        public static bool operator == (CustomReplayFormat one, CustomReplayFormat other)
+        {
+            if (ReferenceEquals(one, null))
+                return ReferenceEquals(other, null);
+
+            return one.Equals(other);
+        }
+
+        public static bool operator !=(CustomReplayFormat one, CustomReplayFormat other)
+        {
+            return !(one == other);
         }
 
         #endregion
