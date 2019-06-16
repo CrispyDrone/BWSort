@@ -319,5 +319,15 @@ namespace ReplayParser.ReplaySorter
                 }
             }
         }
+
+        internal static void MoveReplay(File<IReplay> replay, string newReplayPath)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal static void CopyReplay(File<IReplay> replay, string newReplayPath)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

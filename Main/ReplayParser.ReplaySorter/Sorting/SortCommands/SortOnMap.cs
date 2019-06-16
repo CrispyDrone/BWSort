@@ -121,7 +121,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                             }
                             else
                             {
-                                ReplayHandler.MoveReplay(replay, MapFolder, string.Empty, KeepOriginalReplayNames, Sorter.CustomReplayFormat);
+                                ReplayHandler.MoveReplay(replay, MapFolder, string.Empty, true, null);
                             }
 
                             FileReplays.Add(replay);
@@ -233,7 +233,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                             }
                             else
                             {
-                                ReplayHandler.MoveReplay(replay, MapFolder, string.Empty, KeepOriginalReplayNames, Sorter.CustomReplayFormat);
+                                ReplayHandler.MoveReplay(replay, MapFolder, string.Empty, true, null);
                             }
 
                             FileReplays.Add(replay);
@@ -339,7 +339,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                             }
                             else
                             {
-                                ReplayHandler.MoveReplay(replay, MapFolder, string.Empty, KeepOriginalReplayNames, Sorter.CustomReplayFormat, true);
+                                ReplayHandler.MoveReplay(replay, MapFolder, string.Empty, true, null, true);
                             }
 
                             FileReplays.Add(replay);

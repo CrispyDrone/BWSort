@@ -98,60 +98,38 @@ namespace ReplayParser.ReplaySorter
             return DirectoryFileReplay;
         }
 
-        //TODO extract to general BuildTree function inside DirectoryFileTree ??
-        private DirectoryFileTree BuildTree()
+        private DirectoryFileTree BuildTree(IDictionary<string, List<File<IReplay>>> directoryFiletree)
         {
             var tree = new DirectoryFileTree(OriginalDirectory);
             var directoryNodes = new Dictionary<string, DirectoryFileTreeNode>();
             directoryNodes.Add(OriginalDirectory, tree.Root);
             var pathBuilder = new StringBuilder();
 
-            foreach (var replay in OriginalListReplays)
+            foreach (var folderReplays in directoryFiletree)
             {
                 pathBuilder.Append(OriginalDirectory);
-                var dirs = FileHandler.ExtractDirectoriesFromPath(replay.FilePath, OriginalDirectory).Select(d => d.Trim(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar).TrimEnd(' ')).Where(d => !string.IsNullOrWhiteSpace(d)).ToList();
+                var dirs = FileHandler.ExtractDirectoriesFromPath(folderReplays.Key + @"\", OriginalDirectory).Select(d => d.Trim(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar).TrimEnd(' ')).Where(d => !string.IsNullOrWhiteSpace(d)).ToList();
                 string previousDir = string.Empty;
                 foreach (var dir in dirs)
                 {
                     previousDir = pathBuilder.ToString();
                     pathBuilder.Append(Path.DirectorySeparatorChar + dir);
-                    AddOrModify(tree, directoryNodes, pathBuilder.ToString(), previousDir, dir, pathBuilder.ToString() == Path.GetDirectoryName(replay.FilePath) ? replay : null);
+                    if (pathBuilder.ToString() == folderReplays.Key)
+                    {
+                        foreach (var replay in folderReplays.Value)
+                        {
+                            AddOrModify(tree, directoryNodes, pathBuilder.ToString(), previousDir, dir, replay);
+                        }
+                    }
+                    else
+                    {
+                        AddOrModify(tree, directoryNodes, pathBuilder.ToString(), previousDir, dir, null);
+                    }
                 }
                 pathBuilder.Clear();
             }
             return tree;
         }
-
-        /// <summary>
-        /// returns ordered enumerable of directories contained in a path
-        /// </summary>
-        /// <param name="replayFilePath"></param>
-        /// <param name="rootDirectory"></param>
-        /// <returns></returns>
-        // private IEnumerable<string> ExtractDirectoriesFromPath(string replayFilePath, string rootDirectory)
-        // {
-        //     if (string.IsNullOrWhiteSpace(replayFilePath) || string.IsNullOrWhiteSpace(rootDirectory)) yield break;
-
-        //     var path = replayFilePath.Substring(rootDirectory.Length + 1);
-        //     // return path.Split(Path.DirectorySeparatorChar);
-        //     
-        //    while (path != string.Empty)
-        //    {
-        //         int indexOfSeparator = path.IndexOf(Path.DirectorySeparatorChar);
-        //         if (indexOfSeparator == -1)
-        //         {
-        //             indexOfSeparator = path.IndexOf(Path.AltDirectorySeparatorChar);
-
-        //             if (indexOfSeparator == -1)
-        //             {
-        //                 yield break;
-        //             }
-        //         }
-
-        //         yield return path.Substring(0, indexOfSeparator);
-        //         path = path.Substring(indexOfSeparator + 1);
-        //    }
-        // }
 
         //TODO extract to general BuildTree function inside the DirectoryFileTree ?? Because i'm reusing it when inspecting a backup...
         private void AddOrModify(DirectoryFileTree tree, Dictionary<string, DirectoryFileTreeNode> directories, string directoryPath, string previousDirectoryPath, string directory, File<IReplay> replay)
@@ -313,7 +291,7 @@ namespace ReplayParser.ReplaySorter
                 }
 
             }
-            var tree = BuildTree();
+            var tree = BuildTree(SortOnXResult);
             ReplayHandler.RestoreToSavedStateAndClearFuture(OriginalListReplays);
             return tree;
         }
@@ -345,7 +323,7 @@ namespace ReplayParser.ReplaySorter
                 }
 
             }
-            var tree = BuildTree();
+            var tree = BuildTree(SortOnXResult);
             ReplayHandler.RestoreToSavedStateAndClearFuture(OriginalListReplays);
             return tree;
         }
