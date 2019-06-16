@@ -139,6 +139,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                     ReplayHandler.CopyReplay(replay, sortDirectory, folderName, keepOriginalReplayNames, Sorter.CustomReplayFormat, isPreview);
                     var additionalReplayCreated = File<IReplay>.Create(replay.Content, replay.OriginalFilePath, replay.Hash);
                     additionalReplayCreated.AddAfterCurrent(replay.FilePath);
+                    additionalReplayCreated.Forward();
                     replay.Rewind();
                     directoryFileReplay[Path.Combine(sortDirectory, folderName)].Add(additionalReplayCreated);
                 }
@@ -267,6 +268,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                                 ReplayHandler.CopyReplay(replay, newReplayPath);
                                 var additionalReplayCreated = File<IReplay>.Create(replay.Content, replay.OriginalFilePath, replay.Hash);
                                 additionalReplayCreated.AddAfterCurrent(replay.FilePath);
+                                additionalReplayCreated.Forward();
                                 replay.Rewind();
                                 directoryFileReplay[folderName].Add(additionalReplayCreated);
                             }
@@ -387,6 +389,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                                 ReplayHandler.CopyReplay(replay, newReplayPath);
                                 var additionalReplayCreated = File<IReplay>.Create(replay.Content, replay.OriginalFilePath, replay.Hash);
                                 additionalReplayCreated.AddAfterCurrent(replay.FilePath);
+                                additionalReplayCreated.Forward();
                                 replay.Rewind();
                                 directoryFileReplay[folderName].Add(additionalReplayCreated);
                             }

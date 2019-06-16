@@ -223,7 +223,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                             progressPercentage = Convert.ToInt32((((double)currentPosition / Sorter.ListReplays.Count) * 1 / numberOfPositions * 100 + ((currentPositionNested - 1) * 100 / numberOfPositions)) * ((double)1 / numberOfCriteria));
                             progressPercentage += (currentCriteria - 1) * 100 / numberOfCriteria;
                         }
-                        worker_ReplaySorter.ReportProgress(progressPercentage, "sorting on map...");
+                        worker_ReplaySorter.ReportProgress(progressPercentage, $"sorting on map... {replay.FilePath}");
 
                         try
                         {
@@ -329,7 +329,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                             progressPercentage = Convert.ToInt32((((double)currentPosition / Sorter.ListReplays.Count) * 1 / numberOfPositions * 100 + ((currentPositionNested - 1) * 100 / numberOfPositions)) * ((double)1 / numberOfCriteria));
                             progressPercentage += (currentCriteria - 1) * 100 / numberOfCriteria;
                         }
-                        worker_ReplaySorter.ReportProgress(progressPercentage, "sorting on map...");
+                        worker_ReplaySorter.ReportProgress(progressPercentage, $"sorting on map... {replay.FilePath}");
 
                         try
                         {

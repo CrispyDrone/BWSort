@@ -108,7 +108,7 @@ namespace ReplayParser.ReplaySorter
             foreach (var folderReplays in directoryFiletree)
             {
                 pathBuilder.Append(OriginalDirectory);
-                var dirs = FileHandler.ExtractDirectoriesFromPath(folderReplays.Key + @"\", OriginalDirectory).Select(d => d.Trim(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar).TrimEnd(' ')).Where(d => !string.IsNullOrWhiteSpace(d)).ToList();
+                var dirs = FileHandler.ExtractDirectoriesFromPath(folderReplays.Key + @"\", OriginalDirectory).Select(d => d.Trim(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)).Where(d => !string.IsNullOrWhiteSpace(d)).ToList();
                 string previousDir = string.Empty;
                 foreach (var dir in dirs)
                 {

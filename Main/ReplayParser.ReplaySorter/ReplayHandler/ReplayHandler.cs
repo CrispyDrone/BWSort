@@ -86,7 +86,7 @@ namespace ReplayParser.ReplaySorter
         public static void MoveReplay(File<IReplay> replay, string newReplayPath)
         {
             if (replay == null) throw new ArgumentNullException(nameof(replay));
-            if (string.IsNullOrWhiteSpace(newReplayPath)) throw new ArgumentException(newReplayPath));
+            if (string.IsNullOrWhiteSpace(newReplayPath)) throw new ArgumentException(newReplayPath);
             if (FileHandler.RemoveInvalidChars(newReplayPath) != newReplayPath) throw new ArgumentException($"{nameof(newReplayPath)} contains invalid characters");
 
             newReplayPath = FileHandler.AdjustName(newReplayPath, false);
@@ -164,7 +164,7 @@ namespace ReplayParser.ReplaySorter
         public static void CopyReplay(File<IReplay> replay, string newReplayPath)
         {
             if (replay == null) throw new ArgumentNullException(nameof(replay));
-            if (string.IsNullOrWhiteSpace(newReplayPath)) throw new ArgumentException(newReplayPath));
+            if (string.IsNullOrWhiteSpace(newReplayPath)) throw new ArgumentException(newReplayPath);
             if (FileHandler.RemoveInvalidChars(newReplayPath) != newReplayPath) throw new ArgumentException($"{nameof(newReplayPath)} contains invalid characters");
 
             newReplayPath = FileHandler.AdjustName(newReplayPath, false);

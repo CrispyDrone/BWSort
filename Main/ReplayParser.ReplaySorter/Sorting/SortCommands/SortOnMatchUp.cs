@@ -328,7 +328,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                         progressPercentage = Convert.ToInt32((((double)currentPosition / Sorter.ListReplays.Count) * 1 / numberOfPositions * 100 + ((currentPositionNested - 1) * 100 / numberOfPositions)) * ((double)1 / numberOfCriteria));
                         progressPercentage += (currentCriteria - 1) * 100 / numberOfCriteria;
                     }
-                    worker_ReplaySorter.ReportProgress(progressPercentage, "sorting on matchup...");
+                    worker_ReplaySorter.ReportProgress(progressPercentage, $"sorting on matchup... {replay.FilePath}");
                     try
                     {
                         if (IsNested == false)
@@ -451,7 +451,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                         progressPercentage = Convert.ToInt32((((double)currentPosition / Sorter.ListReplays.Count) * 1 / numberOfPositions * 100 + ((currentPositionNested - 1) * 100 / numberOfPositions)) * ((double)1 / numberOfCriteria));
                         progressPercentage += (currentCriteria - 1) * 100 / numberOfCriteria;
                     }
-                    worker_ReplaySorter.ReportProgress(progressPercentage, "sorting on matchup...");
+                    worker_ReplaySorter.ReportProgress(progressPercentage, $"sorting on matchup... {replay.FilePath}");
                     try
                     {
                         if (IsNested == false)

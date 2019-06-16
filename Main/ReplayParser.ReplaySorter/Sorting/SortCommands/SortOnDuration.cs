@@ -311,7 +311,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                             progressPercentage = Convert.ToInt32((((double)currentPosition / Sorter.ListReplays.Count) * 1 / numberOfPositions * 100 + ((currentPositionNested - 1) * 100 / numberOfPositions)) * ((double)1 / numberOfCriteria));
                             progressPercentage += (currentCriteria - 1) * 100 / numberOfCriteria;
                         }
-                        worker_ReplaySorter.ReportProgress(progressPercentage, "Sorting on duration...");
+                        worker_ReplaySorter.ReportProgress(progressPercentage, $"Sorting on duration... {replay.FilePath}");
                     }
                 }
                 catch (Exception ex)
@@ -452,7 +452,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                             progressPercentage = Convert.ToInt32((((double)currentPosition / Sorter.ListReplays.Count) * 1 / numberOfPositions * 100 + ((currentPositionNested - 1) * 100 / numberOfPositions)) * ((double)1 / numberOfCriteria));
                             progressPercentage += (currentCriteria - 1) * 100 / numberOfCriteria;
                         }
-                        worker_ReplaySorter.ReportProgress(progressPercentage, "Sorting on duration...");
+                        worker_ReplaySorter.ReportProgress(progressPercentage, $"Sorting on duration... {replay.FilePath}");
                     }
                 }
                 catch (Exception ex)
