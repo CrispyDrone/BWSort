@@ -344,16 +344,19 @@ namespace ReplayParser.ReplaySorter
             var nodeQueue = new Queue<DirectoryFileTreeNode>();
             nodeQueue.Enqueue(previewTree.Root);
 
-
             var previewTreeNodeDirectories = new Dictionary<DirectoryFileTreeNode, string>();
             previewTreeNodeDirectories.Add(previewTree.Root, previewTree.Root.Name + @"\");
 
+            var count = previewTree.Count;
+            var currentCount = 0;
             while (nodeQueue.Count != 0)
             {
                 var previewNode = nodeQueue.Dequeue();
                 if (previewNode == null)
                     continue;
 
+                currentCount++;
+                worker_ReplaySorter.ReportProgress(Convert.ToInt32((double)currentCount / count * 100), $"Writing preview to disk... {(previewNode.IsDirectory ? $"Creating directory: {previewNode.Name}" : $"Creating replay {previewNode.Name}")}");
                 if (previewNode.IsDirectory)
                 {
                     foreach (var previewChild in previewNode.Children.ToList())

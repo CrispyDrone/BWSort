@@ -1047,7 +1047,9 @@ namespace ReplayParser.ReplaySorter.UI
                     return;
                 }
                 var root = (e.Result as DirectoryFileTree).Root;
+                Mouse.OverrideCursor = Cursors.Wait;
                 sortOutputTreeView.ItemsSource = root;
+                Dispatcher.Invoke(() => Mouse.OverrideCursor = null, System.Windows.Threading.DispatcherPriority.ContextIdle);
             }
         }
 
@@ -2160,6 +2162,10 @@ namespace ReplayParser.ReplaySorter.UI
                     MessageBox.Show("Invalid custom replay format. Check help section for correct syntax", "Invalid syntax", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
                     return;
                 }
+            }
+            else
+            {
+                return;
             }
             var replaysSuccessfullyRenamed = new List<File<IReplay>>();
             StringBuilder exceptions = new StringBuilder();
