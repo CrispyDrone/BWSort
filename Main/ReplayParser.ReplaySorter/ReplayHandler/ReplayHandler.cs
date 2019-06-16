@@ -13,35 +13,6 @@ namespace ReplayParser.ReplaySorter
 {
     public static class ReplayHandler
     {
-        // public static void MoveReplay(File<IReplay> replay, string sortDirectory, string FolderName, bool KeepOriginalReplayNames, CustomReplayFormat CustomReplayFormat, bool isPreview = false)
-        // {
-        //     var sourceFilePath = replay.FilePath;
-        //     var FileName = FileHandler.GetFileName(replay.FilePath);
-        //     var DestinationFilePath = sortDirectory + @"\" + FolderName + @"\" + FileName;
-
-        //     if (!KeepOriginalReplayNames)
-        //     {
-        //         try
-        //         {
-        //             DestinationFilePath = sortDirectory + @"\" + FolderName + @"\" + GenerateReplayName(replay, CustomReplayFormat) + ".rep";
-        //         }
-        //         catch(Exception ex)
-        //         {
-        //             ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - Error while renaming replay: {replay.OriginalFilePath}", ex : ex);
-        //         }
-        //     }
-
-        //     DestinationFilePath = FileHandler.AdjustName(DestinationFilePath, false);
-
-        //     if (!isPreview)
-        //     {
-        //         File.Move(sourceFilePath, DestinationFilePath);
-        //     }
-
-        //     replay.AddAfterCurrent(DestinationFilePath);
-        //     replay.Forward();
-        // }
-
         public static void MoveReplay(File<IReplay> replay, string sortDirectory, string folderName, bool keepOriginalReplayNames, CustomReplayFormat customReplayFormat, bool isPreview = false)
         {
             if (replay == null) throw new ArgumentNullException(nameof(replay));
@@ -112,6 +83,19 @@ namespace ReplayParser.ReplaySorter
             //}
         }
 
+        public static void MoveReplay(File<IReplay> replay, string newReplayPath)
+        {
+            if (replay == null) throw new ArgumentNullException(nameof(replay));
+            if (string.IsNullOrWhiteSpace(newReplayPath)) throw new ArgumentException(newReplayPath));
+            if (FileHandler.RemoveInvalidChars(newReplayPath) != newReplayPath) throw new ArgumentException($"{nameof(newReplayPath)} contains invalid characters");
+
+            newReplayPath = FileHandler.AdjustName(newReplayPath, false);
+
+            File.Move(replay.FilePath, newReplayPath);
+            replay.AddAfterCurrent(newReplayPath);
+            replay.Forward();
+        }
+
         public static void CopyReplay(File<IReplay> replay, string sortDirectory, string folderName, bool keepOriginalReplayNames, CustomReplayFormat customReplayFormat, bool isPreview = false)
         {
             if (replay == null) throw new ArgumentNullException(nameof(replay));
@@ -176,6 +160,20 @@ namespace ReplayParser.ReplaySorter
                 File.Copy(filePath, destinationFilePath);
             //}
         }
+
+        public static void CopyReplay(File<IReplay> replay, string newReplayPath)
+        {
+            if (replay == null) throw new ArgumentNullException(nameof(replay));
+            if (string.IsNullOrWhiteSpace(newReplayPath)) throw new ArgumentException(newReplayPath));
+            if (FileHandler.RemoveInvalidChars(newReplayPath) != newReplayPath) throw new ArgumentException($"{nameof(newReplayPath)} contains invalid characters");
+
+            newReplayPath = FileHandler.AdjustName(newReplayPath, false);
+
+            File.Copy(replay.FilePath, newReplayPath);
+            replay.AddAfterCurrent(newReplayPath);
+            replay.Forward();
+        }
+
 
         public static void RemoveBadReplay(string filepath, string abadreplay)
         {
@@ -318,16 +316,6 @@ namespace ReplayParser.ReplaySorter
                         throw;
                 }
             }
-        }
-
-        internal static void MoveReplay(File<IReplay> replay, string newReplayPath)
-        {
-            throw new NotImplementedException();
-        }
-
-        internal static void CopyReplay(File<IReplay> replay, string newReplayPath)
-        {
-            throw new NotImplementedException();
         }
     }
 }
