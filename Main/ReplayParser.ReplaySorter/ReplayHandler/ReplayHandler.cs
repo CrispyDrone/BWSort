@@ -83,15 +83,16 @@ namespace ReplayParser.ReplaySorter
             //}
         }
 
-        public static void MoveReplay(File<IReplay> replay, string newReplayPath)
+        public static void MoveReplay(File<IReplay> replay, string newReplayPath, bool isPreview = false)
         {
             if (replay == null) throw new ArgumentNullException(nameof(replay));
             if (string.IsNullOrWhiteSpace(newReplayPath)) throw new ArgumentException(newReplayPath);
-            if (FileHandler.RemoveInvalidChars(newReplayPath) != newReplayPath) throw new ArgumentException($"{nameof(newReplayPath)} contains invalid characters");
 
             newReplayPath = FileHandler.AdjustName(newReplayPath, false);
 
-            File.Move(replay.FilePath, newReplayPath);
+            if (!isPreview)
+                File.Move(replay.FilePath, newReplayPath);
+
             replay.AddAfterCurrent(newReplayPath);
             replay.Forward();
         }
@@ -161,15 +162,16 @@ namespace ReplayParser.ReplaySorter
             //}
         }
 
-        public static void CopyReplay(File<IReplay> replay, string newReplayPath)
+        public static void CopyReplay(File<IReplay> replay, string newReplayPath, bool isPreview = false)
         {
             if (replay == null) throw new ArgumentNullException(nameof(replay));
             if (string.IsNullOrWhiteSpace(newReplayPath)) throw new ArgumentException(newReplayPath);
-            if (FileHandler.RemoveInvalidChars(newReplayPath) != newReplayPath) throw new ArgumentException($"{nameof(newReplayPath)} contains invalid characters");
 
             newReplayPath = FileHandler.AdjustName(newReplayPath, false);
 
-            File.Copy(replay.FilePath, newReplayPath);
+            if (!isPreview)
+                File.Copy(replay.FilePath, newReplayPath);
+
             replay.AddAfterCurrent(newReplayPath);
             replay.Forward();
         }
