@@ -172,10 +172,27 @@ namespace ReplayParser.ReplaySorter.UI
 
         #region parsing
 
-        private class ParseFile
+        private class ParseFile : INotifyPropertyChanged
         {
+            private FeedBack _feedBack;
+
             public string Path { get; set; }
-            public FeedBack Feedback { get; set; }
+            public FeedBack Feedback
+            {
+                get => _feedBack;
+                set
+                {
+                    _feedBack = value;
+                    OnPropertyChanged(nameof(Feedback));
+                }
+            }
+
+            public event PropertyChangedEventHandler PropertyChanged;
+
+            private void OnPropertyChanged(string propertyName)
+            {
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            }
         }
 
         private async Task DiscoverReplayFiles()
@@ -2346,9 +2363,161 @@ namespace ReplayParser.ReplaySorter.UI
             _isFound = false;
         }
 
+        private bool _shouldScrollIntoView = false;
+        private IEnumerable<DirectoryFileTreeNode> _foundNodes;
+        private int _currentFoundNode = 0;
+
         private void GoToNodeMenuItem_Click(object sender, RoutedEventArgs e)
         {
+            var currentNode = (sender as MenuItem)?.DataContext as DirectoryFileTreeNode;
+            if (currentNode == null)
+                return;
 
+            Regex searchRegex = null;
+            var dialogWindow = new TextInputDialog("Search nodes", "Please enter a search string");
+            if (dialogWindow.ShowDialog() == true)
+            {
+                try
+                {
+                    searchRegex = new Regex(dialogWindow.Answer, RegexOptions.IgnoreCase);
+                }
+                catch (Exception ex)
+                {
+                    ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - Failed to create regex for pattern {dialogWindow.Answer}", ex: ex);
+                    return;
+                }
+            }
+            else
+                return;
+
+            _foundNodes = FindNodes(currentNode, searchRegex);
+            var numberOfNodes = _foundNodes.Count();
+            if (_foundNodes.Any())
+            {
+                statusBarAction.Content = $"Found {numberOfNodes} hits.";
+                GetSearchHit(0);
+
+                //todo enable next and back arrows
+                if (numberOfNodes > 1)
+                {
+
+                }
+            }
+            else
+                statusBarAction.Content = "Failed to find any node matching your search string.";
+        }
+
+        private void GetSearchHit(int index)
+        {
+            if (index < 0)
+                return;
+
+            var numberOfNodes = _foundNodes.Count();
+
+            if (index > numberOfNodes - 1)
+                return;
+
+            var rootNode = sortOutputTreeView.Items.Cast<DirectoryFileTreeNode>().FirstOrDefault();
+            if (rootNode == null)
+                return;
+
+            var searchedNode = _foundNodes.ElementAt(index);
+            if (sortOutputTreeView.ItemContainerGenerator.ContainerFromItem(searchedNode) == null)
+            {
+                var nodesToSearchedNode = FindNodePath(rootNode, searchedNode);
+                foreach (var node in nodesToSearchedNode)
+                {
+                    node.IsExpanded = true;
+                }
+            }
+
+            _shouldScrollIntoView = true;
+            searchedNode.IsSelected = true;
+            _shouldScrollIntoView = false;
+        }
+
+        private void NextFoundResultButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void PreviousFoundResultButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private IEnumerable<DirectoryFileTreeNode> FindNodes(DirectoryFileTreeNode rootNode, Regex searchRegex)
+        {
+            var enumerator = rootNode.GetBreadthFirstEnumerator();
+            while (enumerator.MoveNext())
+            {
+                var currentNode = enumerator.Current;
+                if (searchRegex.IsMatch(currentNode.Name))
+                    yield return currentNode;
+            }
+        }
+
+        private IEnumerable<DirectoryFileTreeNode> FindNodePath(DirectoryFileTreeNode rootNode, DirectoryFileTreeNode searchedNode)
+        {
+            var path = new List<DirectoryFileTreeNode>();
+            var nodeStack = new Stack<DirectoryFileTreeNode>();
+            var visitedStack = new Stack<bool>();
+            nodeStack.Push(rootNode);
+            visitedStack.Push(false);
+
+            var foundNode = false;
+
+            while (nodeStack.Count != 0)
+            {
+                var currentNode = nodeStack.Pop();
+                var visited = visitedStack.Pop();
+
+                if (currentNode == null)
+                    continue;
+
+                if (foundNode)
+                {
+                    if (visited)
+                        path.Add(currentNode);
+
+                    continue;
+                }
+
+                if (currentNode == searchedNode)
+                {
+                    foundNode = true;
+                    path.Add(currentNode);
+                    continue;
+                }
+
+                if (!visited)
+                {
+                    if (currentNode.IsDirectory)
+                    {
+                        nodeStack.Push(currentNode);
+                        visitedStack.Push(true);
+
+                        foreach (var child in currentNode.Children ?? Enumerable.Empty<DirectoryFileTreeNode>())
+                        {
+                            nodeStack.Push(child);
+                            visitedStack.Push(false);
+                        }
+                    }
+                }
+            }
+            return path.AsEnumerable().Reverse();
+        }
+
+        private void TreeViewItem_Selected(object sender, RoutedEventArgs e)
+        {
+            if (_shouldScrollIntoView)
+            {
+                var item = sender as TreeViewItem;
+                if (item == null)
+                    return;
+
+                item.BringIntoView();
+            }
         }
 
         /// <summary>

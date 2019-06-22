@@ -254,6 +254,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortResult
         private List<DirectoryFileTreeNode> _children;
         private FileReplay _value;
         private bool _isExpanded;
+        private bool _isSelected;
 
         #endregion
 
@@ -393,6 +394,17 @@ namespace ReplayParser.ReplaySorter.Sorting.SortResult
             {
                 _isExpanded = value;
                 OnPropertyChanged(nameof(IsExpanded));
+            }
+        }
+
+        // This class should be a ViewModel?
+        public bool IsSelected
+        {
+            get => _isSelected;
+            set
+            {
+                _isSelected = value;
+                OnPropertyChanged(nameof(IsSelected));
             }
         }
 

@@ -44,6 +44,8 @@
         </ContextMenu>
         <Style x:Key="DirectoryStyle" TargetType="{x:Type TreeViewItem}">
             <Setter Property="IsExpanded" Value="{Binding Path=IsExpanded, Mode=TwoWay}"/>
+            <Setter Property="IsSelected" Value="{Binding Path=IsSelected, Mode=TwoWay}"/>
+            <EventSetter Event="Selected" Handler="TreeViewItem_Selected"/>
             <Setter Property="ContextMenu" Value="{StaticResource sortOutputTreeViewContextMenu}" />
         </Style>
     </Window.Resources>
@@ -186,7 +188,6 @@
                         <RowDefinition Height="Auto"></RowDefinition>
                         <RowDefinition Height="Auto"></RowDefinition>
                         <RowDefinition Height="Auto"></RowDefinition>
-                        <RowDefinition Height="Auto"></RowDefinition>
                         <RowDefinition Height="*"></RowDefinition>
                         <RowDefinition Height="Auto"></RowDefinition>
                     </Grid.RowDefinitions>
@@ -238,15 +239,31 @@
                         <ListBoxItem Content="MATCHUP"></ListBoxItem>
                         <ListBoxItem Content="GAMETYPE"></ListBoxItem>
                     </ListBox>
-                    <StackPanel Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="4" x:Name="sortCriteriaParameters" Orientation="Horizontal"></StackPanel>
-                    <StackPanel Grid.Row="4" Grid.Column="0" x:Name="keepOriginalReplayNamesPanel" Orientation="Vertical">
+                    <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3" x:Name="sortCriteriaParameters" Orientation="Horizontal"></StackPanel>
+                    <StackPanel Grid.Row="3" Grid.Column="0" x:Name="keepOriginalReplayNamesPanel" Orientation="Vertical">
                         <CheckBox x:Name="keepOriginalReplayNamesCheckBox" Content="Keep original replay names" Click="keepOriginalReplayNamesCheckBox_Click" IsChecked="True"></CheckBox>
                     </StackPanel>
-                    <CheckBox Grid.Row="5" Grid.Column="0" x:Name="sortInPlaceCheckBox" Content="Sort in place" IsEnabled="False" IsChecked="False"></CheckBox>
-                    <CheckBox Grid.Row="6" Grid.Column="0" x:Name="sortIsPreview" Content="Preview" IsChecked="False"></CheckBox>
-                    <TreeView Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="4" x:Name="sortOutputTreeView" ItemTemplateSelector="{StaticResource TreeViewDataTemplateSelector}" ItemContainerStyle="{StaticResource DirectoryStyle}" Margin="0 10 0 0">
+                    <CheckBox Grid.Row="4" Grid.Column="0" x:Name="sortInPlaceCheckBox" Content="Sort in place" IsEnabled="False" IsChecked="False"></CheckBox>
+                    <CheckBox Grid.Row="5" Grid.Column="0" x:Name="sortIsPreview" Content="Preview" IsChecked="False"></CheckBox>
+                    <DockPanel Grid.Row="5" Grid.Column="2" LastChildFill="False" HorizontalAlignment="Right">
+                        <Button x:Name="nextFoundResultButton" Click="NextFoundResultButton_Click" MinWidth="30">
+                            <Path Stroke="Black" Data="m 10 20 a 10,10 0 1 0 -10,-10 m 0 0 l -5 0 l 5 5 l 5 -5 Z" RenderTransformOrigin="0.5 0.5" >
+                                <Path.RenderTransform>
+                                    <ScaleTransform ScaleX="0.75" ScaleY="0.75"/>
+                                </Path.RenderTransform>
+                            </Path>
+                        </Button>
+                        <Button x:Name="previousFoundResultButton" Click="PreviousFoundResultButton_Click" MinWidth="30">
+                            <Path Stroke="Black" Data="m 10 20 a 10,10 0 1 0 -10,-10 m 0 0 l -5 0 l 5 5 l 5 -5 Z" RenderTransformOrigin="0.5 0.5" >
+                                <Path.RenderTransform>
+                                    <ScaleTransform ScaleX="0.75" ScaleY="0.75"/>
+                                </Path.RenderTransform>
+                            </Path>
+                        </Button>
+                    </DockPanel>
+                    <TreeView Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="4" x:Name="sortOutputTreeView" ItemTemplateSelector="{StaticResource TreeViewDataTemplateSelector}" ItemContainerStyle="{StaticResource DirectoryStyle}" Margin="0 10 0 0">
                     </TreeView>
-                    <DockPanel Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="4">
+                    <DockPanel Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="4">
                         <Button DockPanel.Dock="Right" x:Name="cancelSortButton" Content="Cancel" Click="cancelSortButton_Click" MinWidth="70" Margin="10 10 0 10"></Button>
                         <Button DockPanel.Dock="Right" x:Name="executeSortButton"  Content="Sort" Click="executeSortButton_Click" MinWidth="70" Margin="10"></Button>
                         <Grid DockPanel.Dock="Left" Margin="0 10 10 10">
