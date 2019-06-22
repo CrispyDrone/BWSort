@@ -175,7 +175,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                 {
                     sortDirectory = Sorter.CurrentDirectory + @"\" + string.Join(",", Sorter.CriteriaStringOrder);
                 }
-                sortDirectory = FileHandler.CreateDirectory(sortDirectory, true);
+                sortDirectory = FileHandler.CreateDirectory(sortDirectory);
             }
 
             int currentPosition = 0;

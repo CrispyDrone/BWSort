@@ -124,7 +124,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                 {
                     sortDirectory = Sorter.CurrentDirectory + @"\" + string.Join(",", Sorter.CriteriaStringOrder);
                 }
-                sortDirectory = FileHandler.CreateDirectory(sortDirectory, true);
+                sortDirectory = FileHandler.CreateDirectory(sortDirectory);
             }
 
             // make subdirectory per gametype, and put all associated replays into it

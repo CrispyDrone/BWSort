@@ -1,13 +1,30 @@
 ﻿using ReplayParser.ReplaySorter.Extensions;
-using ReplayParser.ReplaySorter.UserInput;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using System.Windows;
+using System;
 
 namespace ReplayParser.ReplaySorter.IO
 {
+    /// <summary>
+    /// Specifies what needs to happen in case a directory already exists.
+    /// </summary>
+    public enum CreateDirectoryBehavior
+    {
+        /// <summary>
+        /// Do nothing.
+        /// </summary>
+        Default,
+        /// <summary>
+        /// Adjust the name.
+        /// </summary>
+        AdjustName,
+        /// <summary>
+        /// Throw an exception.
+        /// </summary>
+        Throw
+    }
+
     public static class FileHandler
     {
         public static string GetParentDirectory(string filePath)
@@ -77,51 +94,27 @@ namespace ReplayParser.ReplaySorter.IO
             return newFullPath;
         }
 
-        //TODO get rid of this ridiculous coupling to console and messagebox
-        public static string CreateDirectory(string sortDirectory, bool UI = false)
+        public static string CreateDirectory(string sortDirectory, CreateDirectoryBehavior createDirectoryBehavior = CreateDirectoryBehavior.AdjustName)
         {
-            if (!UI)
+            switch (createDirectoryBehavior)
             {
-                if (Directory.Exists(sortDirectory))
-                {
-                    Console.WriteLine("Sort directory already exists.");
-                    Console.WriteLine("Write to same directory? Yes/No.");
-                    var WriteToSameDirectory = User.AskYesNo();
-                    if (WriteToSameDirectory.Yes != null)
-                    {
-                        if ((bool)!WriteToSameDirectory.Yes)
-                        {
-                            sortDirectory = AdjustName(sortDirectory, true);
-                            Directory.CreateDirectory(sortDirectory);
-                        }
-                    }
-                }
-                else
-                {
-                    Directory.CreateDirectory(sortDirectory);
-                }
+                case CreateDirectoryBehavior.Default:
+                    break;
+                case CreateDirectoryBehavior.AdjustName:
+                    sortDirectory = AdjustName(sortDirectory, true);
+                    break;
+                case CreateDirectoryBehavior.Throw:
+                    throw new InvalidOperationException($"Directory already exists and behavior {createDirectoryBehavior} was specified!");
+
+                default:
+                    throw new Exception();
             }
-            else
-            {
-                if (Directory.Exists(sortDirectory))
-                {
-                    var result = MessageBox.Show("Directory already exists. Write to a new directory?", "Warning", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.Yes);
-                    if (result == MessageBoxResult.Yes)
-                    {
-                        sortDirectory = AdjustName(sortDirectory, true);
-                        Directory.CreateDirectory(sortDirectory);
-                    }
-                }
-                else
-                {
-                    Directory.CreateDirectory(sortDirectory);
-                }
-            }
+
+            Directory.CreateDirectory(sortDirectory);
+
             return sortDirectory;
         }
 
-        //TODO ref count, makes sense? 
-        //TODO should loop internally? has to take additional parameter isDirectory (?)
         public static string IncrementName(string fileNameOnly, string extension, string path, ref int count)
         {
             string tempFileName = string.Format("{0}({1})", fileNameOnly, count++);

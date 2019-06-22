@@ -201,10 +201,10 @@ namespace ReplayParser.ReplaySorter
 
         public Sorter(string originalDirectory, List<File<IReplay>> listreplays)
         {
-            this.ListReplays = listreplays;
-            this.OriginalListReplays = new List<File<IReplay>>(listreplays);
-            this.CurrentDirectory = originalDirectory;
-            this.OriginalDirectory = originalDirectory;
+            ListReplays = listreplays;
+            OriginalListReplays = new List<File<IReplay>>(listreplays);
+            CurrentDirectory = originalDirectory;
+            OriginalDirectory = originalDirectory;
         }
 
         #endregion
@@ -357,6 +357,7 @@ namespace ReplayParser.ReplaySorter
 
                 currentCount++;
                 worker_ReplaySorter.ReportProgress(Convert.ToInt32((double)currentCount / count * 100), $"Writing preview to disk... {(previewNode.IsDirectory ? $"Creating directory: {previewNode.Name}" : $"Creating replay {previewNode.Name}")}");
+
                 if (previewNode.IsDirectory)
                 {
                     foreach (var previewChild in previewNode.Children.ToList())
@@ -364,12 +365,11 @@ namespace ReplayParser.ReplaySorter
                         nodeQueue.Enqueue(previewChild);
                         if (previewChild.IsDirectory)
                         {
+                            var dirName = FileHandler.CreateDirectory(previewTreeNodeDirectories[previewNode] + previewChild.Name + @"\");
                             if (!previewTreeNodeDirectories.ContainsKey(previewChild))
                             {
-                                previewTreeNodeDirectories.Add(previewChild, previewTreeNodeDirectories[previewNode] + previewChild.Name + @"\");
+                                previewTreeNodeDirectories.Add(previewChild, dirName);
                             }
-                            //TODO I just noticed this CreateDirectory function actually can send messageboxes to the user lol...
-                            var dirName = FileHandler.CreateDirectory(previewTreeNodeDirectories[previewChild], true);
                             previewToResultingTreeNodesMapping.Add(previewChild, resultingTree.AddToNode(previewToResultingTreeNodesMapping[previewNode], FileHandler.ExtractDirectoriesFromPath(dirName, resultingTree.Root.Name).Last()));
                         }
                         else

@@ -242,7 +242,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                 {
                     sortDirectory = Path.Combine(sortDirectory, string.Join(",", Sorter.CriteriaStringOrder));
                 }
-                sortDirectory = FileHandler.CreateDirectory(sortDirectory, true);
+                sortDirectory = FileHandler.CreateDirectory(sortDirectory);
             }
 
             var playerType = GetPlayerType(makeFolderForWinner, makeFolderForLoser);
