@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 
@@ -244,7 +245,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortResult
         #endregion
     }
 
-    public class DirectoryFileTreeNode : IEnumerable<DirectoryFileTreeNode>
+    public class DirectoryFileTreeNode : IEnumerable<DirectoryFileTreeNode>, INotifyPropertyChanged
     {
         #region private
 
@@ -252,6 +253,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortResult
 
         private List<DirectoryFileTreeNode> _children;
         private FileReplay _value;
+        private bool _isExpanded;
 
         #endregion
 
@@ -311,9 +313,24 @@ namespace ReplayParser.ReplaySorter.Sorting.SortResult
 
         #endregion
 
+        #region methods
+
+        private void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        #endregion
+
         #endregion
 
         #region public
+
+        #region fields
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        #endregion
 
         #region constructors
 
@@ -366,6 +383,18 @@ namespace ReplayParser.ReplaySorter.Sorting.SortResult
         #region properties
 
         public string Name { get; }
+
+        // This class should be a ViewModel?
+        // IsExpanded doesn't make sense for a file...
+        public bool IsExpanded
+        {
+            get => _isExpanded;
+            set
+            {
+                _isExpanded = value;
+                OnPropertyChanged(nameof(IsExpanded));
+            }
+        }
 
         public FileReplay Value
         {
@@ -633,6 +662,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortResult
                 if (IsDirectory)
                     return _children;
 
+                //TODO exception instead of null?
                 return null;
             }
         }

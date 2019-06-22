@@ -2232,6 +2232,196 @@ namespace ReplayParser.ReplaySorter.UI
 
         #endregion
 
+        #region sort tab
+
+        private void ExpandAllMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            var treeview = sortOutputTreeView;
+            var nodes = treeview.Items.Cast<DirectoryFileTreeNode>().FirstOrDefault();
+
+            if (nodes == null)
+                return;
+
+            SetNodeState(nodes, true, -1);
+        }
+
+        private void CollapseAllMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            var treeview = sortOutputTreeView;
+            var nodes = treeview.Items.Cast<DirectoryFileTreeNode>().FirstOrDefault();
+
+            if (nodes == null)
+                return;
+
+            SetNodeState(nodes, false, -1);
+        }
+
+        private void ExpandThisNodeMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            var thisNode = (sender as MenuItem)?.DataContext as DirectoryFileTreeNode;
+            if (thisNode == null)
+                return;
+
+            SetNodeState(thisNode, true, -1);
+        }
+
+        private void CollapseThisNodeMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            var thisNode = (sender as MenuItem)?.DataContext as DirectoryFileTreeNode;
+            if (thisNode == null)
+                return;
+
+            SetNodeState(thisNode, false, -1);
+        }
+
+        private void ExpandThisLevelMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            var treeView = sortOutputTreeView;
+            var rootNode = treeView.Items.Cast<DirectoryFileTreeNode>().FirstOrDefault();
+
+            if (rootNode == null)
+                return;
+
+            var currentNode = (sender as MenuItem)?.DataContext as DirectoryFileTreeNode;
+            if (currentNode == null)
+                return;
+
+            if (!currentNode.IsDirectory)
+                return;
+
+            var level = GetDepth(rootNode, currentNode, -1);
+
+            if (level == -1)
+                return;
+
+            SetNodeState(rootNode, true, level);
+            _isFound = false;
+        }
+
+        private void CollapseThisLevelMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            var treeView = sortOutputTreeView;
+            var rootNode = treeView.Items.Cast<DirectoryFileTreeNode>().FirstOrDefault();
+
+            if (rootNode == null)
+                return;
+
+            var currentNode = (sender as MenuItem)?.DataContext as DirectoryFileTreeNode;
+            if (currentNode == null)
+                return;
+
+            if (!currentNode.IsDirectory)
+                return;
+
+            var level = GetDepth(rootNode, currentNode, -1);
+
+            if (level == -1)
+                return;
+
+            CollapseNodesLevel(rootNode, level);
+            _isFound = false;
+        }
+
+        private void CollapseThisLevelRecursivelyMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            var treeView = sortOutputTreeView;
+            var rootNode = treeView.Items.Cast<DirectoryFileTreeNode>().FirstOrDefault();
+
+            if (rootNode == null)
+                return;
+
+            var currentNode = (sender as MenuItem)?.DataContext as DirectoryFileTreeNode;
+            if (currentNode == null)
+                return;
+
+            if (!currentNode.IsDirectory)
+                return;
+
+            var level = GetDepth(rootNode, currentNode, -1);
+
+            if (level == -1)
+                return;
+
+            CollapseNodesLevel(rootNode, level, 0, true);
+            _isFound = false;
+        }
+
+        private void GoToNodeMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        /// <summary>
+        /// Expand or collapse all nodes. Level -1, means the entire (sub)tree.
+        /// </summary>
+        /// <param name="nodes"></param>
+        /// <param name="level"></param>
+        private void SetNodeState(DirectoryFileTreeNode node, bool toExpand = true, int level = -1)
+        {
+            node.IsExpanded = toExpand;
+            if (level > 0 || level == -1)
+            {
+                if (node.IsDirectory)
+                {
+                    foreach (var child in node.Children)
+                    {
+                        SetNodeState(child, toExpand, level == -1 ? -1 : level - 1);
+                    }
+                }
+                else
+                {
+                    node.IsExpanded = toExpand;
+                }
+            }
+        }
+
+        private bool _isFound = false;
+        private int GetDepth(DirectoryFileTreeNode rootNode, DirectoryFileTreeNode currentNode, int currentDepth)
+        {
+            if (_isFound)
+                return -1;
+
+            currentDepth++;
+
+            if (currentNode == rootNode)
+            {
+                _isFound = true;
+                return currentDepth;
+            }
+
+            if (!rootNode.IsDirectory)
+                throw new InvalidOperationException("File node does not have any children.");
+
+            return rootNode.Children?.Where(c => c.IsDirectory).Select(c => GetDepth(c, currentNode, currentDepth)).DefaultIfEmpty(-1).Max() ?? -1;
+        }
+
+        private void CollapseNodesLevel(DirectoryFileTreeNode rootNode, int level, int currentLevel = 0, bool isRecursive = false)
+        {
+            if (currentLevel == level)
+            {
+                if (isRecursive)
+                {
+                    SetNodeState(rootNode, false, -1);
+                }
+                else
+                {
+                    rootNode.IsExpanded = false;
+                }
+            }
+            else
+            {
+                if (rootNode.IsDirectory)
+                {
+                    foreach (var child in rootNode.Children)
+                    {
+                        CollapseNodesLevel(child, level, currentLevel + 1, isRecursive);
+                    }
+                }
+            }
+        }
+
+        #endregion
+
         #endregion
 
         #region help 

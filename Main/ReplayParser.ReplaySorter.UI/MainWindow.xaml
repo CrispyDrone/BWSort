@@ -32,8 +32,19 @@
             <Label Content="{Binding Path=Name}"/>
         </HierarchicalDataTemplate>
         <custom:TreeViewItemDataTemplateSelector x:Key="TreeViewDataTemplateSelector" DirectoryTemplate="{StaticResource DirectoryTemplate}" FileTemplate="{StaticResource FileTemplate}"/>
+        <ContextMenu x:Key="sortOutputTreeViewContextMenu">
+            <MenuItem Name="expandAllMenuItem" Header="Expand all" Click="ExpandAllMenuItem_Click" />
+            <MenuItem Name="collapseAllMenuItem" Header="Collapse all" Click="CollapseAllMenuItem_Click" />
+            <MenuItem Name="expandThisLevelMenuItem" Header="Expand level" Click="ExpandThisLevelMenuItem_Click" />
+            <MenuItem Name="collapseThisLevelMenuItem" Header="Collapse level" Click="CollapseThisLevelMenuItem_Click" />
+            <MenuItem Name="collapseThisLevelRecursivelyMenuItem" Header="Collapse level recursively" Click="CollapseThisLevelRecursivelyMenuItem_Click"/>
+            <MenuItem Name="expandThisNodeMenuItem" Header="Expand node" Click="ExpandThisNodeMenuItem_Click" />
+            <MenuItem Name="collapseThisNodeMenuItem" Header="Collapse node" Click="CollapseThisNodeMenuItem_Click" />
+            <MenuItem Name="goToNodeMenuItem" Header="Find node by full name" Click="GoToNodeMenuItem_Click" />
+        </ContextMenu>
         <Style x:Key="DirectoryStyle" TargetType="{x:Type TreeViewItem}">
-            <Setter Property="IsExpanded" Value="True"/>
+            <Setter Property="IsExpanded" Value="{Binding Path=IsExpanded, Mode=TwoWay}"/>
+            <Setter Property="ContextMenu" Value="{StaticResource sortOutputTreeViewContextMenu}" />
         </Style>
     </Window.Resources>
     <DockPanel>
