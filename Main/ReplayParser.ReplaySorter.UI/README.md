@@ -46,7 +46,7 @@ A crown icon indicates the winning players. An eye icon indicates observers. You
 
 You can filter this list of replays by typing filter expressions in the search bar. Aside from using this search function to find a specific replay, you can also use the filtered output as input for the sorting and renaming actions, but more on that later.
 
-As you can see, many maps don't have an actual image yet but instead a placeholder. If you want to, you can download images and add them to the `images/maps` folder. [In the future, this won't be necessary any more since I will use the data present inside the replay files and Brood War's MPQ file.](#towards-the-future) Name the file exactly like the map but use `_` instead of spaces and remove any special characters such as `'`. Check the [map section](#map-file-names) for a list of the expected file names of all maps.
+As you can see, many maps don't have an actual image yet but instead a placeholder. If you want to, you can download images and add them to the `images/maps` folder. [In the future, this won't be necessary any more since I will use the data present inside the replay files and Brood War's MPQ file.](#towards-the-future) Name the file exactly like the map but use `_` instead of spaces and remove any special characters such as `'`. Check the [map section](#map-filenames) for a list of the expected file names of all maps.
 
 #### Filter syntax
 To use a filter you specify its code followed by a colon. You combine individual filters by separating them with a comma. To reset all filters and get back the original full list of replays, just use an empty filter and press enter.
@@ -146,6 +146,26 @@ The following criteria are currently supported:
 Finally it is possible to combine multiple sort criteria. For example `map playername` will sort your replays first on the map the game was played on, and then create additional folders per player name within the map folder.
 
 ![Preview of sort on map and duration without applying a renaming.](./images/help/sort-tab-preview.png)
+
+Since it can be quite unwieldy to navigate the sort result, you can right click on a node and perform a set of actions to help you, you can do the one of the following:
++ `Expand all`: Expand all the nodes in the tree.
++ `Collapse all`: Collapse all nodes in the tree.
++ `Expand level`: Reveals all nodes of a single level in the tree.
++ `Collapse level`: Collapses all nodes belonging to a single level in the tree.
++ `Collapse level recursively`: Collapses all nodes below a single level in the tree.
++ `Expand node`: Expands a single node recursively.
++ `Collapse node`: Collapses a single node recursively.
++ `Find node by name`: Search nodes matching a specific regex based on the name that's visible in the tree.
+
+Find node by the [full name](#towards-the-future) (name of current node and all the parent nodes combined) is currently not possible because of technical reasons, but it shouldn't be too hard to rectify in future version.
+
+![Searching for nodes in the sort output tree.](./images/help/sort-tab-search-tree.png)
+
+Search for the nodes matching `fighting spirit`.
+
+![You can easily navigate the search results using the arrows at the top right side of the tree view.](./images/help/sort-tab-search-tree-result.png)
+
+The number of hits is shown in the status bar. You can use the arrows at the top right side of the tree view to easily jump to respectively the first, previous, next, and last search result.
 
 ### Renaming replays
 You can now rename replays after parsing, either into an output directory or in place. You can either rename all replays, or only those that matched the latest used filter by ticking the `Select as input` checkbox on the search tab. If you want to experiment with the syntax without actually renaming your replays, make sure to tick off the `Preview` checkbox. After renaming, the transformation from the old to new filename will be shown in the output view. You can toggle between filenames only (hamburger icon) and the entire filepath (directory tree icon) by clicking on the button next to the 2 arrows. As you might have guessed, these 2 arrows are buttons for undoing and redoing a rename. The number of actions you can undo or redo can be configured in the advanced settings but by default is 10. If you are executing renames on many replays, be aware that this has the potential to quickly increase memory usage of BWSort. 
@@ -282,8 +302,24 @@ Due to the possible presence of some bugs and it being hard to verify edge case 
 7. Support for 1.16 replays
 8. Allow backups of multiple directories at the same time.
 9. General bug fixing.
-
-In the very far future, there might be a complete rewrite from scratch with a much better designed codebase. To understand why this is necessary look at the [project history section](#project-history). 
+10. Other possible changes:
+    + Support searching on full names in the sort output view.
+    + Support searching on replay content in the sort, and rename output view.
+    + Add option to "pop-out" the sort output and rename output views.
+    + Allow "merging" of sort outputs into the same folder. Currently it will always write to new directories.
+    + Add option to allow the "unique number" generation to happen at the end of sorting, so all replays in the same folder have sequential numbering.
+    + Add help tooltips
+    + Add a rename symbol box similar to scelight or sc2gears so users can select a renaming syntax item by using their mouse.
+    + Improve the options menu.
+    + Add filtering and sorting for observers.
+    + Add a dark theme.
+    + Improve the application's visual style and layout.
+    + Add configuration settings inside search view tab to be able to disable crown icon,...
+    + Add additional useful context actions everywhere in the application, such as the `Launch in starcraft` action.
+    + Improve UI for working with ignore files.
+    + Add global undo/redo buttons with information on what will be "redone/undone".
+    + Add option to pin replays in search tab so they always stay at the top.
+    + Add option to remove replays from the search tab (temporarily) to make it easier to craft a set of replays to rename or sort.
 
 ## History
 ### Project history
@@ -338,7 +374,7 @@ Many thanks to SimplySerenity for porting the replay parser to C#. You can find 
 ## Attributions
 + <div>Crown icon made by <a href="https://www.flaticon.com/authors/pixel-perfect" title="Pixel perfect">Pixel perfect</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a> is licensed by <a href="http://creativecommons.org/licenses/by/3.0/" title="Creative Commons BY 3.0" target="_blank">CC 3.0 BY</a>.</div>
 
-## Map File Names
+## Map filenames
 + `815.jpg`
 + `acheron.jpg`
 + `alchemist.jpg`
