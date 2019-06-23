@@ -2364,9 +2364,10 @@ namespace ReplayParser.ReplaySorter.UI
         }
 
         private bool _shouldScrollIntoView = false;
-        private IEnumerable<DirectoryFileTreeNode> _foundNodes;
-        private int _currentFoundNode = 0;
-
+        private LinkedList<DirectoryFileTreeNode> _foundNodes;
+        private LinkedListNode<DirectoryFileTreeNode> _currentFoundNode;
+        private int _currentFoundNodeIndex;
+        
         private void GoToNodeMenuItem_Click(object sender, RoutedEventArgs e)
         {
             var currentNode = (sender as MenuItem)?.DataContext as DirectoryFileTreeNode;
@@ -2390,41 +2391,69 @@ namespace ReplayParser.ReplaySorter.UI
             else
                 return;
 
-            _foundNodes = FindNodes(currentNode, searchRegex);
-            var numberOfNodes = _foundNodes.Count();
+            _foundNodes = new LinkedList<DirectoryFileTreeNode>(FindNodes(currentNode, searchRegex));
             if (_foundNodes.Any())
             {
-                statusBarAction.Content = $"Found {numberOfNodes} hits.";
-                GetSearchHit(0);
-
-                //todo enable next and back arrows
-                if (numberOfNodes > 1)
-                {
-
-                }
+                var numberOfNodes = _foundNodes.Count;
+                statusBarAction.Content = $"Found {numberOfNodes} hits. {1}/{numberOfNodes}";
+                GetSearchHit(true);
             }
             else
                 statusBarAction.Content = "Failed to find any node matching your search string.";
         }
 
-        private void GetSearchHit(int index)
+        private void GetSearchHit(bool next)
         {
-            if (index < 0)
-                return;
+            if (_foundNodes == null)
+                throw new InvalidOperationException("No search results available.");
 
-            var numberOfNodes = _foundNodes.Count();
+            var numberOfNodes = _foundNodes.Count;
 
-            if (index > numberOfNodes - 1)
-                return;
+            if (numberOfNodes == 0)
+                throw new InvalidOperationException("No search results available.");
+
+            if (_currentFoundNode == null)
+            {
+                _currentFoundNode = _foundNodes.First;
+                _currentFoundNodeIndex = 1;
+            }
+            else
+            {
+                if (next)
+                {
+                    if (_currentFoundNode.Next == null)
+                        throw new InvalidOperationException("No next result available.");
+
+                    _currentFoundNode = _currentFoundNode.Next;
+                    _currentFoundNodeIndex++;
+                }
+                else
+                {
+                    if (_currentFoundNode.Previous == null)
+                        throw new InvalidOperationException("No previous result available.");
+
+                    _currentFoundNode = _currentFoundNode.Previous;
+                    _currentFoundNodeIndex--;
+                }
+            }
+
+            if (_currentFoundNode.Next == null)
+                nextFoundResultButton.IsEnabled = false;
+            else
+                nextFoundResultButton.IsEnabled = true;
+
+            if (_currentFoundNode.Previous == null)
+                previousFoundResultButton.IsEnabled = false;
+            else
+                previousFoundResultButton.IsEnabled = true;
 
             var rootNode = sortOutputTreeView.Items.Cast<DirectoryFileTreeNode>().FirstOrDefault();
             if (rootNode == null)
                 return;
 
-            var searchedNode = _foundNodes.ElementAt(index);
-            if (sortOutputTreeView.ItemContainerGenerator.ContainerFromItem(searchedNode) == null)
+            if (sortOutputTreeView.ItemContainerGenerator.ContainerFromItem(_currentFoundNode.Value) == null)
             {
-                var nodesToSearchedNode = FindNodePath(rootNode, searchedNode);
+                var nodesToSearchedNode = FindNodePath(rootNode, _currentFoundNode.Value);
                 foreach (var node in nodesToSearchedNode)
                 {
                     node.IsExpanded = true;
@@ -2432,18 +2461,19 @@ namespace ReplayParser.ReplaySorter.UI
             }
 
             _shouldScrollIntoView = true;
-            searchedNode.IsSelected = true;
+            _currentFoundNode.Value.IsSelected = true;
             _shouldScrollIntoView = false;
+            statusBarAction.Content = $"{_currentFoundNodeIndex}/{numberOfNodes} hits.";
         }
 
         private void NextFoundResultButton_Click(object sender, RoutedEventArgs e)
         {
-
+            GetSearchHit(true);
         }
 
         private void PreviousFoundResultButton_Click(object sender, RoutedEventArgs e)
         {
-
+            GetSearchHit(false);
         }
 
         private IEnumerable<DirectoryFileTreeNode> FindNodes(DirectoryFileTreeNode rootNode, Regex searchRegex)
@@ -2510,12 +2540,12 @@ namespace ReplayParser.ReplaySorter.UI
 
         private void TreeViewItem_Selected(object sender, RoutedEventArgs e)
         {
-            if (_shouldScrollIntoView)
-            {
-                var item = sender as TreeViewItem;
-                if (item == null)
-                    return;
+            var item = sender as TreeViewItem;
+            if (item == null)
+                return;
 
+            if (_shouldScrollIntoView && item.DataContext as DirectoryFileTreeNode == _currentFoundNode.Value)
+            {
                 item.BringIntoView();
             }
         }

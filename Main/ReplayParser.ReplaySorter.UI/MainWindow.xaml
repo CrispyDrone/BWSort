@@ -246,15 +246,15 @@
                     <CheckBox Grid.Row="4" Grid.Column="0" x:Name="sortInPlaceCheckBox" Content="Sort in place" IsEnabled="False" IsChecked="False"></CheckBox>
                     <CheckBox Grid.Row="5" Grid.Column="0" x:Name="sortIsPreview" Content="Preview" IsChecked="False"></CheckBox>
                     <DockPanel Grid.Row="5" Grid.Column="2" LastChildFill="False" HorizontalAlignment="Right">
-                        <Button x:Name="nextFoundResultButton" Click="NextFoundResultButton_Click" MinWidth="30">
-                            <Path Stroke="Black" Data="m 10 20 a 10,10 0 1 0 -10,-10 m 0 0 l -5 0 l 5 5 l 5 -5 Z" RenderTransformOrigin="0.5 0.5" >
+                        <Button x:Name="previousFoundResultButton" Click="PreviousFoundResultButton_Click" MinWidth="30" IsEnabled="false">
+                            <Path Stroke="Black" Data="m 20 5 l -15, 0 l 0, 5 l -5, -5 l 5 -5 l 0 5" RenderTransformOrigin="0.5 0.5" >
                                 <Path.RenderTransform>
                                     <ScaleTransform ScaleX="0.75" ScaleY="0.75"/>
                                 </Path.RenderTransform>
                             </Path>
                         </Button>
-                        <Button x:Name="previousFoundResultButton" Click="PreviousFoundResultButton_Click" MinWidth="30">
-                            <Path Stroke="Black" Data="m 10 20 a 10,10 0 1 0 -10,-10 m 0 0 l -5 0 l 5 5 l 5 -5 Z" RenderTransformOrigin="0.5 0.5" >
+                        <Button x:Name="nextFoundResultButton" Click="NextFoundResultButton_Click" MinWidth="30" IsEnabled="false">
+                            <Path Stroke="Black" Data="m 0 5 l 15, 0 l 0 -5 l 5 5 l -5 5 l 0 -5" RenderTransformOrigin="0.5 0.5" >
                                 <Path.RenderTransform>
                                     <ScaleTransform ScaleX="0.75" ScaleY="0.75"/>
                                 </Path.RenderTransform>
