@@ -153,11 +153,6 @@ namespace ReplayParser.ReplaySorter.Renaming
             }
 
             var match = _escapeCharacter.Match(toCheck);
-            if (!match.Success)
-            {
-                customReplayFormat = null;
-                return false;
-            }
 
             var customFormatStringBuilder = new StringBuilder();
             List<Tuple<CustomReplayNameSyntax, string>> customReplayFormatSections = new List<Tuple<CustomReplayNameSyntax, string>>();
