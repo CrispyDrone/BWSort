@@ -192,8 +192,8 @@
                         <RowDefinition Height="Auto"></RowDefinition>
                     </Grid.RowDefinitions>
                     <Label Grid.Row="0" Grid.Column="0" Content="Sort replays into:" VerticalAlignment="Center"/>
-                    <TextBox Grid.Row="0" Grid.Column="1" x:Name="sortOutputDirectoryTextBox" Margin="0 10"></TextBox>
-                    <Button  Grid.Row="0" Grid.Column="2" x:Name="sortOutputDirectoryButton" Content="Set directory" Click="sortOutputDirectoryButton_Click" Margin="10 10 0 10"></Button>
+                    <TextBox Grid.Row="0" Grid.Column="1" x:Name="sortOutputDirectoryTextBox" Margin="10"></TextBox>
+                    <Button  Grid.Row="0" Grid.Column="2" x:Name="sortOutputDirectoryButton" Content="Set directory" Click="sortOutputDirectoryButton_Click" Margin="0 10"></Button>
                     <Label Grid.Row="1" Grid.Column="0" Content="Sort criteria:" VerticalAlignment="Top" Margin="3"/>
                     <ListBox Grid.Row="1" Grid.Column="1" x:Name="sortCriteriaListBox" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" SelectionMode="Multiple" SelectionChanged="SortCriteriaListBox_SelectionChanged">
                         <ListBox.ItemsPanel>
@@ -246,15 +246,29 @@
                     <CheckBox Grid.Row="4" Grid.Column="0" x:Name="sortInPlaceCheckBox" Content="Sort in place" IsEnabled="False" IsChecked="False"></CheckBox>
                     <CheckBox Grid.Row="5" Grid.Column="0" x:Name="sortIsPreview" Content="Preview" IsChecked="False"></CheckBox>
                     <DockPanel Grid.Row="5" Grid.Column="2" LastChildFill="False" HorizontalAlignment="Right">
+                        <Button x:Name="firstFoundResultButton" Click="FirstFoundResultButton_Click"  MinWidth="30" IsEnabled="false">
+                            <Path Stroke="Black" Data="m 5 5 m 0 -5 l -5 5 l 5 5 m 0 -5 l 5 -5 m 0 10 l -5 -5" RenderTransformOrigin="0.5 0.5" >
+                                <Path.RenderTransform>
+                                    <ScaleTransform ScaleX="0.75" ScaleY="0.75"/>
+                                </Path.RenderTransform>
+                            </Path>
+                        </Button>
                         <Button x:Name="previousFoundResultButton" Click="PreviousFoundResultButton_Click" MinWidth="30" IsEnabled="false">
-                            <Path Stroke="Black" Data="m 20 5 l -15, 0 l 0, 5 l -5, -5 l 5 -5 l 0 5" RenderTransformOrigin="0.5 0.5" >
+                            <Path Stroke="Black" Data="m 5 5 m 0 -5 l -5 5 l 5 5" RenderTransformOrigin="0.5 0.5" >
                                 <Path.RenderTransform>
                                     <ScaleTransform ScaleX="0.75" ScaleY="0.75"/>
                                 </Path.RenderTransform>
                             </Path>
                         </Button>
                         <Button x:Name="nextFoundResultButton" Click="NextFoundResultButton_Click" MinWidth="30" IsEnabled="false">
-                            <Path Stroke="Black" Data="m 0 5 l 15, 0 l 0 -5 l 5 5 l -5 5 l 0 -5" RenderTransformOrigin="0.5 0.5" >
+                            <Path Stroke="Black" Data="m 0 15 m 0 -5 l 5 -5 l -5 -5" RenderTransformOrigin="0.5 0.5" >
+                                <Path.RenderTransform>
+                                    <ScaleTransform ScaleX="0.75" ScaleY="0.75"/>
+                                </Path.RenderTransform>
+                            </Path>
+                        </Button>
+                        <Button x:Name="lastFoundResultButton" Click="LastFoundResultButton_Click" MinWidth="30" IsEnabled="false">
+                            <Path Stroke="Black" Data="m 5 15 m 0 -5 l 5 -5 l -5 -5 m -5 0 l 5 5 l -5 5" RenderTransformOrigin="0.5 0.5" >
                                 <Path.RenderTransform>
                                     <ScaleTransform ScaleX="0.75" ScaleY="0.75"/>
                                 </Path.RenderTransform>

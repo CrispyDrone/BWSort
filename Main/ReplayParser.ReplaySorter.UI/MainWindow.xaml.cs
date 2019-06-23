@@ -2384,6 +2384,7 @@ namespace ReplayParser.ReplaySorter.UI
                 }
                 catch (Exception ex)
                 {
+                    MessageBox.Show("Invalid regex pattern.", "Error parsing regex.", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
                     ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - Failed to create regex for pattern {dialogWindow.Answer}", ex: ex);
                     return;
                 }
@@ -2392,6 +2393,9 @@ namespace ReplayParser.ReplaySorter.UI
                 return;
 
             _foundNodes = new LinkedList<DirectoryFileTreeNode>(FindNodes(currentNode, searchRegex));
+            _currentFoundNodeIndex = 0;
+            _currentFoundNode = null;
+
             if (_foundNodes.Any())
             {
                 var numberOfNodes = _foundNodes.Count;
@@ -2437,15 +2441,11 @@ namespace ReplayParser.ReplaySorter.UI
                 }
             }
 
-            if (_currentFoundNode.Next == null)
-                nextFoundResultButton.IsEnabled = false;
-            else
-                nextFoundResultButton.IsEnabled = true;
+            nextFoundResultButton.IsEnabled = _currentFoundNode.Next != null;
+            lastFoundResultButton.IsEnabled = _currentFoundNode.Next != null;
 
-            if (_currentFoundNode.Previous == null)
-                previousFoundResultButton.IsEnabled = false;
-            else
-                previousFoundResultButton.IsEnabled = true;
+            previousFoundResultButton.IsEnabled = _currentFoundNode.Previous != null;
+            firstFoundResultButton.IsEnabled = _currentFoundNode.Previous != null;
 
             var rootNode = sortOutputTreeView.Items.Cast<DirectoryFileTreeNode>().FirstOrDefault();
             if (rootNode == null)
@@ -2474,6 +2474,19 @@ namespace ReplayParser.ReplaySorter.UI
         private void PreviousFoundResultButton_Click(object sender, RoutedEventArgs e)
         {
             GetSearchHit(false);
+        }
+
+        private void FirstFoundResultButton_Click(object sender, RoutedEventArgs e)
+        {
+            _currentFoundNode = null;
+            GetSearchHit(true);
+        }
+
+        private void LastFoundResultButton_Click(object sender, RoutedEventArgs e)
+        {
+            _currentFoundNode = _foundNodes.Last.Previous;
+            _currentFoundNodeIndex = _foundNodes.Count - 1;
+            GetSearchHit(true);
         }
 
         private IEnumerable<DirectoryFileTreeNode> FindNodes(DirectoryFileTreeNode rootNode, Regex searchRegex)
@@ -2632,7 +2645,6 @@ namespace ReplayParser.ReplaySorter.UI
         }
 
         #endregion
-
     }
 }
 
