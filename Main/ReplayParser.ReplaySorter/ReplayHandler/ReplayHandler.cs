@@ -211,19 +211,21 @@ namespace ReplayParser.ReplaySorter
             }
         }
 
-        private static readonly string _stringFormatArgument = @"\{0\}";
-        private static Regex StringFormatArgument = new Regex(_stringFormatArgument);
+        private static readonly string _invalidStringFormatArgument = @"\{[1-9]+\}";
+        private static Regex _invalidSringFormatArgumentRegex = new Regex(_invalidStringFormatArgument);
 
         public static void LogBadReplays(List<string> ReplaysThrowingExceptions, string directory, string formatExpression = "{0}", string header = "", string footer = "")
         {
-            if (!StringFormatArgument.IsMatch(formatExpression))
+            if (_invalidSringFormatArgumentRegex.IsMatch(formatExpression))
+            {
+                ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - Invalid formatExpression {formatExpression}. Failed to log bad replays.");
                 return;
+            }
 
-            //var BadReplays = @"C:\testreplays\BadReplays";
             if (!Directory.Exists(directory))
                 Directory.CreateDirectory(directory);
 
-            using (var streamwriter = new StreamWriter(File.OpenWrite(directory + @"\BadReplays.txt")))
+            using (var streamwriter = File.AppendText(directory + @"\BadReplays.txt"))
             {
                 if (!string.IsNullOrWhiteSpace(header))
                     streamwriter.WriteLine(header);

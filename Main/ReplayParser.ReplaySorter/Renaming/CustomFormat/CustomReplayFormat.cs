@@ -227,7 +227,7 @@ namespace ReplayParser.ReplaySorter.Renaming
 
         public override string ToString()
         {
-            return CustomFormat;
+            return string.Join(string.Empty, CustomFormatSections.Select(f => f.Item2));
         }
 
         public override bool Equals(object obj)
