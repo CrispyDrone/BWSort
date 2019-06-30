@@ -349,6 +349,16 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                     }
                 }
             }
+            if (IsNested == false)
+            {
+                progressPercentage = Convert.ToInt32(1.0 / numberOfCriteria * 100);
+            }
+            else
+            {
+                progressPercentage = Convert.ToInt32((1.0 / numberOfPositions * 100 + ((currentPositionNested - 1) * 100 / numberOfPositions)) * ((double)1 / numberOfCriteria));
+                progressPercentage += (currentCriteria - 1) * 100 / numberOfCriteria;
+            }
+            worker_ReplaySorter.ReportProgress(progressPercentage);
             return DirectoryFileReplay;
         }
 
@@ -424,6 +434,7 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
             int currentPosition = 0;
             int progressPercentage = 0;
 
+            //TODO if there are no matchups to sort... this will screw with the progress reporting...
             foreach (var matchup in ReplayMatchUp.Keys)
             {
                 var MatchUpName = MatchUpToString(matchup);
@@ -472,6 +483,18 @@ namespace ReplayParser.ReplaySorter.Sorting.SortCommands
                     }
                 }
             }
+
+            //... This is necessary in case you skip replays because of non-matching matchups
+            if (IsNested == false)
+            {
+                progressPercentage = Convert.ToInt32(1.0 / numberOfCriteria * 100);
+            }
+            else
+            {
+                progressPercentage = Convert.ToInt32((1.0 / numberOfPositions * 100 + ((currentPositionNested - 1) * 100 / numberOfPositions)) * ((double)1 / numberOfCriteria));
+                progressPercentage += (currentCriteria - 1) * 100 / numberOfCriteria;
+            }
+            worker_ReplaySorter.ReportProgress(progressPercentage);
             return DirectoryFileReplay;
         }
 

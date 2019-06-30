@@ -211,17 +211,8 @@ namespace ReplayParser.ReplaySorter
             }
         }
 
-        private static readonly string _invalidStringFormatArgument = @"\{[1-9]+\}";
-        private static Regex _invalidSringFormatArgumentRegex = new Regex(_invalidStringFormatArgument);
-
         public static void LogBadReplays(List<string> ReplaysThrowingExceptions, string directory, string formatExpression = "{0}", string header = "", string footer = "")
         {
-            if (_invalidSringFormatArgumentRegex.IsMatch(formatExpression))
-            {
-                ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - Invalid formatExpression {formatExpression}. Failed to log bad replays.");
-                return;
-            }
-
             if (!Directory.Exists(directory))
                 Directory.CreateDirectory(directory);
 
@@ -245,7 +236,6 @@ namespace ReplayParser.ReplaySorter
                 if (!string.IsNullOrWhiteSpace(footer))
                     streamwriter.WriteLine(footer);
             }
-
         }
 
         /// <summary>

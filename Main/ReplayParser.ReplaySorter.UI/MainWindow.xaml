@@ -275,7 +275,16 @@
                             </Path>
                         </Button>
                     </DockPanel>
-                    <TreeView Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="4" x:Name="sortOutputTreeView" ItemTemplateSelector="{StaticResource TreeViewDataTemplateSelector}" ItemContainerStyle="{StaticResource DirectoryStyle}" Margin="0 10 0 0">
+                    <TreeView 
+                        Grid.Row="6" 
+                        Grid.Column="0" 
+                        Grid.ColumnSpan="4" 
+                        x:Name="sortOutputTreeView" 
+                        ItemTemplateSelector="{StaticResource TreeViewDataTemplateSelector}" 
+                        ItemContainerStyle="{StaticResource DirectoryStyle}"  
+                        VirtualizingPanel.IsVirtualizing="True"
+                        VirtualizingPanel.VirtualizationMode="Recycling"
+                        Margin="0 10 0 0">
                     </TreeView>
                     <DockPanel Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="4">
                         <Button DockPanel.Dock="Right" x:Name="cancelSortButton" Content="Cancel" Click="cancelSortButton_Click" MinWidth="70" Margin="10 10 0 10"></Button>

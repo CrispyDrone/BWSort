@@ -286,6 +286,7 @@ Due to the possible presence of some bugs and it being hard to verify edge case 
    + build order identification
    + the action list. [See the towards the future section.](#towards-the-future)
 2. Using the `Use as input` functionality will result in a wrong reporting of the number of replays sorted or renamed.
+3. When navigating the sort output with the arrow keys. The up arrow key will get stuck on random nodes after using any of the context menu actions. I think this is a framework bug, which I can circumvent by writing my own event handlers for the up arrow key. But this would require some refactoring that I haven't gotten around to.
 
 ## Towards the future
 1. Add additional filters for the search tab based on units, and user defined build orders.

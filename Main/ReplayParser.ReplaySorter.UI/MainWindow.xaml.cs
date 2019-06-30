@@ -2645,6 +2645,7 @@ namespace ReplayParser.ReplaySorter.UI
         }
 
         #endregion
+
     }
 }
 
