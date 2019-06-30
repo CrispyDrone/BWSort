@@ -37,6 +37,12 @@ namespace ReplayParser.ReplaySorter
                 SortOnX.Sorter.CurrentDirectory = directory;
                 SortOnX.Sorter.ListReplays = FileReplays;
                 var result = SortOnX.Sort(replaysThrowingExceptions);
+                var replaysSorted = result.SelectMany(dir => dir.Value);
+
+                if (replaysSorted.Count() != FileReplays.Count())
+                {
+                    result.Add(directory, FileReplays.Except(replaysSorted).ToList());
+                }
                 DirectoryFileReplay = DirectoryFileReplay.Concat(result).ToDictionary(k => k.Key, k => k.Value);
             }
             return DirectoryFileReplay;
@@ -64,6 +70,13 @@ namespace ReplayParser.ReplaySorter
                 SortOnX.Sorter.CurrentDirectory = directory;
                 SortOnX.Sorter.ListReplays = FileReplays;
                 var result = SortOnX.SortAsync(replaysThrowingExceptions, worker_ReplaySorter, currentCriteria, numberOfCriteria, currentPostion, numberOfPositions);
+                var replaysSorted = result.SelectMany(dir => dir.Value);
+
+                if (replaysSorted.Count() != FileReplays.Count())
+                {
+                    result.Add(directory, FileReplays.Except(replaysSorted).ToList());
+                }
+
                 if (worker_ReplaySorter.CancellationPending == true)
                 {
                     return null;
@@ -88,6 +101,13 @@ namespace ReplayParser.ReplaySorter
                 SortOnX.Sorter.CurrentDirectory = directory;
                 SortOnX.Sorter.ListReplays = FileReplays;
                 var result = SortOnX.PreviewSort(replaysThrowingExceptions, worker_ReplaySorter, currentCriteria, numberOfCriteria, currentPostion, numberOfPositions);
+                var replaysSorted = result.SelectMany(dir => dir.Value);
+
+                if (replaysSorted.Count() != FileReplays.Count())
+                {
+                    result.Add(directory, FileReplays.Except(replaysSorted).ToList());
+                }
+
                 if (worker_ReplaySorter.CancellationPending == true)
                 {
                     return null;
@@ -244,7 +264,7 @@ namespace ReplayParser.ReplaySorter
             for (int i = 0; i < CriteriaStringOrder.Length; i++)
             {
                 // should I pass a new sorter instead of this?? Then I don't have to make separate property OriginalDirectory
-                var SortOnX = Factory.GetSortCommand((Criteria)Enum.Parse(typeof(Criteria), CriteriaStringOrder[i]), sortcriteriaparameters, keeporiginalreplaynames, this);
+                var SortOnX = Factory.GetSortCommand((Criteria)Enum.Parse(typeof(Criteria), CriteriaStringOrder[i]), sortcriteriaparameters, i == CriteriaStringOrder.Length - 1 ? keeporiginalreplaynames : true, this);
                 if (i == 0)
                 {
                     SortOnXResult = SortOnX.Sort(replaysThrowingExceptions);
@@ -270,7 +290,7 @@ namespace ReplayParser.ReplaySorter
             for (int i = 0; i < CriteriaStringOrder.Length; i++)
             {
                 // should I pass a new sorter instead of this?? Then I don't have to make separate property OriginalDirectory
-                var SortOnX = Factory.GetSortCommand((Criteria)Enum.Parse(typeof(Criteria), CriteriaStringOrder[i]), SortCriteriaParameters, keeporiginalreplaynames, this);
+                var SortOnX = Factory.GetSortCommand((Criteria)Enum.Parse(typeof(Criteria), CriteriaStringOrder[i]), SortCriteriaParameters, i == CriteriaStringOrder.Length - 1 ? keeporiginalreplaynames : true, this);
                 if (i == 0)
                 {
                     SortOnXResult = SortOnX.SortAsync(replaysThrowingExceptions, worker_ReplaySorter, i + 1, CriteriaStringOrder.Count());
@@ -291,6 +311,8 @@ namespace ReplayParser.ReplaySorter
                 }
 
             }
+            // lazy...
+            worker_ReplaySorter.ReportProgress(100, "Building tree...");
             var tree = BuildTree(SortOnXResult);
             ReplayHandler.RestoreToSavedStateAndClearFuture(OriginalListReplays);
             return tree;
@@ -303,7 +325,7 @@ namespace ReplayParser.ReplaySorter
             IDictionary<string, List<File<IReplay>>> SortOnXResult = new Dictionary<string, List<File<IReplay>>>();
             for (int i = 0; i < CriteriaStringOrder.Length; i++)
             {
-                var SortOnX = Factory.GetSortCommand((Criteria)Enum.Parse(typeof(Criteria), CriteriaStringOrder[i]), SortCriteriaParameters, keepOriginalReplayNames, this);
+                var SortOnX = Factory.GetSortCommand((Criteria)Enum.Parse(typeof(Criteria), CriteriaStringOrder[i]), SortCriteriaParameters, i == CriteriaStringOrder.Length - 1 ? keepOriginalReplayNames : true, this);
                 if (i == 0)
                 {
                     SortOnXResult = SortOnX.PreviewSort(replaysThrowingExceptions, worker_ReplaySorter, i + 1, CriteriaStringOrder.Count());
@@ -323,6 +345,8 @@ namespace ReplayParser.ReplaySorter
                 }
 
             }
+            // lazy...
+            worker_ReplaySorter.ReportProgress(100, "Building tree...");
             var tree = BuildTree(SortOnXResult);
             ReplayHandler.RestoreToSavedStateAndClearFuture(OriginalListReplays);
             return tree;
