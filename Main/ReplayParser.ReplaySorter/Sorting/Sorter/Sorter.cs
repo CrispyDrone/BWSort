@@ -264,7 +264,7 @@ namespace ReplayParser.ReplaySorter
             for (int i = 0; i < CriteriaStringOrder.Length; i++)
             {
                 // should I pass a new sorter instead of this?? Then I don't have to make separate property OriginalDirectory
-                var SortOnX = Factory.GetSortCommand((Criteria)Enum.Parse(typeof(Criteria), CriteriaStringOrder[i]), sortcriteriaparameters, i == CriteriaStringOrder.Length - 1 ? keeporiginalreplaynames : true, this);
+                var SortOnX = Factory.GetSortCommand((Criteria)Enum.Parse(typeof(Criteria), CriteriaStringOrder[i]), sortcriteriaparameters, i == 0 ? keeporiginalreplaynames : true, this);
                 if (i == 0)
                 {
                     SortOnXResult = SortOnX.Sort(replaysThrowingExceptions);
@@ -290,7 +290,7 @@ namespace ReplayParser.ReplaySorter
             for (int i = 0; i < CriteriaStringOrder.Length; i++)
             {
                 // should I pass a new sorter instead of this?? Then I don't have to make separate property OriginalDirectory
-                var SortOnX = Factory.GetSortCommand((Criteria)Enum.Parse(typeof(Criteria), CriteriaStringOrder[i]), SortCriteriaParameters, i == CriteriaStringOrder.Length - 1 ? keeporiginalreplaynames : true, this);
+                var SortOnX = Factory.GetSortCommand((Criteria)Enum.Parse(typeof(Criteria), CriteriaStringOrder[i]), SortCriteriaParameters, i == 0 ? keeporiginalreplaynames : true, this);
                 if (i == 0)
                 {
                     SortOnXResult = SortOnX.SortAsync(replaysThrowingExceptions, worker_ReplaySorter, i + 1, CriteriaStringOrder.Count());
@@ -325,7 +325,7 @@ namespace ReplayParser.ReplaySorter
             IDictionary<string, List<File<IReplay>>> SortOnXResult = new Dictionary<string, List<File<IReplay>>>();
             for (int i = 0; i < CriteriaStringOrder.Length; i++)
             {
-                var SortOnX = Factory.GetSortCommand((Criteria)Enum.Parse(typeof(Criteria), CriteriaStringOrder[i]), SortCriteriaParameters, i == CriteriaStringOrder.Length - 1 ? keepOriginalReplayNames : true, this);
+                var SortOnX = Factory.GetSortCommand((Criteria)Enum.Parse(typeof(Criteria), CriteriaStringOrder[i]), SortCriteriaParameters, i == 0 ? keepOriginalReplayNames : true, this);
                 if (i == 0)
                 {
                     SortOnXResult = SortOnX.PreviewSort(replaysThrowingExceptions, worker_ReplaySorter, i + 1, CriteriaStringOrder.Count());

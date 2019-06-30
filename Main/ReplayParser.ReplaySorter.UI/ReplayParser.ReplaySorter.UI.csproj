@@ -31,7 +31,7 @@
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
-    <PublishUrl>C:\Users\Eigenaar\Desktop\Computer Science\Projects\Published\v1.0\</PublishUrl>
+    <PublishUrl>C:\Users\Eigenaar\Desktop\Computer Science\Projects\Published\BWSort\v1.0\Installer\Application\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
     <UpdateEnabled>false</UpdateEnabled>
@@ -45,7 +45,7 @@
     <ErrorReportUrl>https://github.com/CrispyDrone/BWSort/issues</ErrorReportUrl>
     <TargetCulture>en</TargetCulture>
     <ProductName>BWSort</ProductName>
-    <ApplicationRevision>4</ApplicationRevision>
+    <ApplicationRevision>6</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <CreateDesktopShortcut>true</CreateDesktopShortcut>
