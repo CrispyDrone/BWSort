@@ -96,18 +96,23 @@ namespace ReplayParser.ReplaySorter.IO
 
         public static string CreateDirectory(string sortDirectory, CreateDirectoryBehavior createDirectoryBehavior = CreateDirectoryBehavior.AdjustName)
         {
+            bool directoryExists = Directory.Exists(sortDirectory);
+
             switch (createDirectoryBehavior)
             {
                 case CreateDirectoryBehavior.Default:
                     break;
+
                 case CreateDirectoryBehavior.AdjustName:
-                    sortDirectory = AdjustName(sortDirectory, true);
+                    if (directoryExists) sortDirectory = AdjustName(sortDirectory, true);
                     break;
+
                 case CreateDirectoryBehavior.Throw:
-                    throw new InvalidOperationException($"Directory already exists and behavior {createDirectoryBehavior} was specified!");
+                    if (directoryExists) throw new InvalidOperationException($"Directory already exists and behavior {createDirectoryBehavior} was specified!");
+                    break;
 
                 default:
-                    throw new Exception();
+                    throw new ArgumentOutOfRangeException(nameof(createDirectoryBehavior));
             }
 
             Directory.CreateDirectory(sortDirectory);
