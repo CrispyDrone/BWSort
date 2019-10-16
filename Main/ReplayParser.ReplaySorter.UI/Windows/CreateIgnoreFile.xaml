@@ -25,7 +25,7 @@
         <Button x:Name="selectFileNamesButton" Grid.Row="2" Grid.Column="1" Margin="10" MinWidth="70" Click="SelectFileNamesButton_Click">Select filenames</Button>
         <StackPanel Grid.Row="4" Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Right">
             <Button x:Name="saveEditingIgnoreFileButton" Margin="10" MinWidth="70" Click="SaveEditingIgnoreFileButton_Click">Save</Button>
-            <Button x:Name="cancelEditingIgnoreFileButton" Margin="10" MinWidth="70" IsCancel="True">Cancel</Button>
+            <Button x:Name="cancelEditingIgnoreFileButton" Margin="10" MinWidth="70" IsCancel="True" Click="CancelEditingIgnoreFileButton_Click">Cancel</Button>
         </StackPanel>
     </Grid>
 </Window>

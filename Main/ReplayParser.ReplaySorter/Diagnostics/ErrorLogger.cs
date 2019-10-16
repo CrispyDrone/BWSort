@@ -8,10 +8,11 @@ using ReplayParser.ReplaySorter.Configuration;
 
 namespace ReplayParser.ReplaySorter.Diagnostics
 {
+    // not threadsafe
     public class ErrorLogger
     {
         private static ErrorLogger _errorLogger;
-        private string _logPath;
+        private static string _logPath;
 
         private static ErrorLogger Create(string logDirectory)
         {
@@ -36,6 +37,14 @@ namespace ReplayParser.ReplaySorter.Diagnostics
             }
 
             return _errorLogger;
+        }
+
+        public static void Reload(IReplaySorterConfiguration replaySorterConfiguration)
+        {
+            if (replaySorterConfiguration == null)
+                return;
+
+            _logPath = Path.Combine(replaySorterConfiguration.LogDirectory, "ErrorLogs.txt");
         }
 
         public void LogError(string message, string filepath = "", Exception ex = null)

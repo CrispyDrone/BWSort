@@ -1660,6 +1660,12 @@ namespace ReplayParser.ReplaySorter.UI
                 _lastExecutedFilter = e.Result as string;
                 statusBarAction.Content = $"{_filteredListReplays?.Count ?? 0} replays matched filter.";
             }
+            else
+            {
+                string errorMessage = $"Something went wrong while filtering replays: {e.Error?.Message}";
+                statusBarAction.Content = errorMessage;
+                ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} " + errorMessage, ex: e.Error);
+            }
         }
 
         private void ResetFiltering()

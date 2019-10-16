@@ -1,4 +1,4 @@
-# BWSort v1.0
+# BWSort v1.0.1
 ## What
 A GUI application to sort, rename, filter and backup replays from the popular RTS-game Starcraft Brood War. 
 
@@ -17,7 +17,7 @@ Currently there are 3 ways to get the program:
 2. Use the non-setup based .exe from the .RAR archive labelled as such
 3. Compile from source
 
-You can find the latest release here: <https://github.com/CrispyDrone/BWSort/releases/tag/v1.0>
+You can find the latest release here: <https://github.com/CrispyDrone/BWSort/releases/tag/v1.0.1>
 
 ## User guide
 After an optional installation, run the .exe file.
@@ -327,6 +327,14 @@ Due to the possible presence of some bugs and it being hard to verify edge case 
 At the end of 2017 I had just started to learn how to program and was still playing some Starcraft here and there. I was severely annoyed at the lack of support from Blizzard in regards to managing replays. I thought this could be the ideal way to gain some experience as a new developer and at the same time help out the Starcraft community. As it was my first real project ever, and many of the important design decisions were made during this period when I had absolutely no experience, the code base is very badly designed and a pain to work with.
 
 ### Change history
+#### v1.1
+Bug fixes!
++ Fixed filtering on player names, it was broken.
++ Cancel button in the create ignore file window didn't work.
++ Changing logging settings wouldn't take effect until after restarting the application.
++ Disabling logging and resetting ignore file location wouldn't work, it would remember the old value.
++ Allow whitespace when filtering on maps, and duration to deliver a better user experience.
+
 #### v1.0
 + Rewrote the renaming feature. It is now much more flexible and supports many more options.
 + Removed support to rename the last sort since it was too complex and made some aspects of the UI confusing.

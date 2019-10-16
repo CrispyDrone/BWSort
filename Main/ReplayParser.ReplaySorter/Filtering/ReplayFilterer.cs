@@ -614,8 +614,16 @@ namespace ReplayParser.ReplaySorter.Filtering
             var replayContent = Expression.PropertyOrField(replay, "Content");
             Expression replayPlayers = Expression.PropertyOrField(replayContent, "Players");
             Expression replayWinners = Expression.PropertyOrField(replayContent, "Winners");
-            MethodInfo any = GetExtensionMethod(typeof(Enumerable).Assembly, "Any", typeof(IEnumerable<>)).MakeGenericMethod(new Type[] { typeof(IPlayer) });
-            MethodInfo asQueryable = GetExtensionMethod(typeof(Enumerable).Assembly, "AsQueryable", typeof(IEnumerable<>)).MakeGenericMethod(new Type[] { typeof(IPlayer) });
+            MethodInfo any = GetExtensionMethods(typeof(Enumerable).Assembly, "Any", typeof(IEnumerable<>))
+                .Where(m => m.DeclaringType.Name.Contains("Enumerable") && m.GetParameters().Count() == 2)
+                .First()
+                .MakeGenericMethod(new Type[] { typeof(IPlayer) });
+
+            MethodInfo asQueryable = GetExtensionMethods(typeof(Enumerable).Assembly, "AsQueryable", typeof(IEnumerable<>))
+                .Where(m => m.IsGenericMethod)
+                .First()
+                .MakeGenericMethod(new Type[] { typeof(IPlayer) });
+
             MethodInfo isMatch = typeof(Regex).GetMethod("IsMatch", new Type[] { typeof(string) });
 
             foreach (var replayExpression in replayExpressions)
@@ -712,14 +720,13 @@ namespace ReplayParser.ReplaySorter.Filtering
             }
             return filterExpression?.Compile();
         }
-
-        private MethodInfo GetExtensionMethod(Assembly assembly, string methodName, Type type)
+        
+        private IEnumerable<MethodInfo> GetExtensionMethods(Assembly assembly, string methodName, Type type)
         {
             return assembly.GetTypes()
                 .Where(t => t.IsSealed && !t.IsGenericType && !type.IsNested)
                     .SelectMany(t => t.GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)
-                    .Where(m => m.Name == methodName))
-                .FirstOrDefault();
+                    .Where(m => m.Name == methodName));
         }
 
         private ReplayParser.Entities.RaceType? ToRaceType(RaceType raceType)
@@ -1025,10 +1032,10 @@ namespace ReplayParser.ReplaySorter.Filtering
         // number - timeunit [ - number - timeunit ]1-2
         // classical 05:10, 00:20:17
         private static readonly string _lessThanGreaterThanOperatorsPattern = "^(<(?!=)|<=|=|>(?!=)|>=)?";
-        private static readonly string _digitalMinutesSecondsPattern = "^(\\d{2}):(\\d{2})$";
-        private static readonly string _digitalHoursMinutesSecondsPattern = "^(\\d{2}):(\\d{2}):(\\d{2})$";
-        private static readonly string _writtenHoursMinutesSecondsPattern = "^(?:(\\d+)(?:h(?:rs|hours)?))?(?:(\\d+)(?:m(?:in(?:utes)?)?))?(?:(\\d+)(?:s(?:ec(?:onds)?)?))?";
-        private static readonly string _timeRangePattern = "^between\\s*(.*?)\\s+and\\s+(.*)$";
+        private static readonly string _digitalMinutesSecondsPattern = "^\\s*(\\d{2}):(\\d{2})\\s*$";
+        private static readonly string _digitalHoursMinutesSecondsPattern = "^\\s*(\\d{2}):(\\d{2}):(\\d{2})\\s*$";
+        private static readonly string _writtenHoursMinutesSecondsPattern = "^\\s*(?:(\\d+)\\s*(?:h(?:rs|hours)?))?\\s*(?:(\\d+)\\s*(?:m(?:in(?:utes)?)?))?\\s*(?:(\\d+)\\s*(?:s(?:ec(?:onds)?)?))?\\s*";
+        private static readonly string _timeRangePattern = "^\\s*between\\s*(.*?)\\s+and\\s+(.*)$";
         private static readonly Regex _lessThanGreaterThanOperatorsRegex = new Regex(_lessThanGreaterThanOperatorsPattern);
         private static readonly Regex _digitalMinutesSecondsRegex = new Regex(_digitalMinutesSecondsPattern);
         private static readonly Regex _digitalHoursMinutesSecondsRegex = new Regex(_digitalHoursMinutesSecondsPattern);
@@ -1141,6 +1148,10 @@ namespace ReplayParser.ReplaySorter.Filtering
 
             //TODO extract common logic
             timeValue = RemoveComparisonOperator(timeValue);
+
+            if (timeValue == null)
+                return null;
+
             Match match = null;
 
             if (_digitalHoursMinutesSecondsRegex.IsMatch(timeValue))
@@ -1179,7 +1190,12 @@ namespace ReplayParser.ReplaySorter.Filtering
             if (!_lessThanGreaterThanOperatorsRegex.IsMatch(timeValue))
                 return null;
 
+            timeValue = timeValue.Trim(' ', '\t');
+
             var match = _lessThanGreaterThanOperatorsRegex.Match(timeValue);
+
+            if (!match.Success)
+                return null;
 
             if (match.Index > 0)
                 return null;
@@ -1190,6 +1206,8 @@ namespace ReplayParser.ReplaySorter.Filtering
         //TODO extract common logic
         private int? ParseComparison(string timeValue)
         {
+            timeValue = timeValue.Trim(' ', '\t');
+
             if (!_lessThanGreaterThanOperatorsRegex.IsMatch(timeValue))
                 return null;
 
@@ -1230,7 +1248,7 @@ namespace ReplayParser.ReplaySorter.Filtering
             {
                 if (string.IsNullOrWhiteSpace(map)) continue;
 
-                var mapRegex = new Regex(map, RegexOptions.IgnoreCase);
+                var mapRegex = new Regex(map.Trim(' ', '\t'), RegexOptions.IgnoreCase);
 
                 // where(r => MapRegex.IsMatch(r.ReplayMap.MapName))
                 string mapNameProperty = "ReplayMap.MapName";

@@ -138,6 +138,11 @@ namespace ReplayParser.ReplaySorter.UI.Windows
             editIgnoreFileTextBox.Text = editIgnoreFileTextBox.Text + Environment.NewLine + toIgnoreFilesBuilder.ToString();
         }
 
+        private void CancelEditingIgnoreFileButton_Click(object sender, RoutedEventArgs e)
+        {
+            this.Close();
+        }
+
         #endregion
 
         #endregion

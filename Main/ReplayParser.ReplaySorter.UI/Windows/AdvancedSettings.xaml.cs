@@ -1,5 +1,6 @@
 ﻿using Microsoft.WindowsAPICodePack.Dialogs;
 using ReplayParser.ReplaySorter.Configuration;
+using ReplayParser.ReplaySorter.Diagnostics;
 using System;
 using System.Linq;
 using System.Windows;
@@ -32,6 +33,7 @@ namespace ReplayParser.ReplaySorter.UI.Windows
             _replaySorterConfiguration.IgnoreFilePath = IgnoreFileTextbox.Text;
             _replaySorterConfiguration.LogDirectory = LoggingDirectoryTextbox.Text;
             _replaySorterConfiguration.GenerateIntermediateFoldersDuringSorting = GenerateIntermediateFoldersDuringSortingCheckBox.IsChecked.HasValue && GenerateIntermediateFoldersDuringSortingCheckBox.IsChecked.Value;
+            ErrorLogger.Reload(_replaySorterConfiguration);
             this.Close();
         }
 

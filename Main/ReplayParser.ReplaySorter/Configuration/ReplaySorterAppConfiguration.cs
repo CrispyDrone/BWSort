@@ -79,7 +79,7 @@ namespace ReplayParser.ReplaySorter.Configuration
             }
             set
             {
-                if (string.IsNullOrWhiteSpace(value) || !Directory.Exists(value))
+                if (!string.IsNullOrWhiteSpace(value) && !Directory.Exists(value))
                     return;
 
                 _logDirectoryChanged = true;
@@ -252,7 +252,7 @@ namespace ReplayParser.ReplaySorter.Configuration
             }
             set
             {
-                if (string.IsNullOrWhiteSpace(value))
+                if (!string.IsNullOrWhiteSpace(value) && !File.Exists(value))
                     return;
 
                 _ignoreFilePathChanged = true;
