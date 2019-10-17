@@ -327,7 +327,10 @@ Due to the possible presence of some bugs and it being hard to verify edge case 
 At the end of 2017 I had just started to learn how to program and was still playing some Starcraft here and there. I was severely annoyed at the lack of support from Blizzard in regards to managing replays. I thought this could be the ideal way to gain some experience as a new developer and at the same time help out the Starcraft community. As it was my first real project ever, and many of the important design decisions were made during this period when I had absolutely no experience, the code base is very badly designed and a pain to work with.
 
 ### Change history
-#### v1.1
+#### v1.0.2
++ Fixed version checking from failing on versions including a patch number.
+
+#### v1.0.1
 Bug fixes!
 + Fixed filtering on player names, it was broken.
 + Cancel button in the create ignore file window didn't work.

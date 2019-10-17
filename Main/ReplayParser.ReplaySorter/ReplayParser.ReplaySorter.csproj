@@ -97,6 +97,7 @@
     </Compile>
     <Compile Include="Configuration\IReplaySorterConfiguration.cs" />
     <Compile Include="Configuration\ReplaySorterAppConfiguration.cs" />
+    <Compile Include="Configuration\Version.cs" />
     <Compile Include="Constants.cs" />
     <Compile Include="Diagnostics\ErrorLogger.cs" />
     <Compile Include="Diagnostics\ProgressBar.cs" />

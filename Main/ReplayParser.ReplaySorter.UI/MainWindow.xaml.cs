@@ -8,6 +8,7 @@ using ReplayParser.ReplaySorter.Extensions;
 using ReplayParser.ReplaySorter.Filtering;
 using ReplayParser.ReplaySorter.IO;
 using ReplayParser.ReplaySorter.Ignoring;
+using ReplayParser.ReplaySorter.Renaming;
 using ReplayParser.ReplaySorter.ReplayRenamer;
 using ReplayParser.ReplaySorter.Sorting.SortResult;
 using ReplayParser.ReplaySorter.Sorting;
@@ -29,7 +30,7 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows;
 using System;
-using ReplayParser.ReplaySorter.Renaming;
+using Version = ReplayParser.ReplaySorter.Configuration.Version;
 
 namespace ReplayParser.ReplaySorter.UI
 {
@@ -111,8 +112,8 @@ namespace ReplayParser.ReplaySorter.UI
                         client.DefaultRequestHeaders.UserAgent.Add(new System.Net.Http.Headers.ProductInfoHeaderValue("BWSort", _replaySorterConfiguration.Version));
                         string responseBody = await client.GetStringAsync(_replaySorterConfiguration.GithubAPIRepoUrl + @"/releases/latest");
                         var versionTag = _replaySorterConfiguration.VersionRegex.Match(responseBody).Groups[1].Value;
-                        var remoteVersion = double.Parse(versionTag);
-                        var localVersion = double.Parse(_replaySorterConfiguration.Version);
+                        var remoteVersion = Version.Parse(versionTag); 
+                        var localVersion = Version.Parse(_replaySorterConfiguration.Version);
                         if (localVersion < remoteVersion)
                             MessageBox.Show($"A new version is available at {_replaySorterConfiguration.RepositoryUrl}");
                     }

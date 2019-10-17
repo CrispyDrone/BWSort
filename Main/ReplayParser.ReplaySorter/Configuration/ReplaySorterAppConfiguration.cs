@@ -54,7 +54,7 @@ namespace ReplayParser.ReplaySorter.Configuration
 
         public string RepositoryUrl => "https://www.github.com/crispydrone/bwsort";
         public string GithubAPIRepoUrl => "https://api.github.com/repos/crispydrone/bwsort";
-        public string Version => "1.0";
+        public string Version => "1.0.1";
         public Regex VersionRegex => new Regex("\"tag_name\"\\s*:\\s*\"v(.*?)\"", RegexOptions.IgnoreCase);
         public string LogDirectory
         {
