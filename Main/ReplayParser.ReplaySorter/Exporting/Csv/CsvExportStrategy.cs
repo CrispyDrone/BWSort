@@ -8,6 +8,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System;
+using System.Linq;
+using System.Globalization;
 
 namespace ReplayParser.ReplaySorter.Exporting.Strategies
 {
@@ -73,6 +75,9 @@ namespace ReplayParser.ReplaySorter.Exporting.Strategies
 
             [Index(18)]
             public string FileName { get; set; }
+
+            [Index(19)]
+            public string Path { get; set; }
         }
 
         #endregion
@@ -142,9 +147,53 @@ namespace ReplayParser.ReplaySorter.Exporting.Strategies
 
         private ReplayCsvRecord ToCsvRecord(File<IReplay> replay)
         {
-            var record = new ReplayCsvRecord();
+            // you lack abstractions, this is almost all information that should just readily be available on a `Replay` type
+            // actually you have the ReplayDecorator class, maybe you should use that one??
+            var gameType = replay.Content.GameType;
+            var players = new IPlayer[12];
+            var playersOrderedByTeam = replay.Content.Players
+                .GroupBy(p => p.ForceIdentifier)
+                .OrderBy(p => p.Key);
 
-            //todo: mapping
+            int counter = 0;
+            foreach (var team in playersOrderedByTeam)
+            {
+                foreach (var player in team)
+                {
+                    players[counter] = player;
+                    counter++;
+                }
+            }
+
+            var map = replay.Content.ReplayMap.MapName;
+            var duration = TimeSpan.FromSeconds(Math.Round(replay.Content.FrameCount / Constants.FastestFPS));
+            var date = replay.Content.Timestamp.ToString("yy-MM-dd", CultureInfo.InvariantCulture);
+            var fileName = Path.GetFileNameWithoutExtension(replay.FilePath);
+            var path = replay.FilePath;
+
+            var record = new ReplayCsvRecord
+            {
+                GameType = gameType.ToString(),
+                GameFormat = "",
+                Matchup = "",
+                Player1 = players[0]?.Name,
+                Player2 = players[1]?.Name,
+                Player3 = players[2]?.Name,
+                Player4 = players[3]?.Name,
+                Player5 = players[4]?.Name,
+                Player6 = players[5]?.Name,
+                Player7 = players[6]?.Name,
+                Player8 = players[7]?.Name,
+                Player9 = players[8]?.Name,
+                Player10 = players[9]?.Name,
+                Player11 = players[10]?.Name,
+                Player12 = players[11]?.Name,
+                Map = map,
+                Duration = duration.TotalSeconds + "s",
+                Date = date,
+                FileName = fileName,
+                Path = path
+            };
 
             return record;
         }
