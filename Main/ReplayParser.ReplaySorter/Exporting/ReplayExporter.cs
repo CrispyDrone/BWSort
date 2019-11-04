@@ -1,20 +1,33 @@
-﻿using ReplayParser.ReplaySorter.Exporting.Interfaces;
+﻿using ReplayParser.ReplaySorter.Diagnostics;
+using ReplayParser.ReplaySorter.Exporting.Interfaces;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
+using System;
 
 namespace ReplayParser.ReplaySorter.Exporting
 {
-    // use CsvHelper
     public class ReplayExporter : IReplayExporter
     {
         public ServiceResult<ServiceResultSummary> ExportReplays(IExportStrategy exportStrategy, string path)
         {
             var exportResult = exportStrategy.Execute();
+            var summary = exportResult.Result;
+            var errors = new List<string>(exportResult.Errors);
 
             var stopwatch = new Stopwatch();
             stopwatch.Start();
 
             var csvFile = exportResult.Result.Result.Content;
-            System.IO.File.WriteAllText(path, csvFile);
+            try
+            {
+                File.WriteAllText(path, csvFile);
+            }
+            catch (Exception ex)
+            {
+                errors.Insert(0, ex.Message);
+                ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - Failed to write to file {path}.", ex: ex);
+            }
 
             stopwatch.Stop();
 
@@ -23,13 +36,14 @@ namespace ReplayParser.ReplaySorter.Exporting
             return new ServiceResult<ServiceResultSummary>(
                 new ServiceResultSummary(
                     csvFile,
-                    $"It took {totalDuration.TotalSeconds} seconds to export {exportResult.Result.OperationCount} replays to {exportStrategy.Name} file {path}. {exportResult.Result.ErrorCount} replays experienced errors.",
+                    $"It took {totalDuration.TotalSeconds} seconds to export {summary.OperationCount} replays to {exportStrategy.Name} file {path}. " +
+                    $"{summary.ErrorCount} replays experienced errors.",
                     totalDuration,
-                    exportResult.Result.OperationCount,
-                    exportResult.Result.ErrorCount
+                    summary.OperationCount,
+                    summary.ErrorCount
                 ), 
                 true, 
-                null
+                errors
             );
         }
     }

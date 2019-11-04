@@ -1,5 +1,6 @@
 ﻿namespace ReplayParser.ReplaySorter.Exporting
 {
+    //todo: unnecessary (?)
     public interface ICsvConfiguration
     {
         char Delimiter { get; set; }

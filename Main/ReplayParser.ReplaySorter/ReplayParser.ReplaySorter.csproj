@@ -68,12 +68,18 @@
     <StartupObject />
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="CsvHelper, Version=12.0.0.0, Culture=neutral, PublicKeyToken=8c4959082be5c823, processorArchitecture=MSIL">
+      <HintPath>..\packages\CsvHelper.12.1.3\lib\net45\CsvHelper.dll</HintPath>
+    </Reference>
     <Reference Include="PresentationFramework" />
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data.SQLite, Version=1.0.110.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Data.SQLite.Core.1.0.110.0\lib\net46\System.Data.SQLite.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ValueTuple, Version=4.0.2.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.ValueTuple.4.4.0\lib\netstandard1.0\System.ValueTuple.dll</HintPath>
     </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -103,13 +109,10 @@
     <Compile Include="Diagnostics\ProgressBar.cs" />
     <Compile Include="Exceptions\RenameException.cs" />
     <Compile Include="Exporting\Csv\CsvConfiguration.cs" />
-    <Compile Include="Exporting\Csv\CsvFile.cs" />
     <Compile Include="Exporting\ReplayExporter.cs" />
-    <Compile Include="Exporting\Csv\Header.cs" />
     <Compile Include="Exporting\Csv\ICsvConfiguration.cs" />
     <Compile Include="Exporting\Interfaces\IExportStrategy.cs" />
     <Compile Include="Exporting\Interfaces\IReplayExporter.cs" />
-    <Compile Include="Exporting\Csv\Row.cs" />
     <Compile Include="Exporting\Csv\CsvExportStrategy.cs" />
     <Compile Include="Extensions\IEnumerableExtensions.cs" />
     <Compile Include="Extensions\ListExtensions.cs" />
