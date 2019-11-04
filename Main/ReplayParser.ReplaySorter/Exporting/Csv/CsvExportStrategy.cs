@@ -1,15 +1,15 @@
 ﻿using ReplayParser.Interfaces;
 using ReplayParser.ReplaySorter.Diagnostics;
+using ReplayParser.ReplaySorter.Exporting.Interfaces;
 using ReplayParser.ReplaySorter.IO;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using System;
 
-namespace ReplayParser.ReplaySorter.Exporting
+namespace ReplayParser.ReplaySorter.Exporting.Strategies
 {
-    // use CsvHelper
-    public class CsvReplayExporter : IReplayExporter
+    public class CsvExportStrategy : IExportStrategy
     {
         private List<string> _errors = new List<string>();
         private StringBuilder _output = new StringBuilder();
@@ -36,24 +36,27 @@ namespace ReplayParser.ReplaySorter.Exporting
             "FileName"
         };
 
-        public CsvReplayExporter(ICsvConfiguration csvConfiguration)
+        public CsvExportStrategy(ICsvConfiguration csvConfiguration, IEnumerable<File<IReplay>> replays)
         {
             CsvConfiguration = csvConfiguration;
+            Replays = replays;
         }
 
         public ICsvConfiguration CsvConfiguration { get; }
+        public IEnumerable<File<IReplay>> Replays { get; }
+        public string Name => "Csv";
 
-        public ServiceResult<ServiceResultSummary<StringContent>> ExportReplays(IEnumerable<File<IReplay>> replays)
+        public ServiceResult<ServiceResultSummary<StringContent>> Execute()
         {
             _errors.Clear();
             _output.Clear();
             var stopwatch = new Stopwatch();
             stopwatch.Start();
             int counter = 0;
-            if (replays != null)
+            if (Replays != null)
             {
                 WriteHeader();
-                foreach (var replay in replays)
+                foreach (var replay in Replays)
                 {
                     try
                     {
