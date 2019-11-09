@@ -146,10 +146,16 @@ namespace ReplayParser.ReplaySorter.Exporting.Strategies
         {
             int counter = 0;
 
+            var csvConfiguration = new CsvHelper.Configuration.Configuration();
+            csvConfiguration.Delimiter = CsvConfiguration.Delimiter.ToString();
+            csvConfiguration.Escape = CsvConfiguration.EscapeCharacter;
+            csvConfiguration.Quote = CsvConfiguration.QuoteCharacter;
+
             using (var writer = new StreamWriter(output))
-            using (var csv = new CsvWriter(writer))
+            using (var csv = new CsvWriter(writer, csvConfiguration))
             {
                 csv.WriteHeader<ReplayCsvRecord>();
+                await csv.NextRecordAsync();
 
                 foreach (var replay in Replays)
                 {

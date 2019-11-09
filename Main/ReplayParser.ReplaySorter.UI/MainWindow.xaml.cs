@@ -1739,7 +1739,7 @@ namespace ReplayParser.ReplaySorter.UI
                 }
             );
 
-            var outputFormat = exportReplaysAsComboBox.SelectedItem.ToString();
+            var outputFormat = (exportReplaysAsComboBox.SelectedItem as ComboBoxItem).Content.ToString();
 
             ServiceResult<ServiceResultSummary> result = null;
 
@@ -1748,14 +1748,15 @@ namespace ReplayParser.ReplaySorter.UI
                 case "csv":
                     var csvConfiguration = new CsvConfiguration();
                     var delimiterPanel = GetPanelWithName(exportConfigurationPanel, "delimiter");
-                    var quotePanel = GetPanelWithName(exportConfigurationPanel, "delimiter");
-                    var escapePanel = GetPanelWithName(exportConfigurationPanel, "delimiter");
+                    var quotePanel = GetPanelWithName(exportConfigurationPanel, "quote");
+                    var escapePanel = GetPanelWithName(exportConfigurationPanel, "escape");
 
-                    csvConfiguration.Delimiter = delimiterPanel.Children.Cast<TextBox>().First().Text.First();
-                    csvConfiguration.QuoteCharacter = quotePanel.Children.Cast<TextBox>().First().Text.First();
-                    csvConfiguration.EscapeCharacter = escapePanel.Children.Cast<TextBox>().First().Text.First();
+                    csvConfiguration.Delimiter = (delimiterPanel.Children.Cast<UIElement>().First(ui => ui is TextBox) as TextBox).Text[0];
+                    csvConfiguration.QuoteCharacter = (quotePanel.Children.Cast<UIElement>().First(ui => ui is TextBox) as TextBox).Text[0];
+                    csvConfiguration.EscapeCharacter = (escapePanel.Children.Cast<UIElement>().First(ui => ui is TextBox) as TextBox).Text[0];
 
                     result = await exporter.ExportToCsvAsync(path, csvConfiguration, _cancelExport.Token, progress);
+                    _cancelExport = null;
 
                     break;
 
@@ -1785,16 +1786,17 @@ namespace ReplayParser.ReplaySorter.UI
 
         private void outputFormatComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            var comboBox = sender as ComboBox;
-            ClearAndAddExportFormatConfigurationControls(comboBox.SelectedItem as string);
+            if (IsLoaded)
+            {
+                var comboBox = sender as ComboBox;
+                ClearAndAddExportFormatConfigurationControls((e.AddedItems[0] as ComboBoxItem).Content as string);
+            }
         }
 
         private void ClearAndAddExportFormatConfigurationControls(string outputFormat)
         {
             exportConfigurationPanel.Children.Clear();
             outputFormat = outputFormat.ToLower();
-            Panel newPanel = new StackPanel();
-            exportConfigurationPanel.Children.Add(newPanel);
 
             switch (outputFormat)
             {
@@ -1854,9 +1856,9 @@ namespace ReplayParser.ReplaySorter.UI
                     escapeCharacterPanel.Children.Add(escapeLabel);
                     escapeCharacterPanel.Children.Add(escapeTextBox);
 
-                    newPanel.Children.Add(delimiterPanel);
-                    newPanel.Children.Add(quoteCharacterPanel);
-                    newPanel.Children.Add(escapeCharacterPanel);
+                    exportConfigurationPanel.Children.Add(delimiterPanel);
+                    exportConfigurationPanel.Children.Add(quoteCharacterPanel);
+                    exportConfigurationPanel.Children.Add(escapeCharacterPanel);
                     break;
 
                 default:

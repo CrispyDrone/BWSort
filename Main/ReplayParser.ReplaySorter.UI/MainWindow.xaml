@@ -597,7 +597,7 @@
                     <Label Grid.Row="0" Grid.Column="0" VerticalAlignment="Center">Export to:</Label>
                     <Label Grid.Row="1" Grid.Column="0" VerticalAlignment="Center">Export as:</Label>
                     <ComboBox Grid.Row="1" Grid.Column="1" MinWidth="70" Margin="10" Name="exportReplaysAsComboBox" SelectionChanged="outputFormatComboBox_SelectionChanged">
-                        <ComboBoxItem IsSelected="True">
+                        <ComboBoxItem>
                             Csv
                         </ComboBoxItem>
                     </ComboBox>
