@@ -1681,13 +1681,41 @@ namespace ReplayParser.ReplaySorter.UI
 
         #region exporting
 
+        private CancellationTokenSource _cancelExport;
+
         private void CancelExportingButton_Click(object sender, RoutedEventArgs e)
         {
-
+            if (_cancelExport != null && !_cancelExport.IsCancellationRequested)
+                _cancelExport.Cancel();
         }
 
         private async void ExecuteExportingButton_Click(object sender, RoutedEventArgs e)
         {
+            if (exportReplaysAsComboBox.SelectedIndex == -1)
+            {
+                MessageBox.Show("Please select an output format!", "Export error", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
+                return;
+            }
+
+            var path = exportReplaysOutputPathTextBox.Text;
+            bool invalidPath = false;
+
+            try
+            {
+                if (!Directory.Exists(Path.GetDirectoryName(path)))
+                    invalidPath = true;
+            }
+            catch
+            {
+                invalidPath = true;
+            }
+
+            if (invalidPath)
+            {
+                MessageBox.Show("Invalid output path", "Export error", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
+                return;
+            }
+
             var filterReplays = filterReplaysCheckBox.IsChecked.HasValue && filterReplaysCheckBox.IsChecked.Value;
             if (filterReplays)
             {
@@ -1698,17 +1726,142 @@ namespace ReplayParser.ReplaySorter.UI
                 }
             }
 
-            var path = "";
-            var csvConfiguration = new CsvConfiguration();
-            var cancellationToken = new CancellationToken();
-            var exporter = new ReplayExporter(_filteredListReplays);
-            var progress = new Progress<int>(percent => 
+            var replays = _listReplays;
+            if (filterReplays)
+                replays = _filteredListReplays;
+
+            _cancelExport = new CancellationTokenSource();
+            var exporter = new ReplayExporter(replays);
+
+            var progress = new Progress<int>(percent =>
                 {
+                    progressBarExportingReplays.Value = percent;
                 }
             );
 
-            var result = await exporter.ExportToCsvAsync(path, csvConfiguration, cancellationToken, progress);
-            MessageBox.Show("");
+            var outputFormat = exportReplaysAsComboBox.SelectedItem.ToString();
+
+            ServiceResult<ServiceResultSummary> result = null;
+
+            switch (outputFormat.ToLower())
+            {
+                case "csv":
+                    var csvConfiguration = new CsvConfiguration();
+                    var delimiterPanel = GetPanelWithName(exportConfigurationPanel, "delimiter");
+                    var quotePanel = GetPanelWithName(exportConfigurationPanel, "delimiter");
+                    var escapePanel = GetPanelWithName(exportConfigurationPanel, "delimiter");
+
+                    csvConfiguration.Delimiter = delimiterPanel.Children.Cast<TextBox>().First().Text.First();
+                    csvConfiguration.QuoteCharacter = quotePanel.Children.Cast<TextBox>().First().Text.First();
+                    csvConfiguration.EscapeCharacter = escapePanel.Children.Cast<TextBox>().First().Text.First();
+
+                    result = await exporter.ExportToCsvAsync(path, csvConfiguration, _cancelExport.Token, progress);
+
+                    break;
+
+                default:
+                    MessageBox.Show($"{outputFormat} not supported!", "Export error", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
+                    return;
+            }
+
+            if (result.Success)
+            {
+                MessageBox.Show(result.Result.Message, "Finished exporting", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);
+            }
+            else
+            {
+                MessageBox.Show(result.Result.Message, "Exporting failed", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
+            }
+        }
+
+        private void ExportOutputPathSelectButton_Click(object sender, RoutedEventArgs e)
+        {
+            var setOutputFileDialog = new CommonOpenFileDialog();
+            if (setOutputFileDialog.ShowDialog() == CommonFileDialogResult.Ok)
+            {
+                exportReplaysOutputPathTextBox.Text = setOutputFileDialog.FileName;
+            }
+        }
+
+        private void outputFormatComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            var comboBox = sender as ComboBox;
+            ClearAndAddExportFormatConfigurationControls(comboBox.SelectedItem as string);
+        }
+
+        private void ClearAndAddExportFormatConfigurationControls(string outputFormat)
+        {
+            exportConfigurationPanel.Children.Clear();
+            outputFormat = outputFormat.ToLower();
+            Panel newPanel = new StackPanel();
+            exportConfigurationPanel.Children.Add(newPanel);
+
+            switch (outputFormat)
+            {
+                case "csv":
+                    // delimiter
+                    var delimiterPanel = new StackPanel
+                    {
+                        Orientation = Orientation.Horizontal,
+                        Name = "delimiter"
+                    };
+                    var delimiterLabel = new Label
+                    {
+                        Content = "Delimiter:"
+                    };
+                    var delimiterTextBox = new TextBox
+                    {
+                        MaxLength = 1,
+                        Text = ","
+                    };
+                    delimiterPanel.Children.Add(delimiterLabel);
+                    delimiterPanel.Children.Add(delimiterTextBox);
+                    
+                    // quotecharacter
+                    var quoteCharacterPanel = new StackPanel
+                    {
+                        Orientation = Orientation.Horizontal,
+                        Name = "quote"
+                    };
+                    var quoteLabel = new Label
+                    {
+                        Content = "Quote character:"
+                    };
+                    var quoteTextBox = new TextBox
+                    {
+                        MaxLength = 1,
+                        Text = "\""
+                    };
+                    quoteCharacterPanel.Children.Add(quoteLabel);
+                    quoteCharacterPanel.Children.Add(quoteTextBox);
+
+                    // escapecharacter
+                    var escapeCharacterPanel = new StackPanel
+                    {
+                        Orientation = Orientation.Horizontal,
+                        Name = "escape"
+                    };
+                    var escapeLabel = new Label
+                    {
+                        Content = "Escape character:"
+                    };
+                    var escapeTextBox = new TextBox
+                    {
+                        MaxLength = 1,
+                        Text = "\\"
+                    };
+
+                    escapeCharacterPanel.Children.Add(escapeLabel);
+                    escapeCharacterPanel.Children.Add(escapeTextBox);
+
+                    newPanel.Children.Add(delimiterPanel);
+                    newPanel.Children.Add(quoteCharacterPanel);
+                    newPanel.Children.Add(escapeCharacterPanel);
+                    break;
+
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
         }
 
         #endregion

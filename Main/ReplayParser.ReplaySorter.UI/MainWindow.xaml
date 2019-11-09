@@ -581,12 +581,32 @@
                 </Grid>
             </TabItem>
             <TabItem Header="Export">
-                <Grid>
+                <Grid Margin="10">
                     <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"></RowDefinition>
+                        <RowDefinition Height="Auto"></RowDefinition>
                         <RowDefinition></RowDefinition>
                         <RowDefinition Height="Auto"></RowDefinition>
                     </Grid.RowDefinitions>
-                    <DockPanel Grid.Row="2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"></ColumnDefinition>
+                        <ColumnDefinition Width="Auto"></ColumnDefinition>
+                        <ColumnDefinition></ColumnDefinition>
+                        <ColumnDefinition Width="Auto"></ColumnDefinition>
+                    </Grid.ColumnDefinitions>
+                    <Label Grid.Row="0" Grid.Column="0" VerticalAlignment="Center">Export to:</Label>
+                    <Label Grid.Row="1" Grid.Column="0" VerticalAlignment="Center">Export as:</Label>
+                    <ComboBox Grid.Row="1" Grid.Column="1" MinWidth="70" Margin="10" Name="exportReplaysAsComboBox" SelectionChanged="outputFormatComboBox_SelectionChanged">
+                        <ComboBoxItem IsSelected="True">
+                            Csv
+                        </ComboBoxItem>
+                    </ComboBox>
+                    <TextBox Grid.Row="0" Grid.Column="2" Margin="10" Name="exportReplaysOutputPathTextBox"></TextBox>
+                    <Button Grid.Row="0" Grid.Column="3" Margin="10 10 0 10" MinWidth="70" Click="ExportOutputPathSelectButton_Click">Set path</Button>
+                    <StackPanel Grid.Row="1" Grid.Column="2" Grid.RowSpan="2" Name="exportConfigurationPanel" Orientation="Vertical">
+                        
+                    </StackPanel>
+                    <DockPanel Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="4">
                         <Button DockPanel.Dock="Right" x:Name="cancelExportingButton" Content="Cancel" Click="CancelExportingButton_Click" Margin="10 10 0 10" MinWidth="70"></Button>
                         <Button DockPanel.Dock="Right" x:Name="executeExportingButton" Content="Export" Click="ExecuteExportingButton_Click" Margin="10" MinWidth="70"></Button>
                         <Grid DockPanel.Dock="Left" Margin="0 10 10 10">
