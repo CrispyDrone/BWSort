@@ -4,12 +4,14 @@ using ReplayParser.Interfaces;
 using ReplayParser.ReplaySorter.Diagnostics;
 using ReplayParser.ReplaySorter.Exporting.Interfaces;
 using ReplayParser.ReplaySorter.IO;
+using ReplayParser.ReplaySorter.Renaming;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System;
-using System.Linq;
 using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+using System;
 
 namespace ReplayParser.ReplaySorter.Exporting.Strategies
 {
@@ -82,60 +84,59 @@ namespace ReplayParser.ReplaySorter.Exporting.Strategies
 
         #endregion
 
-        public CsvExportStrategy(ICsvConfiguration csvConfiguration, IEnumerable<File<IReplay>> replays)
+        public CsvExportStrategy(IEnumerable<File<IReplay>> replays, ICsvConfiguration csvConfiguration = null)
         {
-            CsvConfiguration = csvConfiguration;
-            Replays = replays;
+            Replays = replays ?? throw new ArgumentNullException(nameof(replays));
+            CsvConfiguration = csvConfiguration ?? new CsvConfiguration();
         }
 
         public ICsvConfiguration CsvConfiguration { get; }
         public IEnumerable<File<IReplay>> Replays { get; }
         public string Name => "Csv";
 
-        public ServiceResult<ServiceResultSummary<StringContent>> Execute()
+        public async Task<ServiceResult<ServiceResultSummary>> ExecuteAsync(Stream output)
         {
-            var errors = new List<string>();
             var stopwatch = new Stopwatch();
             stopwatch.Start();
 
+            var errors = new List<string>();
             int counter = 0;
-            var output = "";
 
-            if (Replays != null)
+            using (var writer = new StreamWriter(output))
+            using (var csv = new CsvWriter(writer))
             {
-                using (var writer = new StringWriter())
-                using (var csv = new CsvWriter(writer))
+                csv.WriteHeader<ReplayCsvRecord>();
+
+                foreach (var replay in Replays)
                 {
-                    csv.WriteHeader<ReplayCsvRecord>();
-
-                    foreach (var replay in Replays)
+                    try
                     {
-                        try
-                        {
-                            csv.WriteRecord(ToCsvRecord(replay));
-                        }
-                        catch (Exception ex)
-                        {
-                            errors.Add($"{ex.Message}");
-                            ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - ");
-                        }
-                        counter++;
+                        csv.WriteRecord(ToCsvRecord(replay));
+                        await csv.NextRecordAsync();
                     }
-
-                    // This is not good... I want to decouple the actual writing to a file from the csv content generation, but obviously this could be a massive
-                    // memory drain... I guess you should use buffers
-                    output = writer.ToString();
+                    catch (Exception ex)
+                    {
+                        errors.Add($"{ex.Message}");
+                        ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - ");
+                    }
+                    counter++;
                 }
             }
 
             stopwatch.Stop();
 
-            return new ServiceResult<ServiceResultSummary<StringContent>>(
-                new ServiceResultSummary<StringContent>(
-                    new StringContent(
-                        output
-                    ), 
-                    "", 
+            var message = "";
+            var replayCount = Replays.Count();
+
+            if (errors.Count == 0)
+                message = $"Exported {replayCount} replays successfully without errors in {stopwatch.Elapsed.TotalSeconds} seconds.";
+            else
+                message = $"Exported {replayCount} replays with {errors.Count} errors in {stopwatch.Elapsed.TotalSeconds} seconds.";
+
+            return new ServiceResult<ServiceResultSummary>(
+                new ServiceResultSummary(
+                    null,
+                    message, 
                     stopwatch.Elapsed, 
                     counter, 
                     0
@@ -171,11 +172,13 @@ namespace ReplayParser.ReplaySorter.Exporting.Strategies
             var fileName = Path.GetFileNameWithoutExtension(replay.FilePath);
             var path = replay.FilePath;
 
+            var replayDecorator = ReplayDecorator.Create(replay);
+
             var record = new ReplayCsvRecord
             {
                 GameType = gameType.ToString(),
-                GameFormat = "",
-                Matchup = "",
+                GameFormat = replayDecorator.GameFormat(),
+                Matchup = replayDecorator.Matchup(),
                 Player1 = players[0]?.Name,
                 Player2 = players[1]?.Name,
                 Player3 = players[2]?.Name,

@@ -1,41 +1,69 @@
 ﻿using ReplayParser.ReplaySorter.Diagnostics;
 using ReplayParser.ReplaySorter.Exporting.Interfaces;
+using ReplayParser.Interfaces;
+using ReplayParser.ReplaySorter.Exporting.Strategies;
+using ReplayParser.ReplaySorter.IO;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
+using System.Threading.Tasks;
 using System;
+using System.Diagnostics;
+using System.Linq;
 
 namespace ReplayParser.ReplaySorter.Exporting
 {
     public class ReplayExporter : IReplayExporter
     {
-        public ServiceResult<ServiceResultSummary> ExportReplays(IExportStrategy exportStrategy, string path)
+        public ReplayExporter(IEnumerable<File<IReplay>> replays)
         {
-            var exportResult = exportStrategy.Execute();
-            var summary = exportResult.Result;
-            var errors = new List<string>(exportResult.Errors);
+            Replays = replays;
+        }
 
+        public IEnumerable<File<IReplay>> Replays { get; }
+
+        public async Task<ServiceResult<ServiceResultSummary>> ExportToCsvAsync(string path, ICsvConfiguration csvConfiguration)
+        {
             var stopwatch = new Stopwatch();
             stopwatch.Start();
 
-            var csvFile = exportResult.Result.Result.Content;
+            var errors = new List<string>();
+            var exportStrategy = new CsvExportStrategy(Replays, csvConfiguration);
+            ServiceResult<ServiceResultSummary> exportResult = null;
+
             try
             {
-                File.WriteAllText(path, csvFile);
+                using (var fs = File.OpenWrite(path))
+                {
+                    exportResult = await exportStrategy.ExecuteAsync(fs);
+                }
             }
             catch (Exception ex)
             {
-                errors.Insert(0, ex.Message);
-                ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - Failed to write to file {path}.", ex: ex);
+                ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - Failed to write to stream.", ex: ex);
+                errors.Add(ex.Message);
+
+                stopwatch.Stop();
+                return new ServiceResult<ServiceResultSummary>(
+                    new ServiceResultSummary(
+                        null,
+                        "Something went wrong while exporting.",
+                        stopwatch.Elapsed,
+                        Replays.Count(),
+                        1
+                     ),
+                    false,
+                    errors
+                 );
             }
 
+            var summary = exportResult.Result;
+            errors.AddRange(exportResult.Errors);
             stopwatch.Stop();
-
             var totalDuration = exportResult.Result.Duration + stopwatch.Elapsed;
 
             return new ServiceResult<ServiceResultSummary>(
                 new ServiceResultSummary(
-                    csvFile,
+                    null,
                     $"It took {totalDuration.TotalSeconds} seconds to export {summary.OperationCount} replays to {exportStrategy.Name} file {path}. " +
                     $"{summary.ErrorCount} replays experienced errors.",
                     totalDuration,

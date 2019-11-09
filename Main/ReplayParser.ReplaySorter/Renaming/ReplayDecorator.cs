@@ -8,6 +8,7 @@ using ReplayParser.ReplaySorter.IO;
 using System.Text.RegularExpressions;
 using System.IO;
 using ReplayParser.ReplaySorter.Extensions;
+using System.Collections.Generic;
 
 namespace ReplayParser.ReplaySorter.Renaming
 {
@@ -209,7 +210,7 @@ namespace ReplayParser.ReplaySorter.Renaming
                 case GameType.Unknown:
                 case GameType.Melee:
                     {
-                        var groupedPlayers = _replay.Players?.Except(_replay.Observers).GroupBy(p => p.ForceIdentifier);
+                        var groupedPlayers = _replay.Players?.Except(_replay.Observers ?? Enumerable.Empty<IPlayer>()).GroupBy(p => p.ForceIdentifier);
                         if (groupedPlayers == null)
                             return "NoPlayers";
 
@@ -218,7 +219,7 @@ namespace ReplayParser.ReplaySorter.Renaming
 
                 case GameType.FreeForAll:
                     {
-                        var playerCount = _replay.Players?.Except(_replay.Observers).Count() ?? 0;
+                        var playerCount = _replay.Players?.Except(_replay.Observers ?? Enumerable.Empty<IPlayer>()).Count() ?? 0;
                         return playerCount == 0 ? "NoPlayers" : string.Join("v", new string('1', playerCount).AsEnumerable());
                     }
 
@@ -494,6 +495,16 @@ namespace ReplayParser.ReplaySorter.Renaming
                 default:
                     throw new InvalidOperationException();
             }
+        }
+
+        public string GameFormat()
+        {
+            return GetGameFormat();
+        }
+
+        public string Matchup()
+        {
+            return GetMatchup();
         }
 
         #endregion

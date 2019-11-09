@@ -26,6 +26,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution-files", "Solution-
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReplayParser.ReplaySorter.UnitTests", "ReplayParser.ReplaySorter.UnitTests\ReplayParser.ReplaySorter.UnitTests.csproj", "{61044264-C6EA-42FC-8D2A-4B23B58C1265}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReplayParser.ReplaySorter.IntegrationTests", "ReplayParser.ReplaySorter.IntegrationTests\ReplayParser.ReplaySorter.IntegrationTests.csproj", "{0380A62D-79A3-4B29-8372-D1DDEB46607E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -84,12 +86,21 @@ Global
 		{61044264-C6EA-42FC-8D2A-4B23B58C1265}.Release|Any CPU.Build.0 = Release|Any CPU
 		{61044264-C6EA-42FC-8D2A-4B23B58C1265}.Release|x86.ActiveCfg = Release|Any CPU
 		{61044264-C6EA-42FC-8D2A-4B23B58C1265}.Release|x86.Build.0 = Release|Any CPU
+		{0380A62D-79A3-4B29-8372-D1DDEB46607E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0380A62D-79A3-4B29-8372-D1DDEB46607E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0380A62D-79A3-4B29-8372-D1DDEB46607E}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{0380A62D-79A3-4B29-8372-D1DDEB46607E}.Debug|x86.Build.0 = Debug|Any CPU
+		{0380A62D-79A3-4B29-8372-D1DDEB46607E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0380A62D-79A3-4B29-8372-D1DDEB46607E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0380A62D-79A3-4B29-8372-D1DDEB46607E}.Release|x86.ActiveCfg = Release|Any CPU
+		{0380A62D-79A3-4B29-8372-D1DDEB46607E}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{61044264-C6EA-42FC-8D2A-4B23B58C1265} = {FC2D915D-A71A-4F2A-87D0-5BD2CE3B230F}
+		{0380A62D-79A3-4B29-8372-D1DDEB46607E} = {FC2D915D-A71A-4F2A-87D0-5BD2CE3B230F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9E32093E-4075-47BA-A224-A65E5F123662}
