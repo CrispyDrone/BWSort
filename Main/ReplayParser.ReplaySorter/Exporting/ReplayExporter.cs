@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 
 namespace ReplayParser.ReplaySorter.Exporting
 {
@@ -21,7 +22,21 @@ namespace ReplayParser.ReplaySorter.Exporting
 
         public IEnumerable<File<IReplay>> Replays { get; }
 
-        public async Task<ServiceResult<ServiceResultSummary>> ExportToCsvAsync(string path, ICsvConfiguration csvConfiguration)
+        public async Task<ServiceResult<ServiceResultSummary>> ExportToCsvAsync(
+            string path, 
+            ICsvConfiguration csvConfiguration, 
+            IProgress<int> progress = null
+        )
+        {
+            return await ExportToCsvAsync(path, csvConfiguration, CancellationToken.None, progress);
+        }
+
+        public async Task<ServiceResult<ServiceResultSummary>> ExportToCsvAsync(
+            string path, 
+            ICsvConfiguration csvConfiguration, 
+            CancellationToken cancellationToken, 
+            IProgress<int> progress = null
+        )
         {
             var stopwatch = new Stopwatch();
             stopwatch.Start();
@@ -34,7 +49,7 @@ namespace ReplayParser.ReplaySorter.Exporting
             {
                 using (var fs = File.OpenWrite(path))
                 {
-                    exportResult = await exportStrategy.ExecuteAsync(fs);
+                    exportResult = await exportStrategy.ExecuteAsync(fs, cancellationToken, progress);
                 }
             }
             catch (Exception ex)

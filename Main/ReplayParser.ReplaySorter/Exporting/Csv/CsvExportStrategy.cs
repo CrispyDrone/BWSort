@@ -12,6 +12,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System;
+using System.Threading;
 
 namespace ReplayParser.ReplaySorter.Exporting.Strategies
 {
@@ -94,44 +95,39 @@ namespace ReplayParser.ReplaySorter.Exporting.Strategies
         public IEnumerable<File<IReplay>> Replays { get; }
         public string Name => "Csv";
 
-        public async Task<ServiceResult<ServiceResultSummary>> ExecuteAsync(Stream output)
+        public async Task<ServiceResult<ServiceResultSummary>> ExecuteAsync(Stream output, IProgress<int> progress = null)
+        {
+            return await ExecuteAsync(output, CancellationToken.None, progress);
+        }
+
+        public async Task<ServiceResult<ServiceResultSummary>> ExecuteAsync(Stream output, CancellationToken cancellationToken, IProgress<int> progress = null)
         {
             var stopwatch = new Stopwatch();
             stopwatch.Start();
 
             var errors = new List<string>();
-            int counter = 0;
 
-            using (var writer = new StreamWriter(output))
-            using (var csv = new CsvWriter(writer))
-            {
-                csv.WriteHeader<ReplayCsvRecord>();
-
-                foreach (var replay in Replays)
-                {
-                    try
-                    {
-                        csv.WriteRecord(ToCsvRecord(replay));
-                        await csv.NextRecordAsync();
-                    }
-                    catch (Exception ex)
-                    {
-                        errors.Add($"{ex.Message}");
-                        ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - ");
-                    }
-                    counter++;
-                }
-            }
+            var counter = await WriteReplaysAsync(output, errors, cancellationToken, progress);
 
             stopwatch.Stop();
 
             var message = "";
             var replayCount = Replays.Count();
 
-            if (errors.Count == 0)
-                message = $"Exported {replayCount} replays successfully without errors in {stopwatch.Elapsed.TotalSeconds} seconds.";
+            if (cancellationToken.IsCancellationRequested)
+            {
+                message = $"Operation cancelled, exported {counter} replays with {errors.Count} in {stopwatch.Elapsed.TotalSeconds} seconds.";
+            }
             else
-                message = $"Exported {replayCount} replays with {errors.Count} errors in {stopwatch.Elapsed.TotalSeconds} seconds.";
+            {
+                if (errors.Count == 0)
+                    message = $"Exported {replayCount} replays successfully without errors in {stopwatch.Elapsed.TotalSeconds} seconds.";
+                else
+                    message = $"Exported {replayCount} replays with {errors.Count} errors in {stopwatch.Elapsed.TotalSeconds} seconds.";
+            }
+
+            if (progress != null)
+                progress.Report(100);
 
             return new ServiceResult<ServiceResultSummary>(
                 new ServiceResultSummary(
@@ -144,6 +140,41 @@ namespace ReplayParser.ReplaySorter.Exporting.Strategies
                 true,
                 errors
             );
+        }
+
+        private async Task<int> WriteReplaysAsync(Stream output, List<string> errors, CancellationToken cancellationToken, IProgress<int> progress)
+        {
+            int counter = 0;
+
+            using (var writer = new StreamWriter(output))
+            using (var csv = new CsvWriter(writer))
+            {
+                csv.WriteHeader<ReplayCsvRecord>();
+
+                foreach (var replay in Replays)
+                {
+                    if (cancellationToken.IsCancellationRequested)
+                        return counter;
+
+                    try
+                    {
+                        csv.WriteRecord(ToCsvRecord(replay));
+                        await csv.NextRecordAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        errors.Add($"{ex.Message}");
+                        ErrorLogger.GetInstance()?.LogError($"{DateTime.Now} - ");
+                    }
+                    counter++;
+
+                    if (progress != null)
+                        progress.Report(counter);
+
+                }
+            }
+
+            return counter;
         }
 
         private ReplayCsvRecord ToCsvRecord(File<IReplay> replay)

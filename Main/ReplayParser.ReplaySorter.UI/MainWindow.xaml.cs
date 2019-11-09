@@ -31,6 +31,8 @@ using System.Windows.Input;
 using System.Windows;
 using System;
 using Version = ReplayParser.ReplaySorter.Configuration.Version;
+using ReplayParser.ReplaySorter.Exporting;
+using System.Threading;
 
 namespace ReplayParser.ReplaySorter.UI
 {
@@ -1677,6 +1679,40 @@ namespace ReplayParser.ReplaySorter.UI
 
         #endregion
 
+        #region exporting
+
+        private void CancelExportingButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private async void ExecuteExportingButton_Click(object sender, RoutedEventArgs e)
+        {
+            var filterReplays = filterReplaysCheckBox.IsChecked.HasValue && filterReplaysCheckBox.IsChecked.Value;
+            if (filterReplays)
+            {
+                if (_filteredListReplays == null || _filteredListReplays.Count == 0)
+                {
+                    MessageBox.Show("Can not execute export since filter did not return any replays!", "Failed to start export: invalid filter", MessageBoxButton.OK, MessageBoxImage.Warning, MessageBoxResult.OK);
+                    return;
+                }
+            }
+
+            var path = "";
+            var csvConfiguration = new CsvConfiguration();
+            var cancellationToken = new CancellationToken();
+            var exporter = new ReplayExporter(_filteredListReplays);
+            var progress = new Progress<int>(percent => 
+                {
+                }
+            );
+
+            var result = await exporter.ExportToCsvAsync(path, csvConfiguration, cancellationToken, progress);
+            MessageBox.Show("");
+        }
+
+        #endregion
+
         #region backups
 
         #region fields
@@ -2652,7 +2688,6 @@ namespace ReplayParser.ReplaySorter.UI
         }
 
         #endregion
-
     }
 }
 
