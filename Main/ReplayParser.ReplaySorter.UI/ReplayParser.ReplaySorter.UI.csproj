@@ -141,6 +141,7 @@
     <Compile Include="Converters\DivideByParamConverter.cs" />
     <Compile Include="Converters\ObserverToVisibilityConverter.cs" />
     <Compile Include="Converters\RenamingOutputConverter.cs" />
+    <Compile Include="Helpers\UiHelper.cs" />
     <Compile Include="Models\BackupAction.cs" />
     <Compile Include="Converters\FeedbackToColorConverter.cs" />
     <Compile Include="Converters\FramesToTimeSpanInSecondsConverter.cs" />

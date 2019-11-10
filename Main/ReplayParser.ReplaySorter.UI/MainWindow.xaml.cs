@@ -33,6 +33,8 @@ using System;
 using Version = ReplayParser.ReplaySorter.Configuration.Version;
 using ReplayParser.ReplaySorter.Exporting;
 using System.Threading;
+using System.Windows.Media;
+using ReplayParser.ReplaySorter.UI.Helpers;
 
 namespace ReplayParser.ReplaySorter.UI
 {
@@ -1717,18 +1719,17 @@ namespace ReplayParser.ReplaySorter.UI
             }
 
             var filterReplays = filterReplaysCheckBox.IsChecked.HasValue && filterReplaysCheckBox.IsChecked.Value;
-            if (filterReplays)
-            {
-                if (_filteredListReplays == null || _filteredListReplays.Count == 0)
-                {
-                    MessageBox.Show("Can not execute export since filter did not return any replays!", "Failed to start export: invalid filter", MessageBoxButton.OK, MessageBoxImage.Warning, MessageBoxResult.OK);
-                    return;
-                }
-            }
 
             var replays = _listReplays;
+
             if (filterReplays)
                 replays = _filteredListReplays;
+
+            if (replays == null || !replays.Any())
+            {
+                MessageBox.Show("No replays to export!", "Failed to start export", MessageBoxButton.OK, MessageBoxImage.Warning, MessageBoxResult.OK);
+                return;
+            }
 
             _cancelExport = new CancellationTokenSource();
             var exporter = new ReplayExporter(replays);
@@ -1747,13 +1748,9 @@ namespace ReplayParser.ReplaySorter.UI
             {
                 case "csv":
                     var csvConfiguration = new CsvConfiguration();
-                    var delimiterPanel = GetPanelWithName(exportConfigurationPanel, "delimiter");
-                    var quotePanel = GetPanelWithName(exportConfigurationPanel, "quote");
-                    var escapePanel = GetPanelWithName(exportConfigurationPanel, "escape");
-
-                    csvConfiguration.Delimiter = (delimiterPanel.Children.Cast<UIElement>().First(ui => ui is TextBox) as TextBox).Text[0];
-                    csvConfiguration.QuoteCharacter = (quotePanel.Children.Cast<UIElement>().First(ui => ui is TextBox) as TextBox).Text[0];
-                    csvConfiguration.EscapeCharacter = (escapePanel.Children.Cast<UIElement>().First(ui => ui is TextBox) as TextBox).Text[0];
+                    csvConfiguration.Delimiter = UiHelper.FindVisualChild<TextBox>(exportConfigurationPanel, t => t.Name == "delimiter").Text[0];
+                    csvConfiguration.QuoteCharacter = UiHelper.FindVisualChild<TextBox>(exportConfigurationPanel, t => t.Name == "quote").Text[0];
+                    csvConfiguration.EscapeCharacter = UiHelper.FindVisualChild<TextBox>(exportConfigurationPanel, t => t.Name == "escape").Text[0];
 
                     result = await exporter.ExportToCsvAsync(path, csvConfiguration, _cancelExport.Token, progress);
                     _cancelExport = null;
@@ -1778,6 +1775,7 @@ namespace ReplayParser.ReplaySorter.UI
         private void ExportOutputPathSelectButton_Click(object sender, RoutedEventArgs e)
         {
             var setOutputFileDialog = new CommonOpenFileDialog();
+            setOutputFileDialog.DefaultExtension = (exportReplaysAsComboBox.SelectedValue as ComboBoxItem)?.Content as string;
             if (setOutputFileDialog.ShowDialog() == CommonFileDialogResult.Ok)
             {
                 exportReplaysOutputPathTextBox.Text = setOutputFileDialog.FileName;
@@ -1786,11 +1784,8 @@ namespace ReplayParser.ReplaySorter.UI
 
         private void outputFormatComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (IsLoaded)
-            {
-                var comboBox = sender as ComboBox;
-                ClearAndAddExportFormatConfigurationControls((e.AddedItems[0] as ComboBoxItem).Content as string);
-            }
+            var comboBox = sender as ComboBox;
+            ClearAndAddExportFormatConfigurationControls((e.AddedItems[0] as ComboBoxItem).Content as string);
         }
 
         private void ClearAndAddExportFormatConfigurationControls(string outputFormat)
@@ -1801,64 +1796,83 @@ namespace ReplayParser.ReplaySorter.UI
             switch (outputFormat)
             {
                 case "csv":
+                    var csvConfigGrid = new Grid();
+                    var firstRow = new RowDefinition();
+                    var secondRow = new RowDefinition();
+                    var thirdRow = new RowDefinition();
+                    var firstCol = new ColumnDefinition();
+                    var secondCol = new ColumnDefinition();
+                    csvConfigGrid.RowDefinitions.Add(firstRow);
+                    csvConfigGrid.RowDefinitions.Add(secondRow);
+                    csvConfigGrid.RowDefinitions.Add(thirdRow);
+                    csvConfigGrid.ColumnDefinitions.Add(firstCol);
+                    csvConfigGrid.ColumnDefinitions.Add(secondCol);
+
                     // delimiter
-                    var delimiterPanel = new StackPanel
-                    {
-                        Orientation = Orientation.Horizontal,
-                        Name = "delimiter"
-                    };
                     var delimiterLabel = new Label
                     {
+                        VerticalAlignment = VerticalAlignment.Center,
                         Content = "Delimiter:"
                     };
                     var delimiterTextBox = new TextBox
                     {
+                        Name = "delimiter",
+                        Margin = new Thickness(10),
+                        MinWidth = 70,
                         MaxLength = 1,
                         Text = ","
                     };
-                    delimiterPanel.Children.Add(delimiterLabel);
-                    delimiterPanel.Children.Add(delimiterTextBox);
+                    Grid.SetRow(delimiterLabel, 0);
+                    Grid.SetColumn(delimiterLabel, 0);
+                    Grid.SetRow(delimiterTextBox, 0);
+                    Grid.SetColumn(delimiterTextBox, 1);
                     
                     // quotecharacter
-                    var quoteCharacterPanel = new StackPanel
-                    {
-                        Orientation = Orientation.Horizontal,
-                        Name = "quote"
-                    };
                     var quoteLabel = new Label
                     {
+                        VerticalAlignment = VerticalAlignment.Center,
                         Content = "Quote character:"
                     };
                     var quoteTextBox = new TextBox
                     {
+                        Name = "quote",
+                        Margin = new Thickness(10),
+                        MinWidth = 70,
                         MaxLength = 1,
                         Text = "\""
                     };
-                    quoteCharacterPanel.Children.Add(quoteLabel);
-                    quoteCharacterPanel.Children.Add(quoteTextBox);
+                    Grid.SetRow(quoteLabel, 1);
+                    Grid.SetColumn(quoteLabel, 0);
+                    Grid.SetRow(quoteTextBox, 1);
+                    Grid.SetColumn(quoteTextBox, 1);
 
                     // escapecharacter
-                    var escapeCharacterPanel = new StackPanel
-                    {
-                        Orientation = Orientation.Horizontal,
-                        Name = "escape"
-                    };
                     var escapeLabel = new Label
                     {
+                        VerticalAlignment = VerticalAlignment.Center,
                         Content = "Escape character:"
                     };
                     var escapeTextBox = new TextBox
                     {
+                        Name = "escape",
+                        Margin = new Thickness(10),
+                        MinWidth = 70,
                         MaxLength = 1,
                         Text = "\\"
                     };
+                    Grid.SetRow(escapeLabel, 2);
+                    Grid.SetColumn(escapeLabel, 0);
+                    Grid.SetRow(escapeTextBox, 2);
+                    Grid.SetColumn(escapeTextBox, 1);
 
-                    escapeCharacterPanel.Children.Add(escapeLabel);
-                    escapeCharacterPanel.Children.Add(escapeTextBox);
+                    csvConfigGrid.Children.Add(delimiterLabel);
+                    csvConfigGrid.Children.Add(delimiterTextBox);
+                    csvConfigGrid.Children.Add(quoteLabel);
+                    csvConfigGrid.Children.Add(quoteTextBox);
+                    csvConfigGrid.Children.Add(escapeLabel);
+                    csvConfigGrid.Children.Add(escapeTextBox);
+                    exportConfigurationPanel.Children.Add(csvConfigGrid);
 
-                    exportConfigurationPanel.Children.Add(delimiterPanel);
-                    exportConfigurationPanel.Children.Add(quoteCharacterPanel);
-                    exportConfigurationPanel.Children.Add(escapeCharacterPanel);
                     break;
 
                 default:
