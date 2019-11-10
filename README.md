@@ -1,4 +1,4 @@
-# BWSort v1.0.3
+# BWSort v1.1.0
 ## What
 A GUI application to sort, rename, filter and backup replays from the popular RTS-game Starcraft Brood War. 
 
@@ -10,6 +10,7 @@ A GUI application to sort, rename, filter and backup replays from the popular RT
 + Rename replays according to a special syntax allowing you to extract information such as player names, match-up, race, duration, date,... You can rename replays as is, or also move them into a new output directory.
 + Filter parsed replays on player-name, winner, race, match-up, duration, date or map. Will support units and build orders in the near future as well!
 + Backup entire directories of replays and have the possibility to always recover them exactly as they were! You can easily share database files with each other manually. In the future there might be built-in way.
++ Export parsed replays to csv files
 
 ## How to install
 Currently there are 3 ways to get the program:
@@ -256,6 +257,14 @@ Finally, there are some extra buttons in the panel on the side:
 + Clean database list: This will verify whether the databases still exist and if not, delete them from the list.
 + Add existing database: If you have an existing database that's not part of the list (someone shared it with you for example, or you moved the database to another location), use this button.
 
+### Export replays
+You can now export replays. Currently the only supported format is CSV. For exporting to csv there are 3 configuration values available:
++ Delimiter: the character that is used to delimit fields. `,` by default.
++ Quote character: the character that will be used to quote fields that have a delimiter in them. `"` by default.
++ Escape character: the character that will be used to escape quotes. `\` by default.
+
+![You can now export replays to a csv format.](./imgs/export-tab-export-to-csv.png)
+
 ### Advanced settings
 
 ![There are many advanced settings you can fine tune to your liking.](./imgs/advanced-settings.png)
@@ -327,6 +336,9 @@ Due to the possible presence of some bugs and it being hard to verify edge case 
 At the end of 2017 I had just started to learn how to program and was still playing some Starcraft here and there. I was severely annoyed at the lack of support from Blizzard in regards to managing replays. I thought this could be the ideal way to gain some experience as a new developer and at the same time help out the Starcraft community. As it was my first real project ever, and many of the important design decisions were made during this period when I had absolutely no experience, the code base is very badly designed and a pain to work with.
 
 ### Change history
+#### v1.1.0
++ Added export to csv functionality
+
 #### v1.0.3
 + Fixed application version and some errors in the README file.
 

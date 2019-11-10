@@ -245,6 +245,9 @@
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
     <AppDesigner Include="Properties\" />
+    <Content Include="Images\help\export-tab-export-to-csv.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Images\help\sort-tab-search-tree-result.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
