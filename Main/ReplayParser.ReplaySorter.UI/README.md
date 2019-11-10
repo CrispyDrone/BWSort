@@ -18,7 +18,7 @@ Currently there are 3 ways to get the program:
 2. Use the non-setup based .exe from the .RAR archive labelled as such
 3. Compile from source
 
-You can find the latest release here: <https://github.com/CrispyDrone/BWSort/releases/tag/v1.0.3>
+You can find the latest release here: <https://github.com/CrispyDrone/BWSort/releases/tag/v1.1.0>
 
 ## User guide
 After an optional installation, run the .exe file.
