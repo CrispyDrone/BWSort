@@ -18,7 +18,7 @@ Currently there are 3 ways to get the program:
 2. Use the non-setup based .exe from the .RAR archive labelled as such
 3. Compile from source
 
-You can find the latest release here: <https://github.com/CrispyDrone/BWSort/releases/tag/v1.1.0>
+You can find the latest release here: <https://github.com/CrispyDrone/BWSort/releases/tag/v1.1.1>
 
 ## User guide
 After an optional installation, run the .exe file.
@@ -336,6 +336,10 @@ Due to the possible presence of some bugs and it being hard to verify edge case 
 At the end of 2017 I had just started to learn how to program and was still playing some Starcraft here and there. I was severely annoyed at the lack of support from Blizzard in regards to managing replays. I thought this could be the ideal way to gain some experience as a new developer and at the same time help out the Starcraft community. As it was my first real project ever, and many of the important design decisions were made during this period when I had absolutely no experience, the code base is very badly designed and a pain to work with.
 
 ### Change history
+#### v1.1.1
++ Disable `Export` button while exporting is going on to prevent exceptions
++ Fix progress reporting to actually show percentage instead of the number of replays that have been processed
+
 #### v1.1.0
 + Added export to csv functionality
 

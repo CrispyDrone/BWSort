@@ -126,9 +126,6 @@ namespace ReplayParser.ReplaySorter.Exporting.Strategies
                     message = $"Exported {replayCount} replays with {errors.Count} errors in {stopwatch.Elapsed.TotalSeconds} seconds.";
             }
 
-            if (progress != null)
-                progress.Report(100);
-
             return new ServiceResult<ServiceResultSummary>(
                 new ServiceResultSummary(
                     null,

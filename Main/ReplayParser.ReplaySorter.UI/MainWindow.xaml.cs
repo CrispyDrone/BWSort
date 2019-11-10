@@ -1693,6 +1693,7 @@ namespace ReplayParser.ReplaySorter.UI
 
         private async void ExecuteExportingButton_Click(object sender, RoutedEventArgs e)
         {
+            executeExportingButton.IsEnabled = false;
             if (exportReplaysAsComboBox.SelectedIndex == -1)
             {
                 MessageBox.Show("Please select an output format!", "Export error", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
@@ -1733,10 +1734,11 @@ namespace ReplayParser.ReplaySorter.UI
 
             _cancelExport = new CancellationTokenSource();
             var exporter = new ReplayExporter(replays);
+            var replaysCount = replays.Count;
 
-            var progress = new Progress<int>(percent =>
+            var progress = new Progress<int>(counter =>
                 {
-                    progressBarExportingReplays.Value = percent;
+                    progressBarExportingReplays.Value = Math.Round((double)counter / replaysCount * 100);
                 }
             );
 
@@ -1770,6 +1772,7 @@ namespace ReplayParser.ReplaySorter.UI
             {
                 MessageBox.Show(result.Result.Message, "Exporting failed", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
             }
+            executeExportingButton.IsEnabled = true;
         }
 
         private void ExportOutputPathSelectButton_Click(object sender, RoutedEventArgs e)
